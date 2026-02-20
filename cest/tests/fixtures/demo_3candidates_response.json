@@ -1,0 +1,1214 @@
+{
+  "version": "v0.1.2",
+  "generated_at": "2026-02-18T20:45:25.849582+00:00",
+  "baseline_scenario_id": "scenario_shinagawa",
+  "inputs": {
+    "home_station_distribution": [
+      {
+        "station_id": "kawasaki",
+        "count": 45,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "omiya",
+        "count": 30,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "shibuya",
+        "count": 25,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "yokohama",
+        "count": 35,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "chiba",
+        "count": 20,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "ikebukuro",
+        "count": 15,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "kichijoji",
+        "count": 10,
+        "segment": null,
+        "office_days_per_week_override": null
+      }
+    ],
+    "office_candidates": [
+      {
+        "office_id": "shinagawa",
+        "name": "品川オフィス",
+        "nearest_station_id": "shinagawa",
+        "last_mile_minutes": 5,
+        "lat": 35.6285,
+        "lon": 139.7388,
+        "rent_jpy_month": 8000000
+      },
+      {
+        "office_id": "shibuya",
+        "name": "渋谷オフィス",
+        "nearest_station_id": "shibuya",
+        "last_mile_minutes": 7,
+        "lat": 35.658,
+        "lon": 139.7013,
+        "rent_jpy_month": 12000000
+      },
+      {
+        "office_id": "toyosu",
+        "name": "豊洲オフィス",
+        "nearest_station_id": "toyosu",
+        "last_mile_minutes": 10,
+        "lat": 35.6464,
+        "lon": 139.7914,
+        "rent_jpy_month": 6000000
+      }
+    ],
+    "policy_as_is": {
+      "office_days_per_week": 3
+    },
+    "settings": {
+      "baseline_office_id": "shinagawa",
+      "thresholds_trip_minutes": [
+        60,
+        90
+      ],
+      "percentiles": [
+        50,
+        95
+      ],
+      "ranking_weights": {
+        "access": 0.6,
+        "financial": 0.3,
+        "environmental": 0.1
+      },
+      "bench_trip_p95_minutes": 90,
+      "bench_rent_jpy_month": 10000000,
+      "robust_flip_rate_threshold": 0.1,
+      "routing": {
+        "graph_id": "tokyo_core_v1",
+        "transfer_penalty_minutes": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "scenario_id": "scenario_shinagawa",
+      "office_id": "shinagawa",
+      "kpis": {
+        "population": 180,
+        "population_reachable": 180,
+        "trip_minutes": {
+          "avg": 31.278,
+          "p50": 23.0,
+          "p95": 62.0
+        },
+        "round_trip_minutes": {
+          "avg": 62.556,
+          "p50": 46.0,
+          "p95": 124.0
+        },
+        "weekly_minutes": {
+          "avg": 187.667,
+          "p50": 138.0,
+          "p95": 372.0
+        },
+        "thresholds": [
+          {
+            "trip_minutes": 60,
+            "exceed_count": 20,
+            "exceed_share": 0.111111
+          },
+          {
+            "trip_minutes": 90,
+            "exceed_count": 0,
+            "exceed_share": 0.0
+          }
+        ]
+      },
+      "station_breakdown": [
+        {
+          "station_id": "kawasaki",
+          "count": 45,
+          "reachable": true,
+          "trip_minutes": 14,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "omiya",
+          "count": 30,
+          "reachable": true,
+          "trip_minutes": 57,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "shibuya",
+          "count": 25,
+          "reachable": true,
+          "trip_minutes": 17,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "yokohama",
+          "count": 35,
+          "reachable": true,
+          "trip_minutes": 23,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "chiba",
+          "count": 20,
+          "reachable": true,
+          "trip_minutes": 62,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": true
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "ikebukuro",
+          "count": 15,
+          "reachable": true,
+          "trip_minutes": 30,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        },
+        {
+          "station_id": "kichijoji",
+          "count": 10,
+          "reachable": true,
+          "trip_minutes": 37,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": null
+        }
+      ],
+      "unreachable": {
+        "count": 0,
+        "stations": []
+      },
+      "coverage": {
+        "network_covered_ratio": 1.0,
+        "quality_label": "computed"
+      },
+      "policy_applied": {
+        "office_days_per_week": 3.0,
+        "override_population_share": 0.0
+      }
+    },
+    {
+      "scenario_id": "scenario_shibuya",
+      "office_id": "shibuya",
+      "kpis": {
+        "population": 180,
+        "population_reachable": 180,
+        "trip_minutes": {
+          "avg": 35.222,
+          "p50": 28.0,
+          "p95": 74.0
+        },
+        "round_trip_minutes": {
+          "avg": 70.444,
+          "p50": 56.0,
+          "p95": 148.0
+        },
+        "weekly_minutes": {
+          "avg": 211.333,
+          "p50": 168.0,
+          "p95": 444.0
+        },
+        "thresholds": [
+          {
+            "trip_minutes": 60,
+            "exceed_count": 20,
+            "exceed_share": 0.111111
+          },
+          {
+            "trip_minutes": 90,
+            "exceed_count": 0,
+            "exceed_share": 0.0
+          }
+        ]
+      },
+      "station_breakdown": [
+        {
+          "station_id": "kawasaki",
+          "count": 45,
+          "reachable": true,
+          "trip_minutes": 28,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 14
+        },
+        {
+          "station_id": "omiya",
+          "count": 30,
+          "reachable": true,
+          "trip_minutes": 52,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": -5
+        },
+        {
+          "station_id": "shibuya",
+          "count": 25,
+          "reachable": true,
+          "trip_minutes": 7,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": -10
+        },
+        {
+          "station_id": "yokohama",
+          "count": 35,
+          "reachable": true,
+          "trip_minutes": 37,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 14
+        },
+        {
+          "station_id": "chiba",
+          "count": 20,
+          "reachable": true,
+          "trip_minutes": 74,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": true
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 12
+        },
+        {
+          "station_id": "ikebukuro",
+          "count": 15,
+          "reachable": true,
+          "trip_minutes": 20,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": -10
+        },
+        {
+          "station_id": "kichijoji",
+          "count": 10,
+          "reachable": true,
+          "trip_minutes": 27,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": -10
+        }
+      ],
+      "unreachable": {
+        "count": 0,
+        "stations": []
+      },
+      "coverage": {
+        "network_covered_ratio": 1.0,
+        "quality_label": "computed"
+      },
+      "policy_applied": {
+        "office_days_per_week": 3.0,
+        "override_population_share": 0.0
+      }
+    },
+    {
+      "scenario_id": "scenario_toyosu",
+      "office_id": "toyosu",
+      "kpis": {
+        "population": 180,
+        "population_reachable": 180,
+        "trip_minutes": {
+          "avg": 45.306,
+          "p50": 43.0,
+          "p95": 65.0
+        },
+        "round_trip_minutes": {
+          "avg": 90.611,
+          "p50": 86.0,
+          "p95": 130.0
+        },
+        "weekly_minutes": {
+          "avg": 271.833,
+          "p50": 258.0,
+          "p95": 390.0
+        },
+        "thresholds": [
+          {
+            "trip_minutes": 60,
+            "exceed_count": 20,
+            "exceed_share": 0.111111
+          },
+          {
+            "trip_minutes": 90,
+            "exceed_count": 0,
+            "exceed_share": 0.0
+          }
+        ]
+      },
+      "station_breakdown": [
+        {
+          "station_id": "kawasaki",
+          "count": 45,
+          "reachable": true,
+          "trip_minutes": 34,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 20
+        },
+        {
+          "station_id": "omiya",
+          "count": 30,
+          "reachable": true,
+          "trip_minutes": 60,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 3
+        },
+        {
+          "station_id": "shibuya",
+          "count": 25,
+          "reachable": true,
+          "trip_minutes": 37,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 20
+        },
+        {
+          "station_id": "yokohama",
+          "count": 35,
+          "reachable": true,
+          "trip_minutes": 43,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 20
+        },
+        {
+          "station_id": "chiba",
+          "count": 20,
+          "reachable": true,
+          "trip_minutes": 65,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": true
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 3
+        },
+        {
+          "station_id": "ikebukuro",
+          "count": 15,
+          "reachable": true,
+          "trip_minutes": 41,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 11
+        },
+        {
+          "station_id": "kichijoji",
+          "count": 10,
+          "reachable": true,
+          "trip_minutes": 48,
+          "threshold_results": [
+            {
+              "trip_minutes": 60,
+              "exceeds": false
+            },
+            {
+              "trip_minutes": 90,
+              "exceeds": false
+            }
+          ],
+          "delta_vs_baseline_trip_minutes": 11
+        }
+      ],
+      "unreachable": {
+        "count": 0,
+        "stations": []
+      },
+      "coverage": {
+        "network_covered_ratio": 1.0,
+        "quality_label": "computed"
+      },
+      "policy_applied": {
+        "office_days_per_week": 3.0,
+        "override_population_share": 0.0
+      }
+    }
+  ],
+  "ranking": {
+    "weights_normalized": {
+      "access": 0.6,
+      "financial": 0.3,
+      "environmental": 0.1
+    },
+    "axes": {
+      "access": [
+        {
+          "scenario_id": "scenario_shinagawa",
+          "score_0_100": 31.111,
+          "inputs_available": true,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_shibuya",
+          "score_0_100": 17.778,
+          "inputs_available": true,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_toyosu",
+          "score_0_100": 27.778,
+          "inputs_available": true,
+          "quality_label": "computed"
+        }
+      ],
+      "financial": [
+        {
+          "scenario_id": "scenario_shinagawa",
+          "score_0_100": 20.0,
+          "inputs_available": true,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_shibuya",
+          "score_0_100": 0,
+          "inputs_available": true,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_toyosu",
+          "score_0_100": 40.0,
+          "inputs_available": true,
+          "quality_label": "computed"
+        }
+      ],
+      "environmental": [
+        {
+          "scenario_id": "scenario_shinagawa",
+          "score_0_100": null,
+          "inputs_available": false,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_shibuya",
+          "score_0_100": null,
+          "inputs_available": false,
+          "quality_label": "computed"
+        },
+        {
+          "scenario_id": "scenario_toyosu",
+          "score_0_100": null,
+          "inputs_available": false,
+          "quality_label": "computed"
+        }
+      ]
+    },
+    "overall": [
+      {
+        "scenario_id": "scenario_shinagawa",
+        "overall_score_0_100": 24.667
+      },
+      {
+        "scenario_id": "scenario_shibuya",
+        "overall_score_0_100": 10.667
+      },
+      {
+        "scenario_id": "scenario_toyosu",
+        "overall_score_0_100": 28.667
+      }
+    ],
+    "best_scenario_id": null
+  },
+  "explain_pack": {
+    "tradeoffs": [
+      "豊洲オフィスは家賃が月2,000,000円 安い",
+      "kawasaki駅の45人が、豊洲オフィスでは平均20分悪化"
+    ],
+    "if_you_prioritize": {
+      "access": [
+        "scenario_shinagawa"
+      ],
+      "financial": [
+        "scenario_toyosu"
+      ]
+    }
+  },
+  "sensitivity": {
+    "robust": false,
+    "flip_rate": 0.111111,
+    "critical_assumption": "last_mile_minutes",
+    "summary": "前提を±5分変えると、11%のケースで1位が変わります。結論は不安定です。",
+    "next_action": "各オフィス候補のラストマイル（徒歩/バス分）を実測または正確な値で入力してから再計算してください。",
+    "variants": [
+      {
+        "variant_id": "-5_-5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_-5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_-5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_shinagawa"
+      },
+      {
+        "variant_id": "-5_+0_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_+0_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_+0_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_shinagawa"
+      },
+      {
+        "variant_id": "-5_+5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_+5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "-5_+5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 0
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_shinagawa"
+      },
+      {
+        "variant_id": "+0_-5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_-5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_-5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+0_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+0_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+0_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+0_+5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 5
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_-5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_-5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_-5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 2
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+0_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+0_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+0_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 7
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+5_-5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": -5,
+            "last_mile_minutes_effective": 5
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+5_+0",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 0,
+            "last_mile_minutes_effective": 10
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      },
+      {
+        "variant_id": "+5_+5_+5",
+        "assumptions": {
+          "shinagawa": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 10
+          },
+          "shibuya": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 12
+          },
+          "toyosu": {
+            "last_mile_minutes_delta": 5,
+            "last_mile_minutes_effective": 15
+          }
+        },
+        "best_scenario_id": "scenario_toyosu"
+      }
+    ]
+  },
+  "notices": [
+    {
+      "level": "warning",
+      "code": "SENSITIVITY_UNSTABLE",
+      "message": "前提を±5分変えると、11%のケースで1位が変わります。結論は不安定です。",
+      "action": "各オフィス候補のラストマイル（徒歩/バス分）を実測または正確な値で入力してから再計算してください。",
+      "actionability": "needs_action"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# venv
+.venv/
+venv/
+
+# local / editor / OS
+.env
+.DS_Store
+.vscode/
+
+# Claude Code
+.claude/
+
+# Frontend (チームメンバー担当・未実装)
+cest/web/
+
+# pytest cache
+.pytest_cache/
+
+# Artifacts / snapshots
+artifacts/
+*.tgz
+
+# Legacy code
+legacy/
+
+# Internal tools
+tools/
+

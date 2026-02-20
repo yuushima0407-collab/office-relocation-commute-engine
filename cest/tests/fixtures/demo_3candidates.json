@@ -1,0 +1,55 @@
+{
+  "inputs": {
+    "home_station_distribution": [
+      {"station_id": "kawasaki", "count": 45, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "omiya", "count": 30, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "shibuya", "count": 25, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "yokohama", "count": 35, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "chiba", "count": 20, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "ikebukuro", "count": 15, "segment": null, "office_days_per_week_override": null},
+      {"station_id": "kichijoji", "count": 10, "segment": null, "office_days_per_week_override": null}
+    ],
+    "office_candidates": [
+      {
+        "office_id": "shinagawa",
+        "name": "品川オフィス",
+        "nearest_station_id": "shinagawa",
+        "last_mile_minutes": 5,
+        "lat": 35.6285, "lon": 139.7388,
+        "rent_jpy_month": 8000000
+      },
+      {
+        "office_id": "shibuya",
+        "name": "渋谷オフィス",
+        "nearest_station_id": "shibuya",
+        "last_mile_minutes": 7,
+        "lat": 35.6580, "lon": 139.7013,
+        "rent_jpy_month": 12000000
+      },
+      {
+        "office_id": "toyosu",
+        "name": "豊洲オフィス",
+        "nearest_station_id": "toyosu",
+        "last_mile_minutes": 10,
+        "lat": 35.6464, "lon": 139.7914,
+        "rent_jpy_month": 6000000
+      }
+    ],
+    "policy_as_is": {
+      "office_days_per_week": 3
+    },
+    "settings": {
+      "baseline_office_id": "shinagawa",
+      "thresholds_trip_minutes": [60, 90],
+      "percentiles": [50, 95],
+      "ranking_weights": {"access": 0.6, "financial": 0.3, "environmental": 0.1},
+      "bench_trip_p95_minutes": 90,
+      "bench_rent_jpy_month": 10000000,
+      "robust_flip_rate_threshold": 0.10,
+      "routing": {
+        "graph_id": "tokyo_core_v1",
+        "transfer_penalty_minutes": 0
+      }
+    }
+  }
+}
