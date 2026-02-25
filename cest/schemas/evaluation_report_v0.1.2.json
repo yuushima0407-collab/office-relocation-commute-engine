@@ -277,11 +277,14 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["scenario_id", "overall_score_0_100"],
+            "required": ["scenario_id", "overall_score_0_100", "rank"],
             "properties": {
               "scenario_id": { "type": "string" },
               "overall_score_0_100": {
                 "type": "number", "minimum": 0, "maximum": 100
+              },
+              "rank": {
+                "type": "integer", "minimum": 1
               }
             },
             "additionalProperties": false

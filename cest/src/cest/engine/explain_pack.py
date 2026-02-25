@@ -104,6 +104,50 @@ def generate_if_you_prioritize(
     return iyp
 
 
+def generate_num_offices_story(
+    num_offices_summary: List[Dict[str, Any]],
+) -> List[str]:
+    """
+    拠点数別サマリから、経営会議で読み上げやすい短いナラティブを生成する。
+    例:
+      - 「1→2拠点に増やすと、通勤p95は◯分改善、賃料は◯%増」
+    """
+    if not num_offices_summary or len(num_offices_summary) < 2:
+        return []
+
+    # num_offices昇順を前提とする
+    sorted_summary = sorted(num_offices_summary, key=lambda x: x["num_offices"])
+    stories: List[str] = []
+    prev = sorted_summary[0]
+    for cur in sorted_summary[1:]:
+        prev_k = prev["num_offices"]
+        cur_k = cur["num_offices"]
+        prev_p95 = prev.get("trip_p95")
+        cur_p95 = cur.get("trip_p95")
+        prev_rent = prev.get("total_rent")
+        cur_rent = cur.get("total_rent")
+        if (
+            prev_p95 is None
+            or cur_p95 is None
+            or not isinstance(prev_rent, (int, float))
+            or not isinstance(cur_rent, (int, float))
+            or prev_rent <= 0
+        ):
+            prev = cur
+            continue
+
+        trip_change = cur_p95 - prev_p95
+        trip_dir = "短く" if trip_change < 0 else "長く"
+        rent_change_pct = (cur_rent - prev_rent) / prev_rent * 100.0
+
+        stories.append(
+            f"{prev_k}→{cur_k}拠点に増やすと、通勤p95は{abs(trip_change):.1f}分{trip_dir}なり、賃料は{rent_change_pct:+.1f}%変化します。"
+        )
+        prev = cur
+
+    return stories
+
+
 def _find_result(results: List[Dict[str, Any]], scenario_id: str) -> Optional[Dict[str, Any]]:
     for r in results:
         if r["scenario_id"] == scenario_id:

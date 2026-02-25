@@ -83,3 +83,49 @@ class NoticeCollector:
     def override_applied(self, count: int) -> None:
         self.add("info", "OVERRIDE_APPLIED",
                  f"{count}件の駅/セグメントでoffice_days_per_week_overrideが適用されました。", "informational")
+
+    def commute_worsening_distribution(self, count: int, threshold_minutes: float) -> None:
+        if count <= 0:
+            return
+        self.add(
+            "warning",
+            "COMMUTE_WORSENING_DISTRIBUTION",
+            f"baselineと比較して片道{threshold_minutes:.0f}分以上悪化する社員が{count}人います。",
+            "informational",
+        )
+
+    def hazard_data_partial_coverage(self, available: int, total: int) -> None:
+        if total <= 0 or available == total:
+            return
+        self.add(
+            "info",
+            "HAZARD_DATA_PARTIAL_COVERAGE",
+            f"ハザードデータが利用可能なオフィスは{available}/{total}件です。一部の候補ではハザード軸が計算されません。",
+            "informational",
+        )
+
+    # ── v0.3 追加 ──────────────────────────────────────────
+
+    def hazard_warning(self, station_id: str, detail: str) -> None:
+        self.add(
+            "warning",
+            "HAZARD_WARNING",
+            f"{station_id}: {detail}。自治体のハザードマップを確認してください。",
+            "informational",
+        )
+
+    def capacity_tight(self, office_name: str, headroom: int) -> None:
+        self.add(
+            "warning",
+            "CAPACITY_TIGHT",
+            f"{office_name}: 推定収容人数まで余裕{headroom}人。増員時に注意が必要です。",
+            "informational",
+        )
+
+    def no_pareto_candidates(self) -> None:
+        self.add(
+            "error",
+            "NO_PARETO_CANDIDATES",
+            "制約フィルタ後に有効な組み合わせが0件です。制約を緩和してください。",
+            "blocking",
+        )

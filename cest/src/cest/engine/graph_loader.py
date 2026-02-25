@@ -10,6 +10,7 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 _GRAPH_CACHE: Dict[str, nx.Graph] = {}
 _STATION_MASTER_CACHE: Dict[str, Dict[str, Any]] | None = None
+_STATION_HAZARD_CACHE: Dict[str, Dict[str, Any]] | None = None
 
 
 def _load_json(path: Path) -> Any:
@@ -57,3 +58,38 @@ def load_station_master() -> Dict[str, Dict[str, Any]]:
         }
     _STATION_MASTER_CACHE = master
     return master
+
+
+def load_station_hazard() -> Dict[str, Dict[str, Any]]:
+    """
+    ハザードマップ由来の駅別リスク指標を読み込む。
+    仕様: cest/src/cest/data/station_hazard.json
+    {
+      "stations": [
+        {
+          "station_id": "shinagawa",
+          "flood_depth_m": 0.5,
+          "seismic_rank": 3
+        },
+        ...
+      ]
+    }
+    """
+    global _STATION_HAZARD_CACHE
+    if _STATION_HAZARD_CACHE is not None:
+        return _STATION_HAZARD_CACHE
+
+    path = _DATA_DIR / "station_hazard.json"
+    if not path.exists():
+        _STATION_HAZARD_CACHE = {}
+        return _STATION_HAZARD_CACHE
+
+    data = _load_json(path)
+    hazard: Dict[str, Dict[str, Any]] = {}
+    for s in data.get("stations", []):
+        hazard[s["station_id"]] = {
+            "flood_depth_m": s.get("flood_depth_m"),
+            "seismic_rank": s.get("seismic_rank"),
+        }
+    _STATION_HAZARD_CACHE = hazard
+    return hazard

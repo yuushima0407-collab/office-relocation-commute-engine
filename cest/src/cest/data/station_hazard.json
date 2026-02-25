@@ -1,0 +1,50 @@
+{
+  "stations": [
+    {
+      "station_id": "shinagawa",
+      "flood_depth_m": 0.5,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "shibuya",
+      "flood_depth_m": 0.3,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "toyosu",
+      "flood_depth_m": 1.0,
+      "seismic_rank": 4
+    },
+    {
+      "station_id": "kawasaki",
+      "flood_depth_m": 2.0,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "omiya",
+      "flood_depth_m": 0.0,
+      "seismic_rank": 2
+    },
+    {
+      "station_id": "yokohama",
+      "flood_depth_m": 1.5,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "chiba",
+      "flood_depth_m": 1.0,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "ikebukuro",
+      "flood_depth_m": 0.2,
+      "seismic_rank": 3
+    },
+    {
+      "station_id": "kichijoji",
+      "flood_depth_m": 0.2,
+      "seismic_rank": 2
+    }
+  ]
+}
+

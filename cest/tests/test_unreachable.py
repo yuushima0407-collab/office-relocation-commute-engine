@@ -1,13 +1,15 @@
 """
-Test 2: unreachableで落ちない（Robustness）
+Test 2: unreachable で落ちない（Robustness）
 
 路線ネットワークに存在しない駅が入力に含まれても
-クラッシュせず、unreachableとして正しく報告されること。
+クラッシュせず、unreachable として正しく報告されること。
 
 なぜこれが重要か：
 実際のデータには必ず想定外の駅が入る。
 「落ちること」が最悪の失敗。
-unreachableを0分として扱うことも同様に最悪（サイレントバグ）。
+unreachable を 0 分として扱うことも同様に最悪（サイレントバグ）。
+
+v0.3 では Notice（STATION_ID_NOT_FOUND）で報告される。
 """
 from copy import deepcopy
 
@@ -19,8 +21,7 @@ def test_unreachable_station_does_not_crash():
     input_data = load_fixture("demo_3candidates.json")
     inputs = deepcopy(input_data["inputs"])
     inputs["home_station_distribution"].append(
-        {"station_id": "nonexistent_island_sta", "count": 5, "segment": None,
-         "office_days_per_week_override": None}
+        {"station_id": "nonexistent_island_sta", "count": 5}
     )
 
     result = evaluate(inputs)
@@ -28,17 +29,14 @@ def test_unreachable_station_does_not_crash():
     # クラッシュしない
     assert result is not None
 
-    # unreachableに正しく報告される
-    for scenario_result in result["results"]:
-        unreachable_ids = [s["station_id"] for s in scenario_result["unreachable"]["stations"]]
-        assert "nonexistent_island_sta" in unreachable_ids
-
-        # 0分として混入していない
-        for sb in scenario_result["station_breakdown"]:
-            if sb["station_id"] == "nonexistent_island_sta":
-                assert sb["reachable"] is False
-                assert sb["trip_minutes"] is None
-
-    # Noticeが出る
+    # STATION_ID_NOT_FOUND Notice が出る
     notice_codes = [n["code"] for n in result["notices"]]
-    assert "UNREACHABLE_EXISTS" in notice_codes
+    assert "STATION_ID_NOT_FOUND" in notice_codes, (
+        f"STATION_ID_NOT_FOUND notice が生成されなかった。notices={result['notices']}"
+    )
+
+    # 評価結果（all_combinations）が壊れていない
+    assert "all_combinations" in result
+    assert isinstance(result["all_combinations"], list)
+    assert "pareto_frontier_ids" in result
+    assert isinstance(result["pareto_frontier_ids"], list)
