@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEST v0.3 — オフィス配置シミュレーション</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:    #2563eb;
+      --blue-lt: #eff6ff;
+      --gray:    #6b7280;
+      --gray-lt: #f3f4f6;
+      --gray-bd: #e5e7eb;
+      --green:   #16a34a;
+      --yellow:  #ca8a04;
+      --red:     #dc2626;
+      --radius:  8px;
+      --shadow:  0 1px 3px rgba(0,0,0,.1);
+    }
+    body {
+      font-family: "Hiragino Sans", "Meiryo", sans-serif;
+      font-size: 14px;
+      color: #111827;
+      background: #f9fafb;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────── */
+    .page-header {
+      background: #1e3a5f;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .page-header h1 { font-size: 17px; font-weight: 600; }
+    .page-header .version { font-size: 12px; opacity: .7; }
+
+    .main { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    /* ── Status bar ───────────────────────────────────────────── */
+    #status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    #status-bar.api    { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    #status-bar.demo   { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+    #status-bar.error  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    #status-bar.loading{ background: #f3f4f6; color: var(--gray); border: 1px solid var(--gray-bd); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .api    .status-dot { background: #16a34a; }
+    .demo   .status-dot { background: #ca8a04; }
+    .error  .status-dot { background: #dc2626; }
+    .loading .status-dot { background: var(--gray); }
+
+    /* ── Section card ─────────────────────────────────────────── */
+    .section {
+      background: #fff;
+      border: 1px solid var(--gray-bd);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .section-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gray-bd);
+      font-weight: 600;
+      font-size: 13px;
+      color: #374151;
+      background: var(--gray-lt);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .section-body { padding: 16px; }
+
+    /* ── Input summary ────────────────────────────────────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .summary-item {
+      background: var(--gray-lt);
+      border-radius: 6px;
+      padding: 10px 14px;
+    }
+    .summary-item .label { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
+    .summary-item .value { font-size: 20px; font-weight: 700; color: #111; }
+    .summary-item .unit  { font-size: 12px; color: var(--gray); }
+
+    /* ── Constraints impact ───────────────────────────────────── */
+    .funnel {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .funnel-step {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .funnel-step .n { font-weight: 700; color: var(--blue); }
+    .funnel-step .lbl { color: var(--gray); }
+    .funnel-arrow { color: var(--gray-bd); font-size: 16px; }
+    .funnel-step.pareto .n { color: var(--green); }
+
+    /* ── Combo list ───────────────────────────────────────────── */
+    #combo-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .combo-card {
+      border: 1px solid var(--gray-bd);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px 16px;
+      transition: box-shadow .15s;
+    }
+    .combo-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+    .combo-card.pareto-optimal {
+      border-left: 4px solid var(--blue);
+    }
+    .combo-card.pareto-suboptimal {
+      border-left: 4px solid var(--gray-bd);
+      background: #fafafa;
+    }
+
+    .combo-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .combo-title {
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .combo-card.pareto-suboptimal .combo-title { color: var(--gray); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-pareto { background: var(--blue-lt); color: var(--blue); }
+    .badge-suboptimal { background: var(--gray-lt); color: var(--gray); }
+    .badge-k { background: #f0fdf4; color: var(--green); }
+
+    /* ── KPI row ──────────────────────────────────────────────── */
+    .kpi-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .kpi-item {
+      display: flex;
+      flex-direction: column;
+      min-width: 100px;
+    }
+    .kpi-item .kpi-label { font-size: 11px; color: var(--gray); }
+    .kpi-item .kpi-value { font-size: 18px; font-weight: 700; }
+    .kpi-item .kpi-unit  { font-size: 11px; color: var(--gray); }
+    .kpi-item .kpi-value.warn { color: var(--yellow); }
+    .kpi-item .kpi-value.danger { color: var(--red); }
+    .kpi-divider { width: 1px; background: var(--gray-bd); margin: 0 4px; }
+
+    /* ── Distribution bar ─────────────────────────────────────── */
+    .dist-row {
+      margin-bottom: 8px;
+    }
+    .dist-label { font-size: 11px; color: var(--gray); margin-bottom: 4px; }
+    .dist-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      background: var(--gray-bd);
+    }
+    .dist-seg { height: 100%; transition: width .3s; }
+    .dist-seg.s0 { background: #22c55e; } /* <30 green */
+    .dist-seg.s1 { background: #3b82f6; } /* 30-60 blue */
+    .dist-seg.s2 { background: #f59e0b; } /* 60-90 yellow */
+    .dist-seg.s3 { background: #ef4444; } /* >90 red */
+    .dist-legend {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--gray);
+      flex-wrap: wrap;
+    }
+    .dist-legend span { display: flex; align-items: center; gap: 3px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* ── Assignment ───────────────────────────────────────────── */
+    .assignment-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .office-chip {
+      background: var(--gray-lt);
+      border: 1px solid var(--gray-bd);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .office-chip .office-name { font-weight: 600; margin-bottom: 2px; }
+    .office-chip .office-pop  { color: var(--gray); }
+
+    /* ── Explain block ────────────────────────────────────────── */
+    .explain-block {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--gray-lt);
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+    }
+    .explain-block .headline { font-weight: 600; margin-bottom: 2px; }
+    .explain-block .detail   { color: var(--gray); }
+
+    /* ── Notices ──────────────────────────────────────────────── */
+    .notice {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .notice.warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
+    .notice.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+    /* ── Loading / empty ──────────────────────────────────────── */
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+      font-size: 15px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>オフィス配置シミュレーション</h1>
+  <span class="version">CEST v0.3</span>
+</header>
+
+<main class="main">
+
+  <!-- ステータスバー -->
+  <div id="status-bar" class="loading">
+    <span class="status-dot"></span>
+    <span id="status-text">接続確認中…</span>
+  </div>
+
+  <!-- 入力データ確認 -->
+  <div class="section" id="section-summary" style="display:none">
+    <div class="section-header">入力データ確認</div>
+    <div class="section-body">
+      <div class="summary-grid" id="summary-grid"></div>
+    </div>
+  </div>
+
+  <!-- 通知 -->
+  <div id="notices-container"></div>
+
+  <!-- 全候補一覧 -->
+  <div class="section" id="section-list" style="display:none">
+    <div class="section-header">
+      全候補一覧
+      <span id="funnel-summary" style="font-weight:normal; margin-left:8px; font-size:12px; color:var(--gray)"></span>
+    </div>
+    <div class="section-body">
+      <div class="funnel" id="funnel-row" style="margin-bottom:16px"></div>
+      <div id="combo-list">
+        <div class="loading-spinner">読み込み中…</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+'use strict';
+
+const API_BASE = 'http://localhost:8001';
+
+// ── メイン ──────────────────────────────────────────────────────
+async function init() {
+  let data;
+  try {
+    const health = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    if (!health.ok) throw new Error('health check failed');
+    // API が生きていれば demo_response.json を API 代わりに使う（Phase 1 はデモ固定）
+    data = await loadDemo();
+    setStatus('api', 'APIに接続しました（デモデータを表示中）');
+  } catch {
+    data = await loadDemo();
+    setStatus('demo', 'APIに接続できないため、デモデータを表示しています');
+  }
+  render(data);
+}
+
+async function loadDemo() {
+  const res = await fetch('demo_response.json');
+  if (!res.ok) throw new Error('demo_response.json の読み込みに失敗しました');
+  return res.json();
+}
+
+function setStatus(type, text) {
+  const bar = document.getElementById('status-bar');
+  bar.className = type;
+  document.getElementById('status-text').textContent = text;
+}
+
+// ── レンダリング ─────────────────────────────────────────────────
+function render(data) {
+  renderSummary(data);
+  renderNotices(data.notices || []);
+  renderConstraintsImpact(data.constraints_impact);
+  renderComboList(data.all_combinations, data.pareto_frontier_ids || []);
+  document.getElementById('section-summary').style.display = '';
+  document.getElementById('section-list').style.display = '';
+}
+
+function renderSummary(data) {
+  const inputs = data.inputs || {};
+  const dist   = inputs.home_station_distribution || [];
+  const offices = inputs.office_candidates || [];
+  const days   = (inputs.policy_as_is || {}).office_days_per_week || '—';
+
+  const totalPop = dist.reduce((s, d) => s + (d.count || 0), 0);
+  const groups   = [...new Set(dist.map(d => d.group).filter(Boolean))];
+
+  const grid = document.getElementById('summary-grid');
+  grid.innerHTML = [
+    { label: '社員数',         value: totalPop, unit: '人' },
+    { label: '部署数',         value: groups.length || '—', unit: groups.length ? '部署' : '' },
+    { label: 'オフィス候補',   value: offices.length, unit: '件' },
+    { label: '出社日数',       value: days, unit: '日/週' },
+  ].map(({ label, value, unit }) => `
+    <div class="summary-item">
+      <div class="label">${label}</div>
+      <div class="value">${value}<span class="unit"> ${unit}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderNotices(notices) {
+  const container = document.getElementById('notices-container');
+  container.innerHTML = notices.map(n => `
+    <div class="notice ${n.level === 'warning' ? 'warning' : 'info'}">
+      <span>${n.level === 'warning' ? '⚠' : 'ℹ'}</span>
+      <span>${escHtml(n.message)}</span>
+    </div>
+  `).join('');
+}
+
+function renderConstraintsImpact(ci) {
+  if (!ci) return;
+  const funnel = document.getElementById('funnel-row');
+  const steps = [
+    { n: ci.total_combinations,     lbl: '全組み合わせ',   cls: '' },
+    { n: ci.after_capacity_filter,  lbl: '収容フィルタ後', cls: '' },
+    { n: ci.after_budget_filter,    lbl: '予算フィルタ後', cls: '' },
+    { n: ci.after_commute_filter,   lbl: '通勤フィルタ後', cls: '' },
+    { n: ci.pareto_optimal,         lbl: 'パレート最適',   cls: 'pareto' },
+  ];
+  funnel.innerHTML = steps.map((s, i) => `
+    ${i > 0 ? '<span class="funnel-arrow">→</span>' : ''}
+    <span class="funnel-step ${s.cls}">
+      <span class="n">${s.n}件</span>
+      <span class="lbl">${s.lbl}</span>
+    </span>
+  `).join('');
+}
+
+function renderComboList(combos, paretoIds) {
+  const list = document.getElementById('combo-list');
+  if (!combos || combos.length === 0) {
+    list.innerHTML = '<div class="empty-state">候補がありません</div>';
+    return;
+  }
+
+  // パレート最適を上に、その後はp95昇順
+  const sorted = [...combos].sort((a, b) => {
+    const aP = paretoIds.includes(a.combination_id);
+    const bP = paretoIds.includes(b.combination_id);
+    if (aP !== bP) return aP ? -1 : 1;
+    return a.p95_trip_minutes - b.p95_trip_minutes;
+  });
+
+  list.innerHTML = sorted.map(c => renderComboCard(c, paretoIds)).join('');
+}
+
+function renderComboCard(c, paretoIds) {
+  const isPareto = paretoIds.includes(c.combination_id);
+  const cardClass = isPareto ? 'pareto-optimal' : 'pareto-suboptimal';
+
+  // オフィス名ラベル（selectedOfficesの名前をper_officeから取得）
+  const officeNames = (c.per_office || []).map(o => o.name);
+  const titleText   = officeNames.length > 0
+    ? officeNames.join(' + ')
+    : (c.selected_offices || []).join(' + ');
+
+  // KPI値の警告色
+  const p95Class  = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
+  const rentMillion = (c.total_rent_jpy_month / 1_000_000).toFixed(0);
+
+  // 通勤分布バー
+  const dist = c.distribution || {};
+  const total = c.total_population || 1;
+  const pcts = {
+    s0: ((dist.under_30 || 0) / total * 100).toFixed(1),
+    s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
+    s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
+    s3: ((dist.over_90 || 0) / total * 100).toFixed(1),
+  };
+
+  // 拠点別配置チップ
+  const officeChips = (c.per_office || []).map(o => {
+    const groups = (c.assignment || [])
+      .filter(a => a.assigned_office_id === o.office_id)
+      .map(a => `${a.group}(${a.population}人)`)
+      .join('、');
+    return `
+      <div class="office-chip">
+        <div class="office-name">${escHtml(o.name)}</div>
+        <div class="office-pop">${escHtml(groups) || '—'} &nbsp;|&nbsp; 余裕${o.capacity_headroom}人${o.capacity_estimated ? '（推定）' : ''}</div>
+      </div>
+    `;
+  }).join('');
+
+  // 超過人数の表示
+  const exceed60 = c.exceed_60_count > 0
+    ? `<span style="color:var(--yellow)">60分超 ${c.exceed_60_count}人</span>`
+    : `<span style="color:var(--green)">60分超 0人</span>`;
+
+  const explain = c.explain || {};
+  const explainHtml = explain.commute ? `
+    <div class="explain-block">
+      <div class="headline">${escHtml(explain.commute.headline)}</div>
+      <div class="detail">${escHtml(explain.commute.detail || '')}</div>
+    </div>
+  ` : '';
+
+  return `
+    <div class="combo-card ${cardClass}">
+      <div class="combo-card-header">
+        <div>
+          <div class="combo-title">${escHtml(titleText)}</div>
+          <span class="badge badge-k">${c.num_offices}拠点</span>
+        </div>
+        <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
+          ${isPareto ? '★ パレート最適' : 'パレート劣位'}
+        </span>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-item">
+          <span class="kpi-label">通勤 p95</span>
+          <span class="kpi-value ${p95Class}">${c.p95_trip_minutes}</span>
+          <span class="kpi-unit">分</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-label">平均通勤</span>
+          <span class="kpi-value">${(c.avg_trip_minutes || 0).toFixed(1)}</span>
+          <span class="kpi-unit">分</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-label">月額賃料</span>
+          <span class="kpi-value">${rentMillion}</span>
+          <span class="kpi-unit">万円/月</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-label">社員数</span>
+          <span class="kpi-value">${c.total_population}</span>
+          <span class="kpi-unit">人</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-label">60分超</span>
+          <div style="font-size:14px; font-weight:600; margin-top:2px">${exceed60}</div>
+        </div>
+      </div>
+
+      <div class="dist-row">
+        <div class="dist-label">通勤時間分布</div>
+        <div class="dist-bar">
+          <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
+          <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
+          <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
+          <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
+        </div>
+        <div class="dist-legend">
+          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30 || 0}人</span>
+          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60'] || 0}人</span>
+          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90'] || 0}人</span>
+          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90 || 0}人</span>
+        </div>
+      </div>
+
+      <div class="assignment-row">
+        ${officeChips}
+      </div>
+
+      ${explainHtml}
+    </div>
+  `;
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── 起動 ─────────────────────────────────────────────────────────
+init().catch(err => {
+  setStatus('error', `エラー: ${err.message}`);
+});
+</script>
+</body>
+</html>
