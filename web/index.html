@@ -428,7 +428,7 @@ function renderComboCard(c, paretoIds) {
 
   // KPI値の警告色
   const p95Class  = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
-  const rentMillion = (c.total_rent_jpy_month / 1_000_000).toFixed(0);
+  const rentMillion = (c.total_rent_jpy_month / 10_000).toFixed(0);
 
   // 通勤分布バー
   const dist = c.distribution || {};
