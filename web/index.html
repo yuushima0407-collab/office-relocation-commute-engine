@@ -39,7 +39,7 @@
     .page-header h1 { font-size: 17px; font-weight: 600; }
     .page-header .version { font-size: 12px; opacity: .7; }
 
-    .main { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+    .main { max-width: 960px; margin: 0 auto; padding: 20px 16px 120px; }
 
     /* ── Status bar ───────────────────────────────────────────── */
     #status-bar {
@@ -77,6 +77,9 @@
       color: #374151;
       background: var(--gray-lt);
       border-radius: var(--radius) var(--radius) 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .section-body { padding: 16px; }
 
@@ -113,6 +116,112 @@
     .funnel-arrow { color: var(--gray-bd); font-size: 16px; }
     .funnel-step.pareto .n { color: var(--green); }
 
+    /* ── Scatter plot ─────────────────────────────────────────── */
+    .scatter-wrap { position: relative; overflow: hidden; }
+    #scatter-svg { display: block; width: 100%; }
+    .scatter-tooltip {
+      position: absolute;
+      background: #1e293b;
+      color: #fff;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+      display: none;
+      line-height: 1.8;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    }
+    .scatter-legend {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--gray);
+      flex-wrap: wrap;
+    }
+    .scatter-legend span { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Detail panel ─────────────────────────────────────────── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-block {
+      background: var(--gray-lt);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .detail-block-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 8px;
+    }
+    .detail-office-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--gray-bd);
+      font-size: 13px;
+    }
+    .detail-office-row:last-child { border-bottom: none; }
+    .detail-office-name { font-weight: 600; }
+    .detail-office-rent { color: var(--blue); font-weight: 700; }
+    .capacity-bar-wrap { margin-top: 4px; }
+    .capacity-bar-bg {
+      height: 8px;
+      background: var(--gray-bd);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .capacity-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--blue);
+      transition: width .3s;
+    }
+    .capacity-bar-fill.tight { background: var(--yellow); }
+    .capacity-bar-fill.full  { background: var(--red); }
+    .assignment-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .assignment-table th {
+      text-align: left;
+      padding: 4px 6px;
+      font-size: 11px;
+      color: var(--gray);
+      border-bottom: 1px solid var(--gray-bd);
+    }
+    .assignment-table td { padding: 4px 6px; }
+    .assignment-table tr:nth-child(even) { background: rgba(0,0,0,.02); }
+    .vs-list { list-style: none; }
+    .vs-list li {
+      font-size: 12px;
+      color: #374151;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--gray-bd);
+      display: flex;
+      gap: 6px;
+    }
+    .vs-list li:last-child { border-bottom: none; }
+    .vs-list li::before { content: "↔"; color: var(--gray); flex-shrink: 0; }
+    .detail-close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--gray);
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .detail-close-btn:hover { color: #111; }
+
     /* ── Combo list ───────────────────────────────────────────── */
     #combo-list { display: flex; flex-direction: column; gap: 12px; }
 
@@ -121,9 +230,14 @@
       border-radius: var(--radius);
       background: #fff;
       padding: 14px 16px;
-      transition: box-shadow .15s;
+      transition: box-shadow .15s, border-color .15s;
+      cursor: pointer;
     }
     .combo-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+    .combo-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px #bfdbfe;
+    }
     .combo-card.pareto-optimal {
       border-left: 4px solid var(--blue);
     }
@@ -131,7 +245,9 @@
       border-left: 4px solid var(--gray-bd);
       background: #fafafa;
     }
-
+    .combo-card.selected.pareto-suboptimal {
+      border-color: var(--blue);
+    }
     .combo-card-header {
       display: flex;
       align-items: flex-start;
@@ -139,6 +255,8 @@
       gap: 12px;
       margin-bottom: 10px;
     }
+    .combo-card-header-left { display: flex; flex-direction: column; gap: 4px; }
+    .combo-card-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .combo-title {
       font-weight: 700;
       font-size: 15px;
@@ -158,6 +276,30 @@
     .badge-pareto { background: var(--blue-lt); color: var(--blue); }
     .badge-suboptimal { background: var(--gray-lt); color: var(--gray); }
     .badge-k { background: #f0fdf4; color: var(--green); }
+
+    /* Compare toggle button */
+    .compare-btn {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--gray-bd);
+      background: #fff;
+      cursor: pointer;
+      color: var(--gray);
+      font-weight: 600;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .compare-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .compare-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .compare-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
 
     /* ── KPI row ──────────────────────────────────────────────── */
     .kpi-row {
@@ -179,9 +321,7 @@
     .kpi-divider { width: 1px; background: var(--gray-bd); margin: 0 4px; }
 
     /* ── Distribution bar ─────────────────────────────────────── */
-    .dist-row {
-      margin-bottom: 8px;
-    }
+    .dist-row { margin-bottom: 8px; }
     .dist-label { font-size: 11px; color: var(--gray); margin-bottom: 4px; }
     .dist-bar {
       display: flex;
@@ -191,10 +331,10 @@
       background: var(--gray-bd);
     }
     .dist-seg { height: 100%; transition: width .3s; }
-    .dist-seg.s0 { background: #22c55e; } /* <30 green */
-    .dist-seg.s1 { background: #3b82f6; } /* 30-60 blue */
-    .dist-seg.s2 { background: #f59e0b; } /* 60-90 yellow */
-    .dist-seg.s3 { background: #ef4444; } /* >90 red */
+    .dist-seg.s0 { background: #22c55e; }
+    .dist-seg.s1 { background: #3b82f6; }
+    .dist-seg.s2 { background: #f59e0b; }
+    .dist-seg.s3 { background: #ef4444; }
     .dist-legend {
       display: flex;
       gap: 10px;
@@ -247,6 +387,112 @@
     .notice.warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
     .notice.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
 
+    /* ── Compare bar (fixed bottom) ───────────────────────────── */
+    #compare-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e3a5f;
+      color: #fff;
+      padding: 12px 24px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.25);
+      flex-wrap: wrap;
+    }
+    .compare-bar-label { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+    .compare-bar-items { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+    .compare-bar-chip {
+      background: rgba(255,255,255,.15);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .compare-bar-chip .remove-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.7);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+    }
+    .compare-bar-chip .remove-btn:hover { color: #fff; }
+    .compare-show-btn {
+      background: #fff;
+      color: #1e3a5f;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .compare-show-btn:hover { background: #e0f2fe; }
+    .compare-show-btn:disabled { opacity: 0.5; cursor: default; }
+    .compare-clear-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,.4);
+      color: rgba(255,255,255,.8);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .compare-clear-btn:hover { background: rgba(255,255,255,.1); }
+
+    /* ── Compare panel ────────────────────────────────────────── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-col {
+      border: 1px solid var(--gray-bd);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .compare-col-header {
+      background: var(--gray-lt);
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      border-bottom: 1px solid var(--gray-bd);
+    }
+    .compare-col-header.winner { background: var(--blue-lt); color: var(--blue); }
+    .compare-kpi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--gray-bd);
+      font-size: 13px;
+    }
+    .compare-kpi-row:last-child { border-bottom: none; }
+    .compare-kpi-label { color: var(--gray); font-size: 12px; }
+    .compare-kpi-value { font-weight: 700; font-size: 16px; }
+    .compare-kpi-value.better { color: var(--green); }
+    .compare-kpi-value.worse  { color: var(--red); }
+    .compare-kpi-value.same   { color: var(--gray); }
+    .diff-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+    .diff-badge.better { background: #dcfce7; color: var(--green); }
+    .diff-badge.worse  { background: #fee2e2; color: var(--red); }
+    .diff-badge.same   { background: var(--gray-lt); color: var(--gray); }
+
     /* ── Loading / empty ──────────────────────────────────────── */
     .loading-spinner {
       text-align: center;
@@ -287,11 +533,54 @@
   <!-- 通知 -->
   <div id="notices-container"></div>
 
+  <!-- 散布図 -->
+  <div class="section" id="section-scatter" style="display:none">
+    <div class="section-header">通勤 × 月額賃料 トレードオフ</div>
+    <div class="section-body">
+      <div class="scatter-wrap">
+        <svg id="scatter-svg" viewBox="0 0 800 340" style="height:340px"></svg>
+        <div id="scatter-tooltip" class="scatter-tooltip"></div>
+      </div>
+      <div class="scatter-legend">
+        <span>
+          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#2563eb" opacity=".85"/></svg>
+          パレート最適（クリックで詳細）
+        </span>
+        <span>
+          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#9ca3af" opacity=".7"/></svg>
+          パレート劣位（クリックで詳細）
+        </span>
+        <span>
+          <svg width="24" height="14"><line x1="0" y1="7" x2="24" y2="7" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/></svg>
+          パレートフロンティア
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 詳細パネル -->
+  <div class="section" id="section-detail" style="display:none">
+    <div class="section-header">
+      <span id="detail-title">詳細</span>
+      <button class="detail-close-btn" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="section-body" id="detail-body"></div>
+  </div>
+
+  <!-- 比較パネル -->
+  <div class="section" id="section-compare" style="display:none">
+    <div class="section-header">
+      <span>2案比較</span>
+      <button class="detail-close-btn" onclick="closeCompare()">✕</button>
+    </div>
+    <div class="section-body" id="compare-body"></div>
+  </div>
+
   <!-- 全候補一覧 -->
   <div class="section" id="section-list" style="display:none">
     <div class="section-header">
       全候補一覧
-      <span id="funnel-summary" style="font-weight:normal; margin-left:8px; font-size:12px; color:var(--gray)"></span>
+      <span id="funnel-summary" style="font-weight:normal; font-size:12px; color:var(--gray)"></span>
     </div>
     <div class="section-body">
       <div class="funnel" id="funnel-row" style="margin-bottom:16px"></div>
@@ -303,10 +592,24 @@
 
 </main>
 
+<!-- 比較バー（固定フッター） -->
+<div id="compare-bar">
+  <span class="compare-bar-label">比較中</span>
+  <div class="compare-bar-items" id="compare-bar-items"></div>
+  <button class="compare-show-btn" id="compare-show-btn" onclick="showCompare()" disabled>並べて比較</button>
+  <button class="compare-clear-btn" onclick="clearCompare()">クリア</button>
+</div>
+
 <script>
 'use strict';
 
 const API_BASE = 'http://localhost:8001';
+
+const state = {
+  data: null,
+  selectedComboId: null,
+  compareIds: [],
+};
 
 // ── メイン ──────────────────────────────────────────────────────
 async function init() {
@@ -314,13 +617,13 @@ async function init() {
   try {
     const health = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
     if (!health.ok) throw new Error('health check failed');
-    // API が生きていれば demo_response.json を API 代わりに使う（Phase 1 はデモ固定）
     data = await loadDemo();
     setStatus('api', 'APIに接続しました（デモデータを表示中）');
   } catch {
     data = await loadDemo();
     setStatus('demo', 'APIに接続できないため、デモデータを表示しています');
   }
+  state.data = data;
   render(data);
 }
 
@@ -341,26 +644,28 @@ function render(data) {
   renderSummary(data);
   renderNotices(data.notices || []);
   renderConstraintsImpact(data.constraints_impact);
+  renderScatterPlot(data.all_combinations, data.pareto_frontier_ids || []);
   renderComboList(data.all_combinations, data.pareto_frontier_ids || []);
   document.getElementById('section-summary').style.display = '';
+  document.getElementById('section-scatter').style.display = '';
   document.getElementById('section-list').style.display = '';
 }
 
 function renderSummary(data) {
-  const inputs = data.inputs || {};
-  const dist   = inputs.home_station_distribution || [];
+  const inputs  = data.inputs || {};
+  const dist    = inputs.home_station_distribution || [];
   const offices = inputs.office_candidates || [];
-  const days   = (inputs.policy_as_is || {}).office_days_per_week || '—';
+  const days    = (inputs.policy_as_is || {}).office_days_per_week || '—';
 
   const totalPop = dist.reduce((s, d) => s + (d.count || 0), 0);
   const groups   = [...new Set(dist.map(d => d.group).filter(Boolean))];
 
   const grid = document.getElementById('summary-grid');
   grid.innerHTML = [
-    { label: '社員数',         value: totalPop, unit: '人' },
-    { label: '部署数',         value: groups.length || '—', unit: groups.length ? '部署' : '' },
-    { label: 'オフィス候補',   value: offices.length, unit: '件' },
-    { label: '出社日数',       value: days, unit: '日/週' },
+    { label: '社員数',       value: totalPop,        unit: '人' },
+    { label: '部署数',       value: groups.length || '—', unit: groups.length ? '部署' : '' },
+    { label: 'オフィス候補', value: offices.length,  unit: '件' },
+    { label: '出社日数',     value: days,            unit: '日/週' },
   ].map(({ label, value, unit }) => `
     <div class="summary-item">
       <div class="label">${label}</div>
@@ -383,11 +688,11 @@ function renderConstraintsImpact(ci) {
   if (!ci) return;
   const funnel = document.getElementById('funnel-row');
   const steps = [
-    { n: ci.total_combinations,     lbl: '全組み合わせ',   cls: '' },
-    { n: ci.after_capacity_filter,  lbl: '収容フィルタ後', cls: '' },
-    { n: ci.after_budget_filter,    lbl: '予算フィルタ後', cls: '' },
-    { n: ci.after_commute_filter,   lbl: '通勤フィルタ後', cls: '' },
-    { n: ci.pareto_optimal,         lbl: 'パレート最適',   cls: 'pareto' },
+    { n: ci.total_combinations,    lbl: '全組み合わせ',   cls: '' },
+    { n: ci.after_capacity_filter, lbl: '収容フィルタ後', cls: '' },
+    { n: ci.after_budget_filter,   lbl: '予算フィルタ後', cls: '' },
+    { n: ci.after_commute_filter,  lbl: '通勤フィルタ後', cls: '' },
+    { n: ci.pareto_optimal,        lbl: 'パレート最適',   cls: 'pareto' },
   ];
   funnel.innerHTML = steps.map((s, i) => `
     ${i > 0 ? '<span class="funnel-arrow">→</span>' : ''}
@@ -398,6 +703,503 @@ function renderConstraintsImpact(ci) {
   `).join('');
 }
 
+// ── 散布図 ───────────────────────────────────────────────────────
+function renderScatterPlot(combos, paretoIds) {
+  const svg = document.getElementById('scatter-svg');
+  const VW = 800, VH = 340;
+  const margin = { top: 24, right: 24, bottom: 56, left: 76 };
+  const plotW = VW - margin.left - margin.right;
+  const plotH = VH - margin.top - margin.bottom;
+
+  const xVals = combos.map(c => c.p95_trip_minutes);
+  const yVals = combos.map(c => c.total_rent_jpy_month / 10000);
+  const xPad = (Math.max(...xVals) - Math.min(...xVals)) * 0.2 || 10;
+  const yPad = Math.max(...yVals) * 0.18;
+  const xMin = Math.max(0, Math.min(...xVals) - xPad);
+  const xMax = Math.max(...xVals) + xPad;
+  const yMin = 0;
+  const yMax = Math.max(...yVals) + yPad;
+
+  const xS = v => margin.left + (v - xMin) / (xMax - xMin) * plotW;
+  const yS = v => margin.top + plotH - (v - yMin) / (yMax - yMin) * plotH;
+
+  // nice ticks
+  function niceTicks(min, max, n) {
+    const step = niceStep((max - min) / n);
+    const start = Math.ceil(min / step) * step;
+    const ticks = [];
+    for (let v = start; v <= max + step * 0.01; v += step) ticks.push(parseFloat(v.toFixed(6)));
+    return ticks;
+  }
+  function niceStep(raw) {
+    const exp = Math.pow(10, Math.floor(Math.log10(raw)));
+    const f = raw / exp;
+    return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * exp;
+  }
+
+  const xTicks = niceTicks(xMin, xMax, 6);
+  const yTicks = niceTicks(yMin, yMax, 5);
+
+  let html = `<g>`;
+
+  // Grid lines
+  xTicks.forEach(v => {
+    const x = xS(v);
+    html += `<line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + plotH}" stroke="#e5e7eb" stroke-width="1"/>`;
+  });
+  yTicks.forEach(v => {
+    const y = yS(v);
+    html += `<line x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+  });
+
+  // Axes
+  html += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
+  html += `<line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
+
+  // X ticks + labels
+  xTicks.forEach(v => {
+    const x = xS(v);
+    html += `<line x1="${x}" y1="${margin.top + plotH}" x2="${x}" y2="${margin.top + plotH + 5}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${x}" y="${margin.top + plotH + 18}" text-anchor="middle" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
+  });
+
+  // Y ticks + labels
+  yTicks.forEach(v => {
+    const y = yS(v);
+    html += `<line x1="${margin.left - 5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${margin.left - 9}" y="${y + 4}" text-anchor="end" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
+  });
+
+  // Axis labels
+  html += `<text x="${margin.left + plotW / 2}" y="${VH - 6}" text-anchor="middle" font-size="12" fill="#374151">通勤 p95（分）</text>`;
+  html += `<text x="14" y="${margin.top + plotH / 2}" text-anchor="middle" font-size="12" fill="#374151" transform="rotate(-90,14,${margin.top + plotH / 2})">月額賃料（万円）</text>`;
+
+  // Pareto frontier step line (sort by x, connect)
+  const pFront = combos.filter(c => paretoIds.includes(c.combination_id))
+    .sort((a, b) => a.p95_trip_minutes - b.p95_trip_minutes);
+  if (pFront.length >= 2) {
+    let d = pFront.map(c => `${xS(c.p95_trip_minutes)},${yS(c.total_rent_jpy_month / 10000)}`).join(' L ');
+    html += `<polyline points="${pFront.map(c => `${xS(c.p95_trip_minutes)},${yS(c.total_rent_jpy_month / 10000)}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,4" opacity=".55"/>`;
+  }
+
+  // Points — render non-pareto first, then pareto on top
+  const renderPoint = (c, isPareto) => {
+    const cx = xS(c.p95_trip_minutes);
+    const cy = yS(c.total_rent_jpy_month / 10000);
+    const r = 9;
+    const fill = isPareto ? '#2563eb' : '#9ca3af';
+    const opacity = isPareto ? '.85' : '.65';
+    const offNames = (c.per_office || []).map(o => o.name).join('+');
+    const label = offNames.length > 9 ? offNames.substring(0, 9) + '…' : offNames;
+    html += `
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" fill-opacity="${opacity}"
+        stroke="${fill}" stroke-width="1.5" class="sp" data-id="${escHtml(c.combination_id)}" style="cursor:pointer"/>
+      <text x="${cx}" y="${cy - r - 4}" text-anchor="middle" font-size="10"
+        fill="${isPareto ? '#1d4ed8' : '#6b7280'}" pointer-events="none">${escHtml(label)}</text>
+    `;
+  };
+
+  combos.filter(c => !paretoIds.includes(c.combination_id)).forEach(c => renderPoint(c, false));
+  combos.filter(c =>  paretoIds.includes(c.combination_id)).forEach(c => renderPoint(c, true));
+
+  html += `</g>`;
+  svg.innerHTML = html;
+
+  // Highlight selected
+  highlightScatterSelected();
+
+  // Event listeners
+  const tooltip = document.getElementById('scatter-tooltip');
+  svg.querySelectorAll('.sp').forEach(el => {
+    const id = el.getAttribute('data-id');
+    const combo = combos.find(c => c.combination_id === id);
+
+    el.addEventListener('click', () => selectCombo(id));
+
+    el.addEventListener('mouseenter', e => {
+      if (!combo) return;
+      const rentM = Math.round(combo.total_rent_jpy_month / 10000);
+      tooltip.innerHTML = `
+        <strong>${escHtml((combo.per_office || []).map(o => o.name).join(' + ') || id)}</strong><br>
+        通勤 p95：${combo.p95_trip_minutes} 分<br>
+        平均通勤：${(combo.avg_trip_minutes || 0).toFixed(1)} 分<br>
+        月額賃料：${rentM} 万円<br>
+        60分超：${combo.exceed_60_count} 人
+      `;
+      tooltip.style.display = 'block';
+      moveTooltip(e);
+    });
+
+    el.addEventListener('mousemove', moveTooltip);
+
+    el.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+
+  function moveTooltip(e) {
+    const wrap = svg.parentElement;
+    const rect = wrap.getBoundingClientRect();
+    let left = e.clientX - rect.left + 12;
+    let top  = e.clientY - rect.top  - 10;
+    // keep inside
+    if (left + 200 > rect.width) left = e.clientX - rect.left - 210;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+  }
+}
+
+function highlightScatterSelected() {
+  document.querySelectorAll('#scatter-svg .sp').forEach(el => {
+    const selected = el.getAttribute('data-id') === state.selectedComboId;
+    el.setAttribute('r', selected ? '12' : '9');
+    el.setAttribute('stroke-width', selected ? '3' : '1.5');
+    el.setAttribute('stroke', selected ? '#fff' : el.getAttribute('fill'));
+    if (selected) {
+      // Add outer ring
+      el.setAttribute('stroke', '#fff');
+      el.style.filter = 'drop-shadow(0 0 4px rgba(37,99,235,.7))';
+    } else {
+      el.style.filter = '';
+    }
+  });
+}
+
+// ── 詳細パネル ───────────────────────────────────────────────────
+function selectCombo(id) {
+  state.selectedComboId = id;
+
+  const combo = (state.data.all_combinations || []).find(c => c.combination_id === id);
+  if (!combo) return;
+
+  // Update scatter highlight
+  highlightScatterSelected();
+
+  // Update card highlight
+  document.querySelectorAll('.combo-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.id === id);
+  });
+
+  // Render detail
+  renderDetailPanel(combo);
+  document.getElementById('section-detail').style.display = '';
+
+  // Scroll to detail
+  setTimeout(() => {
+    document.getElementById('section-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function closeDetail() {
+  state.selectedComboId = null;
+  document.getElementById('section-detail').style.display = 'none';
+  highlightScatterSelected();
+  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('selected'));
+}
+
+function renderDetailPanel(c) {
+  const paretoIds = state.data.pareto_frontier_ids || [];
+  const isPareto  = paretoIds.includes(c.combination_id);
+  const officeNames = (c.per_office || []).map(o => o.name).join(' + ');
+
+  document.getElementById('detail-title').textContent =
+    `詳細：${officeNames || c.combination_id} ${isPareto ? '★ パレート最適' : ''}`;
+
+  const dist  = c.distribution || {};
+  const total = c.total_population || 1;
+
+  // 通勤分布バー
+  const pcts = {
+    s0: ((dist.under_30   || 0) / total * 100).toFixed(1),
+    s1: ((dist['30_to_60']|| 0) / total * 100).toFixed(1),
+    s2: ((dist['60_to_90']|| 0) / total * 100).toFixed(1),
+    s3: ((dist.over_90    || 0) / total * 100).toFixed(1),
+  };
+
+  const distHtml = `
+    <div class="detail-block">
+      <div class="detail-block-title">通勤時間分布</div>
+      <div class="dist-bar" style="height:14px; border-radius:7px; margin-bottom:8px">
+        <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
+        <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
+        <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
+        <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
+      </div>
+      <div class="dist-legend">
+        <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
+        <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
+        <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
+        <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
+      </div>
+      <div style="margin-top:10px; font-size:13px;">
+        <span style="font-weight:700">p95：${c.p95_trip_minutes}分</span>
+        &nbsp;|&nbsp;
+        <span>平均：${(c.avg_trip_minutes||0).toFixed(1)}分</span>
+        &nbsp;|&nbsp;
+        <span ${c.exceed_60_count > 0 ? 'style="color:var(--yellow)"' : 'style="color:var(--green)"'}>60分超：${c.exceed_60_count}人</span>
+      </div>
+    </div>
+  `;
+
+  // コスト内訳
+  const totalRentMan = Math.round(c.total_rent_jpy_month / 10000);
+  const costRows = (c.per_office || []).map(o => {
+    const rentMan = Math.round(o.rent_jpy_month / 10000);
+    const pct     = (o.rent_jpy_month / c.total_rent_jpy_month * 100).toFixed(0);
+    return `
+      <div class="detail-office-row">
+        <span class="detail-office-name">${escHtml(o.name)}</span>
+        <span class="detail-office-rent">${rentMan}万円</span>
+        <span style="font-size:11px;color:var(--gray)">${pct}%</span>
+      </div>
+    `;
+  }).join('');
+
+  const costHtml = `
+    <div class="detail-block">
+      <div class="detail-block-title">コスト内訳</div>
+      ${costRows}
+      <div style="margin-top:8px; text-align:right; font-size:13px; font-weight:700; color:var(--blue)">
+        合計：${totalRentMan}万円/月
+      </div>
+    </div>
+  `;
+
+  // 部署配置
+  const assignRows = (c.assignment || []).map(a => {
+    const office = (c.per_office || []).find(o => o.office_id === a.assigned_office_id);
+    return `
+      <tr>
+        <td>${escHtml(a.group)}</td>
+        <td>${escHtml(office ? office.name : a.assigned_office_id)}</td>
+        <td style="text-align:right">${a.population}人</td>
+      </tr>
+    `;
+  }).join('');
+
+  const assignHtml = `
+    <div class="detail-block">
+      <div class="detail-block-title">部署配置</div>
+      <table class="assignment-table">
+        <thead><tr><th>部署</th><th>担当オフィス</th><th style="text-align:right">人数</th></tr></thead>
+        <tbody>${assignRows}</tbody>
+      </table>
+    </div>
+  `;
+
+  // 収容余裕
+  const capacityRows = (c.per_office || []).map(o => {
+    const used = o.assigned_population;
+    const cap  = o.capacity;
+    const pct  = cap > 0 ? Math.round(used / cap * 100) : 0;
+    const fillClass = pct >= 95 ? 'full' : pct >= 80 ? 'tight' : '';
+    return `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="font-weight:600">${escHtml(o.name)}</span>
+          <span style="color:var(--gray)">${used}人 / ${cap}人${o.capacity_estimated ? '（推定）' : ''}</span>
+        </div>
+        <div class="capacity-bar-bg">
+          <div class="capacity-bar-fill ${fillClass}" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">余裕 ${o.capacity_headroom}人（使用率${pct}%）</div>
+      </div>
+    `;
+  }).join('');
+
+  const capacityHtml = `
+    <div class="detail-block">
+      <div class="detail-block-title">収容余裕</div>
+      ${capacityRows}
+    </div>
+  `;
+
+  // 比較メモ
+  const explain    = c.explain || {};
+  const vsAlts     = explain.vs_alternatives || [];
+  const vsHtml = vsAlts.length ? `
+    <div class="detail-block" style="grid-column:1/-1">
+      <div class="detail-block-title">他案との比較</div>
+      <ul class="vs-list">${vsAlts.map(v => `<li>${escHtml(v)}</li>`).join('')}</ul>
+    </div>
+  ` : '';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-grid">
+      ${distHtml}
+      ${costHtml}
+      ${assignHtml}
+      ${capacityHtml}
+      ${vsHtml}
+    </div>
+  `;
+}
+
+// ── 比較機能 ─────────────────────────────────────────────────────
+function toggleCompare(id, btn) {
+  const idx = state.compareIds.indexOf(id);
+  if (idx >= 0) {
+    state.compareIds.splice(idx, 1);
+  } else {
+    if (state.compareIds.length >= 2) return; // 最大2件
+    state.compareIds.push(id);
+  }
+  updateCompareBar();
+  updateCompareBtns();
+}
+
+function updateCompareBtns() {
+  document.querySelectorAll('.compare-btn').forEach(btn => {
+    const id = btn.dataset.id;
+    const active = state.compareIds.includes(id);
+    btn.classList.toggle('active', active);
+    btn.textContent = active ? '比較中 ✓' : '比較に追加';
+    btn.disabled = !active && state.compareIds.length >= 2;
+  });
+}
+
+function updateCompareBar() {
+  const bar   = document.getElementById('compare-bar');
+  const items = document.getElementById('compare-bar-items');
+  const btn   = document.getElementById('compare-show-btn');
+
+  if (state.compareIds.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  btn.disabled = state.compareIds.length < 2;
+
+  const combos = state.data.all_combinations || [];
+  items.innerHTML = state.compareIds.map(id => {
+    const c = combos.find(x => x.combination_id === id);
+    const name = c ? (c.per_office || []).map(o => o.name).join('+') : id;
+    return `
+      <span class="compare-bar-chip">
+        ${escHtml(name)}
+        <button class="remove-btn" onclick="removeFromCompare('${escHtml(id)}')" title="削除">✕</button>
+      </span>
+    `;
+  }).join('');
+}
+
+function removeFromCompare(id) {
+  state.compareIds = state.compareIds.filter(x => x !== id);
+  updateCompareBar();
+  updateCompareBtns();
+}
+
+function clearCompare() {
+  state.compareIds = [];
+  updateCompareBar();
+  updateCompareBtns();
+  document.getElementById('section-compare').style.display = 'none';
+}
+
+function showCompare() {
+  if (state.compareIds.length < 2) return;
+  const combos = state.data.all_combinations || [];
+  const [c1, c2] = state.compareIds.map(id => combos.find(c => c.combination_id === id));
+  if (!c1 || !c2) return;
+  renderComparePanel(c1, c2);
+  document.getElementById('section-compare').style.display = '';
+  setTimeout(() => {
+    document.getElementById('section-compare').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function closeCompare() {
+  document.getElementById('section-compare').style.display = 'none';
+}
+
+function renderComparePanel(c1, c2) {
+  const name1 = (c1.per_office || []).map(o => o.name).join('+') || c1.combination_id;
+  const name2 = (c2.per_office || []).map(o => o.name).join('+') || c2.combination_id;
+  const paretoIds = state.data.pareto_frontier_ids || [];
+
+  // KPI rows definition: label, accessor, unit, lower-is-better
+  const kpiDefs = [
+    { label: '通勤 p95',   get: c => c.p95_trip_minutes,                fmt: v => `${v}分`,          lowerBetter: true  },
+    { label: '平均通勤',   get: c => c.avg_trip_minutes,                fmt: v => `${v.toFixed(1)}分`, lowerBetter: true  },
+    { label: '月額賃料',   get: c => c.total_rent_jpy_month / 10000,    fmt: v => `${Math.round(v)}万円`, lowerBetter: true  },
+    { label: '60分超人数', get: c => c.exceed_60_count,                 fmt: v => `${v}人`,           lowerBetter: true  },
+    { label: '社員数',     get: c => c.total_population,                fmt: v => `${v}人`,           lowerBetter: false },
+  ];
+
+  function colHtml(c, other, name) {
+    const isPareto = paretoIds.includes(c.combination_id);
+    const rows = kpiDefs.map(def => {
+      const v1 = def.get(c);
+      const v2 = def.get(other);
+      const diff = v1 - v2;
+      let cls = 'same', diffLabel = '同じ';
+      if (diff !== 0) {
+        const better = def.lowerBetter ? diff < 0 : diff > 0;
+        cls = better ? 'better' : 'worse';
+        diffLabel = (diff > 0 ? '+' : '') + (Number.isInteger(v1) && Number.isInteger(v2) ? diff : diff.toFixed(1));
+      }
+      return `
+        <div class="compare-kpi-row">
+          <span class="compare-kpi-label">${def.label}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span class="compare-kpi-value ${cls}">${def.fmt(v1)}</span>
+            ${diff !== 0 ? `<span class="diff-badge ${cls}">${diffLabel}</span>` : ''}
+          </span>
+        </div>
+      `;
+    }).join('');
+
+    const distRows = (() => {
+      const dist  = c.distribution || {};
+      const total = c.total_population || 1;
+      const pcts  = {
+        s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
+        s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
+        s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
+        s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
+      };
+      return `
+        <div style="padding:12px 14px;border-bottom:1px solid var(--gray-bd)">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px">通勤分布</div>
+          <div class="dist-bar" style="height:12px;border-radius:6px">
+            <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
+            <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
+            <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
+            <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
+          </div>
+          <div class="dist-legend" style="margin-top:4px">
+            <span><i class="dot" style="background:#22c55e"></i>${dist.under_30||0}</span>
+            <span><i class="dot" style="background:#3b82f6"></i>${dist['30_to_60']||0}</span>
+            <span><i class="dot" style="background:#f59e0b"></i>${dist['60_to_90']||0}</span>
+            <span><i class="dot" style="background:#ef4444"></i>${dist.over_90||0}</span>
+          </div>
+        </div>
+      `;
+    })();
+
+    return `
+      <div class="compare-col">
+        <div class="compare-col-header ${isPareto ? 'winner' : ''}">
+          ${isPareto ? '★ ' : ''}${escHtml(name)} （${c.num_offices}拠点）
+        </div>
+        ${rows}
+        ${distRows}
+      </div>
+    `;
+  }
+
+  document.getElementById('compare-body').innerHTML = `
+    <div class="compare-grid">
+      ${colHtml(c1, c2, name1)}
+      ${colHtml(c2, c1, name2)}
+    </div>
+    <p style="margin-top:10px;font-size:11px;color:var(--gray)">
+      ※ 緑は相手案より優れた値、赤は劣った値、差分は 左 − 右 で表示
+    </p>
+  `;
+}
+
+// ── 候補一覧 ─────────────────────────────────────────────────────
 function renderComboList(combos, paretoIds) {
   const list = document.getElementById('combo-list');
   if (!combos || combos.length === 0) {
@@ -405,7 +1207,6 @@ function renderComboList(combos, paretoIds) {
     return;
   }
 
-  // パレート最適を上に、その後はp95昇順
   const sorted = [...combos].sort((a, b) => {
     const aP = paretoIds.includes(a.combination_id);
     const bP = paretoIds.includes(b.combination_id);
@@ -414,33 +1215,36 @@ function renderComboList(combos, paretoIds) {
   });
 
   list.innerHTML = sorted.map(c => renderComboCard(c, paretoIds)).join('');
+
+  // Card click → select combo (but not when clicking compare button)
+  list.querySelectorAll('.combo-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.compare-btn')) return;
+      selectCombo(card.dataset.id);
+    });
+  });
 }
 
 function renderComboCard(c, paretoIds) {
-  const isPareto = paretoIds.includes(c.combination_id);
-  const cardClass = isPareto ? 'pareto-optimal' : 'pareto-suboptimal';
-
-  // オフィス名ラベル（selectedOfficesの名前をper_officeから取得）
+  const isPareto    = paretoIds.includes(c.combination_id);
+  const cardClass   = isPareto ? 'pareto-optimal' : 'pareto-suboptimal';
   const officeNames = (c.per_office || []).map(o => o.name);
   const titleText   = officeNames.length > 0
     ? officeNames.join(' + ')
     : (c.selected_offices || []).join(' + ');
 
-  // KPI値の警告色
-  const p95Class  = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
-  const rentMillion = (c.total_rent_jpy_month / 10_000).toFixed(0);
+  const p95Class   = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
+  const rentMillion = Math.round(c.total_rent_jpy_month / 10000);
 
-  // 通勤分布バー
-  const dist = c.distribution || {};
+  const dist  = c.distribution || {};
   const total = c.total_population || 1;
-  const pcts = {
-    s0: ((dist.under_30 || 0) / total * 100).toFixed(1),
+  const pcts  = {
+    s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
     s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
     s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
-    s3: ((dist.over_90 || 0) / total * 100).toFixed(1),
+    s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
   };
 
-  // 拠点別配置チップ
   const officeChips = (c.per_office || []).map(o => {
     const groups = (c.assignment || [])
       .filter(a => a.assigned_office_id === o.office_id)
@@ -454,12 +1258,11 @@ function renderComboCard(c, paretoIds) {
     `;
   }).join('');
 
-  // 超過人数の表示
   const exceed60 = c.exceed_60_count > 0
     ? `<span style="color:var(--yellow)">60分超 ${c.exceed_60_count}人</span>`
     : `<span style="color:var(--green)">60分超 0人</span>`;
 
-  const explain = c.explain || {};
+  const explain    = c.explain || {};
   const explainHtml = explain.commute ? `
     <div class="explain-block">
       <div class="headline">${escHtml(explain.commute.headline)}</div>
@@ -468,15 +1271,19 @@ function renderComboCard(c, paretoIds) {
   ` : '';
 
   return `
-    <div class="combo-card ${cardClass}">
+    <div class="combo-card ${cardClass}" data-id="${escHtml(c.combination_id)}" title="クリックで詳細表示">
       <div class="combo-card-header">
-        <div>
+        <div class="combo-card-header-left">
           <div class="combo-title">${escHtml(titleText)}</div>
           <span class="badge badge-k">${c.num_offices}拠点</span>
         </div>
-        <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
-          ${isPareto ? '★ パレート最適' : 'パレート劣位'}
-        </span>
+        <div class="combo-card-header-right">
+          <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
+            ${isPareto ? '★ パレート最適' : 'パレート劣位'}
+          </span>
+          <button class="compare-btn" data-id="${escHtml(c.combination_id)}"
+            onclick="toggleCompare('${escHtml(c.combination_id)}', this)">比較に追加</button>
+        </div>
       </div>
 
       <div class="kpi-row">
@@ -519,17 +1326,14 @@ function renderComboCard(c, paretoIds) {
           <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
         </div>
         <div class="dist-legend">
-          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30 || 0}人</span>
-          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60'] || 0}人</span>
-          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90'] || 0}人</span>
-          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90 || 0}人</span>
+          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
+          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
+          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
+          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
         </div>
       </div>
 
-      <div class="assignment-row">
-        ${officeChips}
-      </div>
-
+      <div class="assignment-row">${officeChips}</div>
       ${explainHtml}
     </div>
   `;
