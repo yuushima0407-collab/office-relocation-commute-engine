@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CEST v0.3 — オフィス配置シミュレーション</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     /* ── Reset & base ─────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -505,6 +507,60 @@
       padding: 40px;
       color: var(--gray);
     }
+
+    /* ── Map section ──────────────────────────────────────────── */
+    #map-container {
+      height: 420px;
+      border-radius: 0;
+    }
+    .map-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--gray);
+      flex-wrap: wrap;
+      border-top: 1px solid var(--gray-bd);
+    }
+    .map-legend span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Sensitivity section ──────────────────────────────────── */
+    .sensitivity-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .sensitivity-badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .sensitivity-badge.stable   { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .sensitivity-badge.unstable { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .sensitivity-summary {
+      font-size: 13px;
+      color: #374151;
+      padding: 10px 12px;
+      background: var(--gray-lt);
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .sensitivity-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .sensitivity-table th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--gray);
+      border-bottom: 1px solid var(--gray-bd);
+      background: var(--gray-lt);
+    }
+    .sensitivity-table td { padding: 7px 10px; border-bottom: 1px solid var(--gray-bd); }
+    .sensitivity-table tr:last-child td { border-bottom: none; }
+    .sensitivity-ok { color: var(--green); font-weight: 600; }
+    .sensitivity-ng { color: var(--red);   font-weight: 600; }
   </style>
 </head>
 <body>
@@ -567,6 +623,26 @@
     <div class="section-body" id="detail-body"></div>
   </div>
 
+  <!-- 通勤マップ -->
+  <div class="section" id="section-map" style="display:none">
+    <div class="section-header">
+      <span id="map-title">通勤マップ</span>
+      <button class="detail-close-btn" onclick="closeMap()">✕</button>
+    </div>
+    <div id="map-container"></div>
+    <div class="map-legend">
+      <span><i class="dot" style="background:#22c55e"></i>30分未満</span>
+      <span><i class="dot" style="background:#3b82f6"></i>30〜60分</span>
+      <span><i class="dot" style="background:#f59e0b"></i>60〜90分</span>
+      <span><i class="dot" style="background:#ef4444"></i>90分超</span>
+      <span style="margin-left:8px">
+        <svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="#1e3a5f"/><text x="8" y="12" text-anchor="middle" font-size="9" fill="#fff">★</text></svg>
+        オフィス
+      </span>
+      <span style="font-size:11px;margin-left:auto">円の大きさ = 社員数</span>
+    </div>
+  </div>
+
   <!-- 比較パネル -->
   <div class="section" id="section-compare" style="display:none">
     <div class="section-header">
@@ -590,6 +666,12 @@
     </div>
   </div>
 
+  <!-- 感度分析 -->
+  <div class="section" id="section-sensitivity" style="display:none">
+    <div class="section-header">感度分析</div>
+    <div class="section-body" id="sensitivity-body"></div>
+  </div>
+
 </main>
 
 <!-- 比較バー（固定フッター） -->
@@ -611,8 +693,22 @@ const state = {
   compareIds: [],
 };
 
+const stationMaster = {};
+let leafletMap = null;
+const OFFICE_COLORS = ['#1e3a5f', '#16a34a', '#9333ea', '#ea580c'];
+
+async function loadStationMaster() {
+  try {
+    const res = await fetch('station_master.json');
+    if (!res.ok) return;
+    const json = await res.json();
+    (json.stations || []).forEach(s => { stationMaster[s.station_id] = s; });
+  } catch(e) {}
+}
+
 // ── メイン ──────────────────────────────────────────────────────
 async function init() {
+  await loadStationMaster();
   let data;
   try {
     const health = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
@@ -646,6 +742,7 @@ function render(data) {
   renderConstraintsImpact(data.constraints_impact);
   renderScatterPlot(data.all_combinations, data.pareto_frontier_ids || []);
   renderComboList(data.all_combinations, data.pareto_frontier_ids || []);
+  renderSensitivity(data.sensitivity);
   document.getElementById('section-summary').style.display = '';
   document.getElementById('section-scatter').style.display = '';
   document.getElementById('section-list').style.display = '';
@@ -884,6 +981,9 @@ function selectCombo(id) {
   renderDetailPanel(combo);
   document.getElementById('section-detail').style.display = '';
 
+  // Render map
+  renderMap(combo);
+
   // Scroll to detail
   setTimeout(() => {
     document.getElementById('section-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -893,6 +993,7 @@ function selectCombo(id) {
 function closeDetail() {
   state.selectedComboId = null;
   document.getElementById('section-detail').style.display = 'none';
+  closeMap();
   highlightScatterSelected();
   document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('selected'));
 }
@@ -1346,6 +1447,131 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── 地図 ──────────────────────────────────────────────────────────
+function renderMap(combo) {
+  const section   = document.getElementById('section-map');
+  const title     = document.getElementById('map-title');
+  const officeNames = (combo.per_office || []).map(o => o.name).join(' + ');
+  title.textContent = `通勤マップ：${officeNames}`;
+  section.style.display = '';
+
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+
+  leafletMap = L.map('map-container').setView([35.68, 139.75], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 16,
+  }).addTo(leafletMap);
+
+  const inputCandidates = ((state.data.inputs || {}).office_candidates || []);
+  const bounds = [];
+
+  // オフィスマーカー
+  (combo.per_office || []).forEach((office, i) => {
+    const candidate = inputCandidates.find(o => o.office_id === office.office_id);
+    const stId = (candidate && candidate.nearest_station_id) || office.office_id;
+    const st = stationMaster[stId];
+    if (!st) return;
+
+    const color = OFFICE_COLORS[i % OFFICE_COLORS.length];
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;line-height:1">★</div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+    });
+
+    L.marker([st.lat, st.lon], { icon, zIndexOffset: 1000 })
+      .addTo(leafletMap)
+      .bindPopup(
+        `<strong>${escHtml(office.name)}</strong><br>` +
+        `配置人数：${office.assigned_population}人<br>` +
+        `収容（推定）：${office.capacity}人<br>` +
+        `余裕：${office.capacity_headroom}人`
+      );
+    bounds.push([st.lat, st.lon]);
+  });
+
+  // 居住駅サークル（通勤時間で色分け、人数で半径）
+  (combo.per_office || []).forEach(office => {
+    (office.station_breakdown || []).forEach(sb => {
+      if (!sb.reachable) return;
+      const st = stationMaster[sb.station_id];
+      if (!st) return;
+
+      const color = sb.trip_minutes < 30 ? '#22c55e'
+                  : sb.trip_minutes < 60 ? '#3b82f6'
+                  : sb.trip_minutes < 90 ? '#f59e0b'
+                  : '#ef4444';
+      const radius = Math.max(8, Math.sqrt(sb.count) * 2.8);
+
+      L.circleMarker([st.lat, st.lon], {
+        radius,
+        color: '#fff',
+        weight: 1.5,
+        fillColor: color,
+        fillOpacity: 0.8,
+      }).addTo(leafletMap)
+        .bindPopup(
+          `<strong>${escHtml(st.name)}駅</strong><br>` +
+          `通勤時間：${sb.trip_minutes}分<br>` +
+          `社員数：${sb.count}人`
+        );
+      bounds.push([st.lat, st.lon]);
+    });
+  });
+
+  if (bounds.length > 0) {
+    leafletMap.fitBounds(bounds, { padding: [40, 40] });
+  }
+}
+
+function closeMap() {
+  document.getElementById('section-map').style.display = 'none';
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+}
+
+// ── 感度分析 ──────────────────────────────────────────────────────
+function renderSensitivity(sensitivity) {
+  if (!sensitivity) return;
+  const section = document.getElementById('section-sensitivity');
+  const body    = document.getElementById('sensitivity-body');
+  const stable  = sensitivity.ranking_stable;
+  const details = sensitivity.details || [];
+
+  const detailRows = details.map(d => `
+    <tr>
+      <td>${escHtml(d.parameter)}</td>
+      <td class="${d.ranking_changed ? 'sensitivity-ng' : 'sensitivity-ok'}">
+        ${d.ranking_changed ? '⚠ 変化あり' : '✓ 安定'}
+      </td>
+      <td style="color:#374151">${escHtml(d.description)}</td>
+    </tr>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="sensitivity-header">
+      <span class="sensitivity-badge ${stable ? 'stable' : 'unstable'}">
+        ${stable ? '✓ 結果は安定しています' : '⚠ 結果が不安定です'}
+      </span>
+    </div>
+    <div class="sensitivity-summary">${escHtml(sensitivity.summary || '')}</div>
+    ${details.length > 0 ? `
+      <table class="sensitivity-table">
+        <thead>
+          <tr>
+            <th>変動パラメータ</th>
+            <th>順位変化</th>
+            <th>説明</th>
+          </tr>
+        </thead>
+        <tbody>${detailRows}</tbody>
+      </table>
+    ` : ''}
+  `;
+  section.style.display = '';
 }
 
 // ── 起動 ─────────────────────────────────────────────────────────
