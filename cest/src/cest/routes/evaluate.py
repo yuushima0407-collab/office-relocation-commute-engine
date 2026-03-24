@@ -22,4 +22,4 @@ def post_evaluate(body: EvaluateRequest):
         raise
     except Exception as e:
         logger.exception("Unexpected error in /evaluate")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")

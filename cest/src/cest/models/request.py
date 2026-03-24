@@ -11,6 +11,8 @@ class HomeStation(BaseModel):
     segment: Optional[str] = None
     group: Optional[str] = None
     office_days_per_week_override: Optional[float] = Field(None, ge=0, le=5)
+    # CSVに通勤費の実費が含まれる場合に入力。指定時は推定より優先
+    commute_allowance_jpy_month: Optional[int] = Field(None, ge=0)
 
 
 class OfficeCandidate(BaseModel):
@@ -68,6 +70,12 @@ class Settings(BaseModel):
     thresholds_trip_minutes: List[float] = Field(default=[60, 90])
     percentiles: List[int] = Field(default=[50, 95])
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
+    # 通勤費負担ポリシー
+    # "full": 全額会社負担（デフォルト）
+    # "capped": 上限あり（commute_cost_cap_jpy_month を参照）
+    # "ignore": 通勤費を考慮しない
+    commute_cost_policy: Literal["full", "capped", "ignore"] = "full"
+    commute_cost_cap_jpy_month: Optional[int] = Field(None, ge=0)
     # 後方互換フィールド（v0.1.x/v0.2）
     baseline_office_id: Optional[str] = None
     ranking_weights: Optional[Dict[str, float]] = None

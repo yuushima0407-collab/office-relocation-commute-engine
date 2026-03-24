@@ -6,12 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from cest.routes.evaluate import router as evaluate_router
 from cest.routes.parse_csv import router as parse_csv_router
 
-app = FastAPI(title="CEST API", version="v0.2.0")
+app = FastAPI(title="CEST API", version="v0.3.1")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

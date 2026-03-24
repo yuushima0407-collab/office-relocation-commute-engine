@@ -108,7 +108,6 @@ def _build_empty_report(collector: NoticeCollector) -> Dict[str, Any]:
             "vs_previous_round": None,
         },
         "sensitivity": {
-            "ranking_stable": True,
             "summary": "",
             "details": [],
         },
