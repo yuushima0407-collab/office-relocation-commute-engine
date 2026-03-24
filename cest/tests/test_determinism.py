@@ -50,11 +50,14 @@ def test_output_conforms_to_v03_schema():
     ):
         assert key in ci, f"constraints_impact に '{key}' がない"
 
-    # sensitivity の構造
+    # sensitivity の構造（v0.3.1形式: ranking_stable は廃止、impacts テーブルに移行）
     sens = result["sensitivity"]
-    for key in ("ranking_stable", "summary", "details"):
+    for key in ("summary", "details"):
         assert key in sens, f"sensitivity に '{key}' がない"
-    assert isinstance(sens["ranking_stable"], bool)
+    assert isinstance(sens["details"], list)
+    for detail in sens["details"]:
+        for key in ("parameter", "description", "impacts"):
+            assert key in detail, f"sensitivity.detail に '{key}' がない"
 
     # all_combinations の各コンボ構造
     for combo in result["all_combinations"]:
