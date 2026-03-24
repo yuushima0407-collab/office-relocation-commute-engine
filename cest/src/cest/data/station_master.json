@@ -54,6 +54,17 @@
     {"station_id": "otsuka", "name": "大塚", "lat": 35.7319, "lon": 139.7286},
     {"station_id": "sugamo", "name": "巣鴨", "lat": 35.7334, "lon": 139.7394},
     {"station_id": "komagome", "name": "駒込", "lat": 35.7363, "lon": 139.7483},
-    {"station_id": "shin_okubo", "name": "新大久保", "lat": 35.7010, "lon": 139.7003}
+    {"station_id": "shin_okubo", "name": "新大久保", "lat": 35.7010, "lon": 139.7003},
+
+    {"station_id": "omotesando", "name": "表参道", "lat": 35.6650, "lon": 139.7120},
+    {"station_id": "ginza", "name": "銀座", "lat": 35.6717, "lon": 139.7641},
+    {"station_id": "otemachi", "name": "大手町", "lat": 35.6853, "lon": 139.7630},
+    {"station_id": "akasaka", "name": "赤坂", "lat": 35.6731, "lon": 139.7370},
+    {"station_id": "shinkiba", "name": "新木場", "lat": 35.6470, "lon": 139.8260},
+    {"station_id": "nakameguro", "name": "中目黒", "lat": 35.6440, "lon": 139.6990},
+    {"station_id": "jiyugaoka", "name": "自由が丘", "lat": 35.6070, "lon": 139.6690},
+    {"station_id": "ogikubo", "name": "荻窪", "lat": 35.7040, "lon": 139.6200},
+    {"station_id": "omori", "name": "大森", "lat": 35.5880, "lon": 139.7280},
+    {"station_id": "ayase", "name": "綾瀬", "lat": 35.7630, "lon": 139.8260}
   ]
 }

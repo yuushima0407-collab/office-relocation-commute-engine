@@ -55,7 +55,18 @@
     {"station_id": "otsuka", "name": "大塚"},
     {"station_id": "sugamo", "name": "巣鴨"},
     {"station_id": "komagome", "name": "駒込"},
-    {"station_id": "shin_okubo", "name": "新大久保"}
+    {"station_id": "shin_okubo", "name": "新大久保"},
+
+    {"station_id": "omotesando", "name": "表参道"},
+    {"station_id": "ginza", "name": "銀座"},
+    {"station_id": "otemachi", "name": "大手町"},
+    {"station_id": "akasaka", "name": "赤坂"},
+    {"station_id": "shinkiba", "name": "新木場"},
+    {"station_id": "nakameguro", "name": "中目黒"},
+    {"station_id": "jiyugaoka", "name": "自由が丘"},
+    {"station_id": "ogikubo", "name": "荻窪"},
+    {"station_id": "omori", "name": "大森"},
+    {"station_id": "ayase", "name": "綾瀬"}
   ],
   "edges": [
     {"from": "tokyo", "to": "yurakucho", "minutes": 2, "line": "JR山手線"},
@@ -138,6 +149,24 @@
 
     {"from": "ikebukuro", "to": "akabane", "minutes": 10, "line": "JR埼京線"},
 
-    {"from": "takadanobaba", "to": "ikebukuro", "minutes": 4, "line": "JR山手線/西武新宿線"}
+    {"from": "takadanobaba", "to": "ikebukuro", "minutes": 4, "line": "JR山手線/西武新宿線"},
+
+    {"from": "omotesando", "to": "shibuya", "minutes": 2, "line": "東京メトロ半蔵門線"},
+    {"from": "omotesando", "to": "roppongi", "minutes": 5, "line": "東京メトロ日比谷線"},
+    {"from": "ginza", "to": "shimbashi", "minutes": 2, "line": "東京メトロ銀座線"},
+    {"from": "ginza", "to": "yurakucho", "minutes": 2, "line": "東京メトロ有楽町線"},
+    {"from": "otemachi", "to": "tokyo", "minutes": 1, "line": "東京メトロ丸ノ内線"},
+    {"from": "otemachi", "to": "iidabashi", "minutes": 6, "line": "東京メトロ東西線"},
+    {"from": "akasaka", "to": "roppongi", "minutes": 3, "line": "東京メトロ日比谷線"},
+    {"from": "akasaka", "to": "yotsuya", "minutes": 5, "line": "東京メトロ丸ノ内線"},
+    {"from": "shinkiba", "to": "toyosu", "minutes": 3, "line": "東京メトロ有楽町線"},
+    {"from": "nakameguro", "to": "ebisu", "minutes": 2, "line": "東京メトロ日比谷線"},
+    {"from": "nakameguro", "to": "jiyugaoka", "minutes": 5, "line": "東急東横線"},
+    {"from": "jiyugaoka", "to": "musashikosugi", "minutes": 10, "line": "東急東横線"},
+    {"from": "ogikubo", "to": "nakano", "minutes": 5, "line": "JR中央線各停"},
+    {"from": "ogikubo", "to": "kichijoji", "minutes": 5, "line": "JR中央線各停"},
+    {"from": "omori", "to": "shinagawa", "minutes": 5, "line": "JR京浜東北線"},
+    {"from": "omori", "to": "kamata", "minutes": 4, "line": "JR京浜東北線"},
+    {"from": "ayase", "to": "kitasenju", "minutes": 3, "line": "東京メトロ千代田線"}
   ]
 }
