@@ -608,15 +608,15 @@
     <span id="status-text">接続確認中…</span>
   </div>
 
-  <!-- ── トップタブ: メイン / 感度分析 / データ入力 ─── -->
-  <nav class="top-tab-nav" id="top-tab-nav" style="display:none">
-    <button class="top-tab-btn active" data-tab="main"        onclick="switchTopTab('main')">メイン</button>
+  <!-- ── トップタブ: データ入力 / 結果 / 感度分析 ─── -->
+  <nav class="top-tab-nav" id="top-tab-nav">
+    <button class="top-tab-btn active" data-tab="upload"      onclick="switchTopTab('upload')">データ入力</button>
+    <button class="top-tab-btn"        data-tab="main"        onclick="switchTopTab('main')">結果</button>
     <button class="top-tab-btn"        data-tab="sensitivity" onclick="switchTopTab('sensitivity')">感度分析</button>
-    <button class="top-tab-btn"        data-tab="upload"      onclick="switchTopTab('upload')">データ入力</button>
   </nav>
 
-  <!-- ══════════════ タブ: メイン ══════════════ -->
-  <div class="top-tab-panel active" id="panel-main">
+  <!-- ══════════════ タブ: 結果 ══════════════ -->
+  <div class="top-tab-panel" id="panel-main">
 
     <!-- 概要エリア（入力確認 + 散布図） -->
     <div id="section-summary" class="section" style="display:none">
@@ -664,7 +664,13 @@
         <!-- ファネル -->
         <div class="funnel" id="funnel-row"></div>
 
-        <!-- 候補タブストリップ -->
+        <!-- 候補フィルタバー + タブストリップ -->
+        <div id="combo-filter-bar" style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 6px">
+          <span id="combo-filter-label" style="font-size:12px;color:var(--gray)"></span>
+          <button id="toggle-all-combos" onclick="toggleAllCombos()"
+            style="font-size:11px;padding:3px 10px;border:1px solid var(--gray-bd);border-radius:4px;background:#fff;cursor:pointer;color:#374151;white-space:nowrap">
+          </button>
+        </div>
         <div class="combo-tab-strip" id="combo-tab-strip"></div>
 
         <!-- 選択候補の詳細 + 地図（2カラム） -->
@@ -695,7 +701,7 @@
   </div>
 
   <!-- ══════════════ タブ: データ入力 ══════════════ -->
-  <div class="top-tab-panel" id="panel-upload">
+  <div class="top-tab-panel active" id="panel-upload">
     <div class="section">
       <div class="section-header">CSVデータアップロード</div>
       <div class="section-body">
@@ -738,6 +744,9 @@ const state = {
   data: null,
   selectedComboId: null,
   compareIds: [],
+  sortedCombos: [],
+  paretoIds: [],
+  showAllCombos: false,
 };
 
 const stationMaster = {};
@@ -800,7 +809,7 @@ function render(data) {
   renderComboTabs(data.all_combinations, data.pareto_frontier_ids || []);
   renderSensitivity(data.sensitivity);
 
-  document.getElementById('top-tab-nav').style.display = '';
+  switchTopTab('main');
   document.getElementById('section-summary').style.display = '';
   document.getElementById('section-scatter').style.display = '';
   document.getElementById('section-candidates').style.display = '';
@@ -995,8 +1004,39 @@ function renderComboTabs(combos, paretoIds) {
     return a.p95_trip_minutes - b.p95_trip_minutes;
   });
 
+  state.sortedCombos = sorted;
+  state.paretoIds    = paretoIds;
+  state.showAllCombos = false;
+
+  renderTabStrip();
+}
+
+function renderTabStrip() {
+  const { sortedCombos: sorted, paretoIds, showAllCombos } = state;
+  const paretoOnly  = sorted.filter(c => paretoIds.includes(c.combination_id));
+  const visible     = showAllCombos ? sorted : (paretoOnly.length ? paretoOnly : sorted);
+  const allCount    = sorted.length;
+  const paretoCount = paretoOnly.length;
+
+  // フィルタバーを更新
+  const label = document.getElementById('combo-filter-label');
+  const btn   = document.getElementById('toggle-all-combos');
+  if (showAllCombos) {
+    label.textContent = `全${allCount}案を表示中`;
+    btn.textContent   = `★ パレートのみ表示`;
+    btn.style.borderColor = 'var(--blue)';
+    btn.style.color       = 'var(--blue)';
+  } else {
+    label.textContent = `★ パレート最適 ${paretoCount}案 / 全${allCount}案`;
+    btn.textContent   = `全${allCount}案を表示`;
+    btn.style.borderColor = 'var(--gray-bd)';
+    btn.style.color       = '#374151';
+  }
+  // パレートしかない場合はボタン不要
+  btn.style.display = (allCount === paretoCount) ? 'none' : '';
+
   const strip = document.getElementById('combo-tab-strip');
-  strip.innerHTML = sorted.map(c => {
+  strip.innerHTML = visible.map(c => {
     const isPareto  = paretoIds.includes(c.combination_id);
     const names     = (c.per_office || []).map(o => o.name).join('+')
                       || (c.selected_offices || []).join('+');
@@ -1018,6 +1058,22 @@ function renderComboTabs(combos, paretoIds) {
       </button>
     `;
   }).join('');
+
+  // アクティブ状態を再適用
+  document.querySelectorAll('.combo-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.id === state.selectedComboId));
+}
+
+function toggleAllCombos() {
+  state.showAllCombos = !state.showAllCombos;
+  renderTabStrip();
+
+  // パレートのみ表示に戻したとき、選択中が非表示になる場合は先頭へ
+  if (!state.showAllCombos) {
+    const paretoOnly = state.sortedCombos.filter(c => state.paretoIds.includes(c.combination_id));
+    const stillVisible = paretoOnly.find(c => c.combination_id === state.selectedComboId);
+    if (!stillVisible && paretoOnly.length) selectCombo(paretoOnly[0].combination_id);
+  }
 }
 
 // ─── 候補選択 ────────────────────────────────────────────────────
