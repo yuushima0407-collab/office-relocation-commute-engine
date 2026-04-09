@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CEST v0.3 — オフィス配置シミュレーション</title>
+  <title>CEST v0.3.1 — オフィス配置シミュレーション</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    /* ── Reset & base ─────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --blue:    #2563eb;
@@ -29,50 +28,77 @@
       line-height: 1.6;
     }
 
-    /* ── Layout ───────────────────────────────────────────────── */
+    /* ── Header ─────────────────────────────────────────────── */
     .page-header {
       background: #1e3a5f;
       color: #fff;
-      padding: 14px 24px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .page-header h1 { font-size: 17px; font-weight: 600; }
-    .page-header .version { font-size: 12px; opacity: .7; }
+    .page-header h1 { font-size: 16px; font-weight: 600; }
+    .page-header .version { font-size: 11px; opacity: .65; }
 
-    .main { max-width: 960px; margin: 0 auto; padding: 20px 16px 120px; }
+    /* ── Layout ──────────────────────────────────────────────── */
+    .main { max-width: 1100px; margin: 0 auto; padding: 14px 16px 100px; }
 
-    /* ── Status bar ───────────────────────────────────────────── */
+    /* ── Status bar ──────────────────────────────────────────── */
     #status-bar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 14px;
+      padding: 7px 12px;
       border-radius: var(--radius);
-      font-size: 13px;
-      margin-bottom: 16px;
+      font-size: 12px;
+      margin-bottom: 10px;
     }
     #status-bar.api    { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     #status-bar.demo   { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
     #status-bar.error  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
     #status-bar.loading{ background: #f3f4f6; color: var(--gray); border: 1px solid var(--gray-bd); }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .api    .status-dot { background: #16a34a; }
     .demo   .status-dot { background: #ca8a04; }
     .error  .status-dot { background: #dc2626; }
     .loading .status-dot { background: var(--gray); }
 
-    /* ── Section card ─────────────────────────────────────────── */
+    /* ── Top-level tabs ──────────────────────────────────────── */
+    .top-tab-nav {
+      display: flex;
+      gap: 2px;
+      border-bottom: 2px solid var(--gray-bd);
+      margin-bottom: 14px;
+    }
+    .top-tab-btn {
+      padding: 8px 20px;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      border-radius: 6px 6px 0 0;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+    .top-tab-btn:hover { color: #374151; background: #f3f4f6; }
+    .top-tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: #fff; }
+    .top-tab-panel { display: none; }
+    .top-tab-panel.active { display: block; }
+
+    /* ── Section card ────────────────────────────────────────── */
     .section {
       background: #fff;
       border: 1px solid var(--gray-bd);
       border-radius: var(--radius);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       box-shadow: var(--shadow);
     }
     .section-header {
-      padding: 12px 16px;
+      padding: 10px 16px;
       border-bottom: 1px solid var(--gray-bd);
       font-weight: 600;
       font-size: 13px;
@@ -83,301 +109,24 @@
       align-items: center;
       justify-content: space-between;
     }
-    .section-body { padding: 16px; }
+    .section-body { padding: 14px 16px; }
 
-    /* ── Input summary ────────────────────────────────────────── */
+    /* ── Summary grid ────────────────────────────────────────── */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
     }
     .summary-item {
       background: var(--gray-lt);
       border-radius: 6px;
-      padding: 10px 14px;
+      padding: 9px 12px;
     }
-    .summary-item .label { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
-    .summary-item .value { font-size: 20px; font-weight: 700; color: #111; }
-    .summary-item .unit  { font-size: 12px; color: var(--gray); }
+    .summary-item .lbl { font-size: 11px; color: var(--gray); margin-bottom: 1px; }
+    .summary-item .val { font-size: 20px; font-weight: 700; }
+    .summary-item .unt { font-size: 11px; color: var(--gray); }
 
-    /* ── Constraints impact ───────────────────────────────────── */
-    .funnel {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 13px;
-    }
-    .funnel-step {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .funnel-step .n { font-weight: 700; color: var(--blue); }
-    .funnel-step .lbl { color: var(--gray); }
-    .funnel-arrow { color: var(--gray-bd); font-size: 16px; }
-    .funnel-step.pareto .n { color: var(--green); }
-
-    /* ── Scatter plot ─────────────────────────────────────────── */
-    .scatter-wrap { position: relative; overflow: hidden; }
-    #scatter-svg { display: block; width: 100%; }
-    .scatter-tooltip {
-      position: absolute;
-      background: #1e293b;
-      color: #fff;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 12px;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 10;
-      display: none;
-      line-height: 1.8;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-    }
-    .scatter-legend {
-      display: flex;
-      gap: 20px;
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--gray);
-      flex-wrap: wrap;
-    }
-    .scatter-legend span { display: flex; align-items: center; gap: 6px; }
-
-    /* ── Detail panel ─────────────────────────────────────────── */
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
-    .detail-block {
-      background: var(--gray-lt);
-      border-radius: 6px;
-      padding: 12px 14px;
-    }
-    .detail-block-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--gray);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      margin-bottom: 8px;
-    }
-    .detail-office-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px solid var(--gray-bd);
-      font-size: 13px;
-    }
-    .detail-office-row:last-child { border-bottom: none; }
-    .detail-office-name { font-weight: 600; }
-    .detail-office-rent { color: var(--blue); font-weight: 700; }
-    .capacity-bar-wrap { margin-top: 4px; }
-    .capacity-bar-bg {
-      height: 8px;
-      background: var(--gray-bd);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .capacity-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--blue);
-      transition: width .3s;
-    }
-    .capacity-bar-fill.tight { background: var(--yellow); }
-    .capacity-bar-fill.full  { background: var(--red); }
-    .assignment-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .assignment-table th {
-      text-align: left;
-      padding: 4px 6px;
-      font-size: 11px;
-      color: var(--gray);
-      border-bottom: 1px solid var(--gray-bd);
-    }
-    .assignment-table td { padding: 4px 6px; }
-    .assignment-table tr:nth-child(even) { background: rgba(0,0,0,.02); }
-    .vs-list { list-style: none; }
-    .vs-list li {
-      font-size: 12px;
-      color: #374151;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--gray-bd);
-      display: flex;
-      gap: 6px;
-    }
-    .vs-list li:last-child { border-bottom: none; }
-    .vs-list li::before { content: "↔"; color: var(--gray); flex-shrink: 0; }
-    .detail-close-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      color: var(--gray);
-      line-height: 1;
-      padding: 0 4px;
-    }
-    .detail-close-btn:hover { color: #111; }
-
-    /* ── Combo list ───────────────────────────────────────────── */
-    #combo-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .combo-card {
-      border: 1px solid var(--gray-bd);
-      border-radius: var(--radius);
-      background: #fff;
-      padding: 14px 16px;
-      transition: box-shadow .15s, border-color .15s;
-      cursor: pointer;
-    }
-    .combo-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.12); }
-    .combo-card.selected {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 2px #bfdbfe;
-    }
-    .combo-card.pareto-optimal {
-      border-left: 4px solid var(--blue);
-    }
-    .combo-card.pareto-suboptimal {
-      border-left: 4px solid var(--gray-bd);
-      background: #fafafa;
-    }
-    .combo-card.selected.pareto-suboptimal {
-      border-color: var(--blue);
-    }
-    .combo-card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    .combo-card-header-left { display: flex; flex-direction: column; gap: 4px; }
-    .combo-card-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .combo-title {
-      font-weight: 700;
-      font-size: 15px;
-    }
-    .combo-card.pareto-suboptimal .combo-title { color: var(--gray); }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .badge-pareto { background: var(--blue-lt); color: var(--blue); }
-    .badge-suboptimal { background: var(--gray-lt); color: var(--gray); }
-    .badge-k { background: #f0fdf4; color: var(--green); }
-
-    /* Compare toggle button */
-    .compare-btn {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--gray-bd);
-      background: #fff;
-      cursor: pointer;
-      color: var(--gray);
-      font-weight: 600;
-      transition: background .15s, color .15s, border-color .15s;
-      white-space: nowrap;
-    }
-    .compare-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .compare-btn.active {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-    }
-    .compare-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    /* ── KPI row ──────────────────────────────────────────────── */
-    .kpi-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-    .kpi-item {
-      display: flex;
-      flex-direction: column;
-      min-width: 100px;
-    }
-    .kpi-item .kpi-label { font-size: 11px; color: var(--gray); }
-    .kpi-item .kpi-value { font-size: 18px; font-weight: 700; }
-    .kpi-item .kpi-unit  { font-size: 11px; color: var(--gray); }
-    .kpi-item .kpi-value.warn { color: var(--yellow); }
-    .kpi-item .kpi-value.danger { color: var(--red); }
-    .kpi-divider { width: 1px; background: var(--gray-bd); margin: 0 4px; }
-
-    /* ── Distribution bar ─────────────────────────────────────── */
-    .dist-row { margin-bottom: 8px; }
-    .dist-label { font-size: 11px; color: var(--gray); margin-bottom: 4px; }
-    .dist-bar {
-      display: flex;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      background: var(--gray-bd);
-    }
-    .dist-seg { height: 100%; transition: width .3s; }
-    .dist-seg.s0 { background: #22c55e; }
-    .dist-seg.s1 { background: #3b82f6; }
-    .dist-seg.s2 { background: #f59e0b; }
-    .dist-seg.s3 { background: #ef4444; }
-    .dist-legend {
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
-      font-size: 11px;
-      color: var(--gray);
-      flex-wrap: wrap;
-    }
-    .dist-legend span { display: flex; align-items: center; gap: 3px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-
-    /* ── Assignment ───────────────────────────────────────────── */
-    .assignment-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .office-chip {
-      background: var(--gray-lt);
-      border: 1px solid var(--gray-bd);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-    .office-chip .office-name { font-weight: 600; margin-bottom: 2px; }
-    .office-chip .office-pop  { color: var(--gray); }
-
-    /* ── Explain block ────────────────────────────────────────── */
-    .explain-block {
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: var(--gray-lt);
-      border-radius: 6px;
-      font-size: 12px;
-      color: #374151;
-    }
-    .explain-block .headline { font-weight: 600; margin-bottom: 2px; }
-    .explain-block .detail   { color: var(--gray); }
-
-    /* ── Notices ──────────────────────────────────────────────── */
+    /* ── Notices ─────────────────────────────────────────────── */
     .notice {
       display: flex;
       gap: 8px;
@@ -389,287 +138,591 @@
     .notice.warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
     .notice.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
 
-    /* ── Compare bar (fixed bottom) ───────────────────────────── */
-    #compare-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1e3a5f;
+    /* ── Scatter ─────────────────────────────────────────────── */
+    .scatter-wrap { position: relative; overflow: hidden; }
+    #scatter-svg { display: block; width: 100%; }
+    .scatter-tooltip {
+      position: absolute;
+      background: #1e293b;
       color: #fff;
-      padding: 12px 24px;
+      border-radius: 6px;
+      padding: 7px 11px;
+      font-size: 12px;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
       display: none;
-      align-items: center;
+      line-height: 1.8;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    }
+    .scatter-legend {
+      display: flex;
       gap: 16px;
-      z-index: 100;
-      box-shadow: 0 -4px 16px rgba(0,0,0,.25);
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--gray);
       flex-wrap: wrap;
     }
-    .compare-bar-label { font-size: 13px; font-weight: 600; flex-shrink: 0; }
-    .compare-bar-items { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
-    .compare-bar-chip {
-      background: rgba(255,255,255,.15);
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: 12px;
+    .scatter-legend span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Funnel ──────────────────────────────────────────────── */
+    .funnel {
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-    .compare-bar-chip .remove-btn {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,.7);
-      cursor: pointer;
-      font-size: 14px;
-      line-height: 1;
-      padding: 0;
-    }
-    .compare-bar-chip .remove-btn:hover { color: #fff; }
-    .compare-show-btn {
-      background: #fff;
-      color: #1e3a5f;
-      border: none;
-      border-radius: 20px;
-      padding: 6px 18px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .compare-show-btn:hover { background: #e0f2fe; }
-    .compare-show-btn:disabled { opacity: 0.5; cursor: default; }
-    .compare-clear-btn {
-      background: none;
-      border: 1px solid rgba(255,255,255,.4);
-      color: rgba(255,255,255,.8);
-      border-radius: 20px;
-      padding: 5px 14px;
+      flex-wrap: wrap;
       font-size: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
+      margin-bottom: 12px;
     }
-    .compare-clear-btn:hover { background: rgba(255,255,255,.1); }
+    .funnel-step { display: flex; align-items: center; gap: 3px; }
+    .funnel-step .n { font-weight: 700; color: var(--blue); }
+    .funnel-step .lbl { color: var(--gray); }
+    .funnel-arrow { color: var(--gray-bd); }
+    .funnel-step.pareto .n { color: var(--green); }
 
-    /* ── Compare panel ────────────────────────────────────────── */
-    .compare-grid {
+    /* ── Combo candidate tabs ────────────────────────────────── */
+    .combo-tab-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      scrollbar-width: thin;
+    }
+    .combo-tab-strip::-webkit-scrollbar { height: 4px; }
+    .combo-tab-strip::-webkit-scrollbar-track { background: var(--gray-lt); }
+    .combo-tab-strip::-webkit-scrollbar-thumb { background: var(--gray-bd); border-radius: 2px; }
+
+    .combo-tab-btn {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border: 1.5px solid var(--gray-bd);
+      border-radius: var(--radius);
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      min-width: 110px;
+      max-width: 180px;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      position: relative;
+    }
+    .combo-tab-btn:hover { border-color: var(--blue); box-shadow: 0 2px 6px rgba(37,99,235,.15); }
+    .combo-tab-btn.active {
+      border-color: var(--blue);
+      background: var(--blue-lt);
+      box-shadow: 0 2px 6px rgba(37,99,235,.2);
+    }
+    .combo-tab-btn.pareto-tab { border-left: 3px solid var(--blue); }
+    .combo-tab-btn.pareto-tab.active { border-left-color: var(--blue); }
+    .combo-tab-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .combo-tab-btn.active .combo-tab-name { color: var(--blue); }
+    .combo-tab-meta {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 3px;
+      flex-wrap: wrap;
+    }
+    .combo-tab-p95 { font-size: 11px; color: var(--gray); }
+    .combo-tab-btn.active .combo-tab-p95 { color: #3b82f6; }
+    .badge-mini {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .badge-mini.pareto    { background: var(--blue-lt); color: var(--blue); }
+    .badge-mini.subopt    { background: var(--gray-lt); color: var(--gray); }
+    .badge-mini.est       { background: #fef3c7; color: #92400e; }
+
+    /* ── Combo content grid (detail + map) ───────────────────── */
+    .combo-content-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
+      align-items: start;
     }
-    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
-    .compare-col {
+    @media (max-width: 740px) { .combo-content-grid { grid-template-columns: 1fr; } }
+
+    /* ── Combo detail pane ───────────────────────────────────── */
+    .combo-detail-pane { }
+    .combo-detail-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-pareto   { background: var(--blue-lt); color: var(--blue); }
+    .badge-suboptimal { background: var(--gray-lt); color: var(--gray); }
+    .badge-k        { background: #f0fdf4; color: var(--green); }
+    .badge-est-full { background: #fef3c7; color: #92400e; font-size: 11px; }
+
+    /* ── KPI row ─────────────────────────────────────────────── */
+    .kpi-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: var(--gray-lt);
+      border-radius: 6px;
+    }
+    .kpi-item { display: flex; flex-direction: column; min-width: 80px; }
+    .kpi-label { font-size: 10px; color: var(--gray); }
+    .kpi-value { font-size: 17px; font-weight: 700; }
+    .kpi-unit  { font-size: 10px; color: var(--gray); }
+    .kpi-value.warn   { color: var(--yellow); }
+    .kpi-value.danger { color: var(--red); }
+    .kpi-divider { width: 1px; background: var(--gray-bd); margin: 0 2px; align-self: stretch; }
+
+    /* ── Distribution bar ────────────────────────────────────── */
+    .dist-wrap { margin-bottom: 12px; }
+    .dist-label { font-size: 11px; color: var(--gray); margin-bottom: 4px; }
+    .dist-bar {
+      display: flex;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      background: var(--gray-bd);
+    }
+    .dist-seg { height: 100%; }
+    .dist-seg.s0 { background: #22c55e; }
+    .dist-seg.s1 { background: #3b82f6; }
+    .dist-seg.s2 { background: #f59e0b; }
+    .dist-seg.s3 { background: #ef4444; }
+    .dist-legend {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--gray);
+      flex-wrap: wrap;
+    }
+    .dist-legend span { display: flex; align-items: center; gap: 3px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+    /* ── Office chips ────────────────────────────────────────── */
+    .office-chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .office-chip {
+      background: var(--gray-lt);
+      border: 1px solid var(--gray-bd);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .office-chip-name { font-weight: 600; margin-bottom: 2px; }
+    .office-chip-sub  { color: var(--gray); font-size: 11px; }
+
+    /* ── Cost summary ────────────────────────────────────────── */
+    .cost-summary {
+      padding: 10px 12px;
+      background: var(--gray-lt);
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+    }
+    .cost-row.total {
+      border-top: 1px solid var(--gray-bd);
+      margin-top: 4px;
+      padding-top: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--blue);
+    }
+    .cost-label { color: var(--gray); }
+
+    /* ── Capacity bars ───────────────────────────────────────── */
+    .capacity-section { margin-bottom: 10px; }
+    .cap-office { margin-bottom: 8px; }
+    .cap-office-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+    .cap-office-name { font-weight: 600; }
+    .cap-office-nums { color: var(--gray); font-size: 11px; }
+    .cap-bar-bg {
+      height: 7px;
+      background: var(--gray-bd);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .cap-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--blue);
+    }
+    .cap-bar-fill.tight { background: var(--yellow); }
+    .cap-bar-fill.full  { background: var(--red); }
+    .cap-note { font-size: 10px; color: var(--gray); margin-top: 1px; }
+
+    /* ── Explain block ───────────────────────────────────────── */
+    .explain-block {
+      padding: 8px 10px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .explain-block .hl  { font-weight: 600; color: #0369a1; }
+    .explain-block .det { color: #374151; margin-top: 2px; }
+
+    /* ── Compare button ──────────────────────────────────────── */
+    .compare-toggle-btn {
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 14px;
+      border: 1.5px solid var(--gray-bd);
+      background: #fff;
+      cursor: pointer;
+      color: var(--gray);
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .compare-toggle-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .compare-toggle-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .compare-toggle-btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── Map pane ────────────────────────────────────────────── */
+    .combo-map-pane {
       border: 1px solid var(--gray-bd);
       border-radius: var(--radius);
       overflow: hidden;
     }
-    .compare-col-header {
+    .combo-map-header {
+      padding: 8px 12px;
       background: var(--gray-lt);
-      padding: 10px 14px;
-      font-weight: 700;
-      font-size: 13px;
+      border-bottom: 1px solid var(--gray-bd);
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+    #combo-map-container { height: 380px; }
+    .map-legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 12px;
+      font-size: 11px;
+      color: var(--gray);
+      flex-wrap: wrap;
+      border-top: 1px solid var(--gray-bd);
+      background: var(--gray-lt);
+    }
+    .map-legend span { display: flex; align-items: center; gap: 4px; }
+
+    /* ── Compare bar (fixed bottom) ──────────────────────────── */
+    #compare-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1e3a5f;
+      color: #fff;
+      padding: 10px 24px;
+      display: none;
+      align-items: center;
+      gap: 14px;
+      z-index: 200;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.25);
+      flex-wrap: wrap;
+    }
+    .compare-bar-label { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+    .compare-bar-items { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+    .compare-bar-chip {
+      background: rgba(255,255,255,.15);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .remove-btn {
+      background: none; border: none;
+      color: rgba(255,255,255,.7);
+      cursor: pointer; font-size: 13px;
+      line-height: 1; padding: 0;
+    }
+    .remove-btn:hover { color: #fff; }
+    .compare-show-btn {
+      background: #fff; color: #1e3a5f; border: none;
+      border-radius: 20px; padding: 5px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+    }
+    .compare-show-btn:hover { background: #e0f2fe; }
+    .compare-show-btn:disabled { opacity: .5; cursor: default; }
+    .compare-clear-btn {
+      background: none; border: 1px solid rgba(255,255,255,.4);
+      color: rgba(255,255,255,.8); border-radius: 20px;
+      padding: 4px 12px; font-size: 12px; cursor: pointer; flex-shrink: 0;
+    }
+    .compare-clear-btn:hover { background: rgba(255,255,255,.1); }
+
+    /* ── Compare panel ───────────────────────────────────────── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-col { border: 1px solid var(--gray-bd); border-radius: var(--radius); overflow: hidden; }
+    .compare-col-header {
+      background: var(--gray-lt); padding: 9px 14px;
+      font-weight: 700; font-size: 13px;
       border-bottom: 1px solid var(--gray-bd);
     }
     .compare-col-header.winner { background: var(--blue-lt); color: var(--blue); }
     .compare-kpi-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 9px 14px;
-      border-bottom: 1px solid var(--gray-bd);
-      font-size: 13px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 14px; border-bottom: 1px solid var(--gray-bd); font-size: 13px;
     }
     .compare-kpi-row:last-child { border-bottom: none; }
     .compare-kpi-label { color: var(--gray); font-size: 12px; }
-    .compare-kpi-value { font-weight: 700; font-size: 16px; }
+    .compare-kpi-value { font-weight: 700; font-size: 15px; }
     .compare-kpi-value.better { color: var(--green); }
     .compare-kpi-value.worse  { color: var(--red); }
     .compare-kpi-value.same   { color: var(--gray); }
     .diff-badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 10px;
+      font-size: 10px; font-weight: 600;
+      padding: 1px 6px; border-radius: 8px;
     }
     .diff-badge.better { background: #dcfce7; color: var(--green); }
     .diff-badge.worse  { background: #fee2e2; color: var(--red); }
     .diff-badge.same   { background: var(--gray-lt); color: var(--gray); }
+    .compare-close-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 17px; color: var(--gray); line-height: 1; padding: 0 4px;
+    }
+    .compare-close-btn:hover { color: #111; }
 
-    /* ── Loading / empty ──────────────────────────────────────── */
-    .loading-spinner {
-      text-align: center;
-      padding: 40px;
-      color: var(--gray);
-      font-size: 15px;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: var(--gray);
-    }
-
-    /* ── Map section ──────────────────────────────────────────── */
-    #map-container {
-      height: 420px;
-      border-radius: 0;
-    }
-    .map-legend {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: var(--gray);
-      flex-wrap: wrap;
-      border-top: 1px solid var(--gray-bd);
-    }
-    .map-legend span { display: flex; align-items: center; gap: 5px; }
-
-    /* ── Sensitivity section ──────────────────────────────────── */
-    .sensitivity-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    .sensitivity-badge {
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .sensitivity-badge.stable   { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .sensitivity-badge.unstable { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    /* ── Sensitivity ─────────────────────────────────────────── */
     .sensitivity-summary {
-      font-size: 13px;
-      color: #374151;
-      padding: 10px 12px;
-      background: var(--gray-lt);
-      border-radius: 6px;
-      margin-bottom: 12px;
+      font-size: 13px; color: #374151;
+      padding: 10px 12px; background: var(--gray-lt);
+      border-radius: 6px; margin-bottom: 14px;
     }
-    .sensitivity-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .sensitivity-table th {
-      text-align: left;
-      padding: 6px 10px;
-      font-size: 11px;
-      color: var(--gray);
-      border-bottom: 1px solid var(--gray-bd);
-      background: var(--gray-lt);
+    .sens-detail {
+      border: 1px solid var(--gray-bd);
+      border-radius: 6px; margin-bottom: 8px; overflow: hidden;
     }
-    .sensitivity-table td { padding: 7px 10px; border-bottom: 1px solid var(--gray-bd); }
-    .sensitivity-table tr:last-child td { border-bottom: none; }
-    .sensitivity-ok { color: var(--green); font-weight: 600; }
-    .sensitivity-ng { color: var(--red);   font-weight: 600; }
+    .sens-detail-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: var(--gray-lt);
+      cursor: pointer; user-select: none; font-size: 13px;
+    }
+    .sens-detail-header:hover { background: #e9eaf0; }
+    .sens-detail-title { font-weight: 600; }
+    .sens-detail-desc { font-size: 12px; color: var(--gray); }
+    .sens-chevron { font-size: 11px; color: var(--gray); transition: transform .2s; }
+    .sens-detail.open .sens-chevron { transform: rotate(180deg); }
+    .sens-detail-body { display: none; }
+    .sens-detail.open .sens-detail-body { display: block; }
+    .impacts-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .impacts-table th {
+      text-align: left; padding: 6px 14px; font-size: 11px;
+      color: var(--gray); border-bottom: 1px solid var(--gray-bd); background: var(--gray-lt);
+    }
+    .impacts-table td { padding: 7px 14px; border-bottom: 1px solid var(--gray-bd); }
+    .impacts-table tr:last-child td { border-bottom: none; }
+    .diff-up   { color: var(--red);   font-weight: 600; }
+    .diff-down { color: var(--green); font-weight: 600; }
+    .diff-zero { color: var(--gray); }
+
+    /* ── CSV Upload ──────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--gray-bd); border-radius: var(--radius);
+      padding: 36px 24px; text-align: center; color: var(--gray);
+      cursor: pointer; transition: border-color .15s, background .15s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--blue); background: var(--blue-lt); color: var(--blue);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0;
+      cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .upload-hint { font-size: 12px; }
+    .upload-result {
+      margin-top: 14px; padding: 10px 14px; border-radius: 6px;
+      font-size: 13px; display: none;
+    }
+    .upload-result.success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .upload-result.error   { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .upload-preview-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+    }
+    .upload-preview-table th {
+      background: var(--gray-lt); padding: 5px 10px; text-align: left;
+      font-size: 11px; color: var(--gray); border-bottom: 1px solid var(--gray-bd);
+    }
+    .upload-preview-table td { padding: 5px 10px; border-bottom: 1px solid var(--gray-bd); }
+    .upload-preview-table tr:last-child td { border-bottom: none; }
+
+    /* ── Misc ────────────────────────────────────────────────── */
+    .loading-spinner { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
+    code { font-size: 12px; background: var(--gray-lt); padding: 1px 4px; border-radius: 3px; }
   </style>
 </head>
 <body>
 
 <header class="page-header">
   <h1>オフィス配置シミュレーション</h1>
-  <span class="version">CEST v0.3</span>
+  <span class="version">CEST v0.3.1</span>
 </header>
 
 <main class="main">
 
-  <!-- ステータスバー -->
   <div id="status-bar" class="loading">
     <span class="status-dot"></span>
     <span id="status-text">接続確認中…</span>
   </div>
 
-  <!-- 入力データ確認 -->
-  <div class="section" id="section-summary" style="display:none">
-    <div class="section-header">入力データ確認</div>
-    <div class="section-body">
-      <div class="summary-grid" id="summary-grid"></div>
-    </div>
-  </div>
+  <!-- ── トップタブ: データ入力 / 結果 / 感度分析 ─── -->
+  <nav class="top-tab-nav" id="top-tab-nav">
+    <button class="top-tab-btn active" data-tab="upload"      onclick="switchTopTab('upload')">データ入力</button>
+    <button class="top-tab-btn"        data-tab="main"        onclick="switchTopTab('main')">結果</button>
+    <button class="top-tab-btn"        data-tab="sensitivity" onclick="switchTopTab('sensitivity')">感度分析</button>
+  </nav>
 
-  <!-- 通知 -->
-  <div id="notices-container"></div>
+  <!-- ══════════════ タブ: 結果 ══════════════ -->
+  <div class="top-tab-panel" id="panel-main">
 
-  <!-- 散布図 -->
-  <div class="section" id="section-scatter" style="display:none">
-    <div class="section-header">通勤 × 月額賃料 トレードオフ</div>
-    <div class="section-body">
-      <div class="scatter-wrap">
-        <svg id="scatter-svg" viewBox="0 0 800 340" style="height:340px"></svg>
-        <div id="scatter-tooltip" class="scatter-tooltip"></div>
-      </div>
-      <div class="scatter-legend">
-        <span>
-          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#2563eb" opacity=".85"/></svg>
-          パレート最適（クリックで詳細）
-        </span>
-        <span>
-          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#9ca3af" opacity=".7"/></svg>
-          パレート劣位（クリックで詳細）
-        </span>
-        <span>
-          <svg width="24" height="14"><line x1="0" y1="7" x2="24" y2="7" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/></svg>
-          パレートフロンティア
-        </span>
+    <!-- 概要エリア（入力確認 + 散布図） -->
+    <div id="section-summary" class="section" style="display:none">
+      <div class="section-header">入力データ確認</div>
+      <div class="section-body">
+        <div class="summary-grid" id="summary-grid"></div>
       </div>
     </div>
-  </div>
 
-  <!-- 詳細パネル -->
-  <div class="section" id="section-detail" style="display:none">
-    <div class="section-header">
-      <span id="detail-title">詳細</span>
-      <button class="detail-close-btn" onclick="closeDetail()">✕</button>
-    </div>
-    <div class="section-body" id="detail-body"></div>
-  </div>
+    <div id="notices-container"></div>
 
-  <!-- 通勤マップ -->
-  <div class="section" id="section-map" style="display:none">
-    <div class="section-header">
-      <span id="map-title">通勤マップ</span>
-      <button class="detail-close-btn" onclick="closeMap()">✕</button>
-    </div>
-    <div id="map-container"></div>
-    <div class="map-legend">
-      <span><i class="dot" style="background:#22c55e"></i>30分未満</span>
-      <span><i class="dot" style="background:#3b82f6"></i>30〜60分</span>
-      <span><i class="dot" style="background:#f59e0b"></i>60〜90分</span>
-      <span><i class="dot" style="background:#ef4444"></i>90分超</span>
-      <span style="margin-left:8px">
-        <svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="#1e3a5f"/><text x="8" y="12" text-anchor="middle" font-size="9" fill="#fff">★</text></svg>
-        オフィス
-      </span>
-      <span style="font-size:11px;margin-left:auto">円の大きさ = 社員数</span>
-    </div>
-  </div>
-
-  <!-- 比較パネル -->
-  <div class="section" id="section-compare" style="display:none">
-    <div class="section-header">
-      <span>2案比較</span>
-      <button class="detail-close-btn" onclick="closeCompare()">✕</button>
-    </div>
-    <div class="section-body" id="compare-body"></div>
-  </div>
-
-  <!-- 全候補一覧 -->
-  <div class="section" id="section-list" style="display:none">
-    <div class="section-header">
-      全候補一覧
-      <span id="funnel-summary" style="font-weight:normal; font-size:12px; color:var(--gray)"></span>
-    </div>
-    <div class="section-body">
-      <div class="funnel" id="funnel-row" style="margin-bottom:16px"></div>
-      <div id="combo-list">
-        <div class="loading-spinner">読み込み中…</div>
+    <div id="section-scatter" class="section" style="display:none">
+      <div class="section-header">通勤 × 合計コスト トレードオフ</div>
+      <div class="section-body">
+        <div class="scatter-wrap">
+          <svg id="scatter-svg" viewBox="0 0 800 280" style="height:280px"></svg>
+          <div id="scatter-tooltip" class="scatter-tooltip"></div>
+        </div>
+        <div class="scatter-legend">
+          <span>
+            <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#2563eb" opacity=".85"/></svg>
+            パレート最適
+          </span>
+          <span>
+            <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#9ca3af" opacity=".7"/></svg>
+            パレート劣位
+          </span>
+          <span>
+            <svg width="22" height="12"><line x1="0" y1="6" x2="22" y2="6" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/></svg>
+            パレートフロンティア
+          </span>
+          <span style="font-size:11px;color:var(--gray);margin-left:auto">クリックで候補を選択</span>
+        </div>
       </div>
     </div>
+
+    <!-- 候補一覧エリア（同一ページ・タブ切り替え） -->
+    <div id="section-candidates" class="section" style="display:none">
+      <div class="section-header">
+        <span>オフィス組み合わせ候補</span>
+        <span id="funnel-text" style="font-weight:normal;font-size:12px;color:var(--gray)"></span>
+      </div>
+      <div class="section-body">
+
+        <!-- ファネル -->
+        <div class="funnel" id="funnel-row"></div>
+
+        <!-- 候補フィルタバー + タブストリップ -->
+        <div id="combo-filter-bar" style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 6px">
+          <span id="combo-filter-label" style="font-size:12px;color:var(--gray)"></span>
+          <button id="toggle-all-combos" onclick="toggleAllCombos()"
+            style="font-size:11px;padding:3px 10px;border:1px solid var(--gray-bd);border-radius:4px;background:#fff;cursor:pointer;color:#374151;white-space:nowrap">
+          </button>
+        </div>
+        <div class="combo-tab-strip" id="combo-tab-strip"></div>
+
+        <!-- 選択候補の詳細 + 地図（2カラム） -->
+        <div class="combo-content-grid" id="combo-content-grid">
+          <div class="loading-spinner" style="grid-column:1/-1">候補を選択してください</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 比較パネル（2案選択後に表示） -->
+    <div id="section-compare" class="section" style="display:none">
+      <div class="section-header">
+        <span>2案比較</span>
+        <button class="compare-close-btn" onclick="closeCompare()">✕</button>
+      </div>
+      <div class="section-body" id="compare-body"></div>
+    </div>
+
+  </div><!-- /panel-main -->
+
+  <!-- ══════════════ タブ: 感度分析 ══════════════ -->
+  <div class="top-tab-panel" id="panel-sensitivity">
+    <div id="section-sensitivity" class="section" style="display:none">
+      <div class="section-header">感度分析</div>
+      <div class="section-body" id="sensitivity-body"></div>
+    </div>
   </div>
 
-  <!-- 感度分析 -->
-  <div class="section" id="section-sensitivity" style="display:none">
-    <div class="section-header">感度分析</div>
-    <div class="section-body" id="sensitivity-body"></div>
+  <!-- ══════════════ タブ: データ入力 ══════════════ -->
+  <div class="top-tab-panel active" id="panel-upload">
+    <div class="section">
+      <div class="section-header">CSVデータアップロード</div>
+      <div class="section-body">
+        <p style="font-size:13px;color:#374151;margin-bottom:14px">
+          社員の居住駅データをCSV・TSV・Excelファイルでアップロードできます。<br>
+          必須列: <code>station_id</code>, <code>count</code>  /  任意列: <code>group</code>
+        </p>
+        <div class="upload-zone" id="upload-zone"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          <input type="file" id="file-input" accept=".csv,.tsv,.txt,.xlsx"
+            onchange="handleFileSelect(event)">
+          <div class="upload-icon">📂</div>
+          <div class="upload-title">ファイルをドロップ、またはクリックして選択</div>
+          <div class="upload-hint">CSV / TSV / Excel (.xlsx) に対応</div>
+        </div>
+        <div class="upload-result" id="upload-result"></div>
+        <div id="upload-preview"></div>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -691,12 +744,16 @@ const state = {
   data: null,
   selectedComboId: null,
   compareIds: [],
+  sortedCombos: [],
+  paretoIds: [],
+  showAllCombos: false,
 };
 
 const stationMaster = {};
 let leafletMap = null;
 const OFFICE_COLORS = ['#1e3a5f', '#16a34a', '#9333ea', '#ea580c'];
 
+// ─── ステーションマスター ────────────────────────────────────────
 async function loadStationMaster() {
   try {
     const res = await fetch('station_master.json');
@@ -706,18 +763,18 @@ async function loadStationMaster() {
   } catch(e) {}
 }
 
-// ── メイン ──────────────────────────────────────────────────────
+// ─── 起動 ────────────────────────────────────────────────────────
 async function init() {
   await loadStationMaster();
   let data;
   try {
-    const health = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
-    if (!health.ok) throw new Error('health check failed');
+    const h = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+    if (!h.ok) throw new Error();
     data = await loadDemo();
-    setStatus('api', 'APIに接続しました（デモデータを表示中）');
+    setStatus('api', 'APIに接続しました（デモデータ表示中）');
   } catch {
     data = await loadDemo();
-    setStatus('demo', 'APIに接続できないため、デモデータを表示しています');
+    setStatus('demo', 'APIに接続できないためデモデータを表示しています');
   }
   state.data = data;
   render(data);
@@ -735,17 +792,32 @@ function setStatus(type, text) {
   document.getElementById('status-text').textContent = text;
 }
 
-// ── レンダリング ─────────────────────────────────────────────────
+// ─── トップタブ切替 ──────────────────────────────────────────────
+function switchTopTab(name) {
+  document.querySelectorAll('.top-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.top-tab-panel').forEach(p =>
+    p.classList.toggle('active', p.id === 'panel-' + name));
+}
+
+// ─── レンダリング ────────────────────────────────────────────────
 function render(data) {
   renderSummary(data);
   renderNotices(data.notices || []);
   renderConstraintsImpact(data.constraints_impact);
   renderScatterPlot(data.all_combinations, data.pareto_frontier_ids || []);
-  renderComboList(data.all_combinations, data.pareto_frontier_ids || []);
+  renderComboTabs(data.all_combinations, data.pareto_frontier_ids || []);
   renderSensitivity(data.sensitivity);
+
+  switchTopTab('main');
   document.getElementById('section-summary').style.display = '';
   document.getElementById('section-scatter').style.display = '';
-  document.getElementById('section-list').style.display = '';
+  document.getElementById('section-candidates').style.display = '';
+
+  // 最初のパレート最適案を選択
+  const first = (data.pareto_frontier_ids || [])[0]
+    || (data.all_combinations || [])[0]?.combination_id;
+  if (first) selectCombo(first);
 }
 
 function renderSummary(data) {
@@ -753,27 +825,24 @@ function renderSummary(data) {
   const dist    = inputs.home_station_distribution || [];
   const offices = inputs.office_candidates || [];
   const days    = (inputs.policy_as_is || {}).office_days_per_week || '—';
-
   const totalPop = dist.reduce((s, d) => s + (d.count || 0), 0);
   const groups   = [...new Set(dist.map(d => d.group).filter(Boolean))];
 
-  const grid = document.getElementById('summary-grid');
-  grid.innerHTML = [
-    { label: '社員数',       value: totalPop,        unit: '人' },
-    { label: '部署数',       value: groups.length || '—', unit: groups.length ? '部署' : '' },
-    { label: 'オフィス候補', value: offices.length,  unit: '件' },
-    { label: '出社日数',     value: days,            unit: '日/週' },
-  ].map(({ label, value, unit }) => `
+  document.getElementById('summary-grid').innerHTML = [
+    { lbl: '社員数',       val: totalPop,        unt: '人' },
+    { lbl: '部署数',       val: groups.length || '—', unt: groups.length ? '部署' : '' },
+    { lbl: 'オフィス候補', val: offices.length,  unt: '件' },
+    { lbl: '出社日数',     val: days,            unt: '日/週' },
+  ].map(({ lbl, val, unt }) => `
     <div class="summary-item">
-      <div class="label">${label}</div>
-      <div class="value">${value}<span class="unit"> ${unit}</span></div>
+      <div class="lbl">${lbl}</div>
+      <div class="val">${val}<span class="unt"> ${unt}</span></div>
     </div>
   `).join('');
 }
 
 function renderNotices(notices) {
-  const container = document.getElementById('notices-container');
-  container.innerHTML = notices.map(n => `
+  document.getElementById('notices-container').innerHTML = notices.map(n => `
     <div class="notice ${n.level === 'warning' ? 'warning' : 'info'}">
       <span>${n.level === 'warning' ? '⚠' : 'ℹ'}</span>
       <span>${escHtml(n.message)}</span>
@@ -783,33 +852,32 @@ function renderNotices(notices) {
 
 function renderConstraintsImpact(ci) {
   if (!ci) return;
-  const funnel = document.getElementById('funnel-row');
   const steps = [
-    { n: ci.total_combinations,    lbl: '全組み合わせ',   cls: '' },
-    { n: ci.after_capacity_filter, lbl: '収容フィルタ後', cls: '' },
-    { n: ci.after_budget_filter,   lbl: '予算フィルタ後', cls: '' },
-    { n: ci.after_commute_filter,  lbl: '通勤フィルタ後', cls: '' },
-    { n: ci.pareto_optimal,        lbl: 'パレート最適',   cls: 'pareto' },
+    { n: ci.total_combinations,    lbl: '全組み合わせ' },
+    { n: ci.after_capacity_filter, lbl: '収容フィルタ後' },
+    { n: ci.after_budget_filter,   lbl: '予算フィルタ後' },
+    { n: ci.after_commute_filter,  lbl: '通勤フィルタ後' },
+    { n: ci.pareto_optimal,        lbl: 'パレート最適', cls: 'pareto' },
   ];
-  funnel.innerHTML = steps.map((s, i) => `
+  document.getElementById('funnel-row').innerHTML = steps.map((s, i) => `
     ${i > 0 ? '<span class="funnel-arrow">→</span>' : ''}
-    <span class="funnel-step ${s.cls}">
+    <span class="funnel-step ${s.cls || ''}">
       <span class="n">${s.n}件</span>
       <span class="lbl">${s.lbl}</span>
     </span>
   `).join('');
 }
 
-// ── 散布図 ───────────────────────────────────────────────────────
+// ─── 散布図 ──────────────────────────────────────────────────────
 function renderScatterPlot(combos, paretoIds) {
   const svg = document.getElementById('scatter-svg');
-  const VW = 800, VH = 340;
-  const margin = { top: 24, right: 24, bottom: 56, left: 76 };
+  const VW = 800, VH = 280;
+  const margin = { top: 20, right: 20, bottom: 50, left: 72 };
   const plotW = VW - margin.left - margin.right;
   const plotH = VH - margin.top - margin.bottom;
 
   const xVals = combos.map(c => c.p95_trip_minutes);
-  const yVals = combos.map(c => c.total_rent_jpy_month / 10000);
+  const yVals = combos.map(c => (c.total_cost_jpy_month || c.total_rent_jpy_month) / 10000);
   const xPad = (Math.max(...xVals) - Math.min(...xVals)) * 0.2 || 10;
   const yPad = Math.max(...yVals) * 0.18;
   const xMin = Math.max(0, Math.min(...xVals) - xPad);
@@ -820,207 +888,342 @@ function renderScatterPlot(combos, paretoIds) {
   const xS = v => margin.left + (v - xMin) / (xMax - xMin) * plotW;
   const yS = v => margin.top + plotH - (v - yMin) / (yMax - yMin) * plotH;
 
-  // nice ticks
-  function niceTicks(min, max, n) {
-    const step = niceStep((max - min) / n);
-    const start = Math.ceil(min / step) * step;
-    const ticks = [];
-    for (let v = start; v <= max + step * 0.01; v += step) ticks.push(parseFloat(v.toFixed(6)));
-    return ticks;
-  }
-  function niceStep(raw) {
+  function niceTicks(mn, mx, n) {
+    const raw = (mx - mn) / n;
     const exp = Math.pow(10, Math.floor(Math.log10(raw)));
     const f = raw / exp;
-    return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * exp;
+    const step = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * exp;
+    const start = Math.ceil(mn / step) * step;
+    const ticks = [];
+    for (let v = start; v <= mx + step * 0.01; v += step)
+      ticks.push(parseFloat(v.toFixed(6)));
+    return ticks;
   }
 
   const xTicks = niceTicks(xMin, xMax, 6);
   const yTicks = niceTicks(yMin, yMax, 5);
+  let html = '<g>';
 
-  let html = `<g>`;
-
-  // Grid lines
   xTicks.forEach(v => {
     const x = xS(v);
-    html += `<line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + plotH}" stroke="#e5e7eb" stroke-width="1"/>`;
+    html += `<line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top+plotH}" stroke="#e5e7eb" stroke-width="1"/>`;
+    html += `<line x1="${x}" y1="${margin.top+plotH}" x2="${x}" y2="${margin.top+plotH+5}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${x}" y="${margin.top+plotH+17}" text-anchor="middle" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
   });
   yTicks.forEach(v => {
     const y = yS(v);
-    html += `<line x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    html += `<line x1="${margin.left}" y1="${y}" x2="${margin.left+plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    html += `<line x1="${margin.left-5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${margin.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
   });
+  html += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top+plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
+  html += `<line x1="${margin.left}" y1="${margin.top+plotH}" x2="${margin.left+plotW}" y2="${margin.top+plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
+  html += `<text x="${margin.left+plotW/2}" y="${VH-5}" text-anchor="middle" font-size="12" fill="#374151">通勤 p95（分）</text>`;
+  html += `<text x="13" y="${margin.top+plotH/2}" text-anchor="middle" font-size="12" fill="#374151" transform="rotate(-90,13,${margin.top+plotH/2})">合計コスト（万円/月）</text>`;
 
-  // Axes
-  html += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
-  html += `<line x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
-
-  // X ticks + labels
-  xTicks.forEach(v => {
-    const x = xS(v);
-    html += `<line x1="${x}" y1="${margin.top + plotH}" x2="${x}" y2="${margin.top + plotH + 5}" stroke="#9ca3af" stroke-width="1"/>`;
-    html += `<text x="${x}" y="${margin.top + plotH + 18}" text-anchor="middle" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
-  });
-
-  // Y ticks + labels
-  yTicks.forEach(v => {
-    const y = yS(v);
-    html += `<line x1="${margin.left - 5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="#9ca3af" stroke-width="1"/>`;
-    html += `<text x="${margin.left - 9}" y="${y + 4}" text-anchor="end" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
-  });
-
-  // Axis labels
-  html += `<text x="${margin.left + plotW / 2}" y="${VH - 6}" text-anchor="middle" font-size="12" fill="#374151">通勤 p95（分）</text>`;
-  html += `<text x="14" y="${margin.top + plotH / 2}" text-anchor="middle" font-size="12" fill="#374151" transform="rotate(-90,14,${margin.top + plotH / 2})">月額賃料（万円）</text>`;
-
-  // Pareto frontier step line (sort by x, connect)
+  // パレートフロンティア線
   const pFront = combos.filter(c => paretoIds.includes(c.combination_id))
     .sort((a, b) => a.p95_trip_minutes - b.p95_trip_minutes);
   if (pFront.length >= 2) {
-    let d = pFront.map(c => `${xS(c.p95_trip_minutes)},${yS(c.total_rent_jpy_month / 10000)}`).join(' L ');
-    html += `<polyline points="${pFront.map(c => `${xS(c.p95_trip_minutes)},${yS(c.total_rent_jpy_month / 10000)}`).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,4" opacity=".55"/>`;
+    html += `<polyline points="${pFront.map(c =>
+      `${xS(c.p95_trip_minutes)},${yS((c.total_cost_jpy_month||c.total_rent_jpy_month)/10000)}`
+    ).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,4" opacity=".55"/>`;
   }
 
-  // Points — render non-pareto first, then pareto on top
-  const renderPoint = (c, isPareto) => {
+  // ポイント（テキストラベルなし）
+  const renderPt = (c, isPareto) => {
     const cx = xS(c.p95_trip_minutes);
-    const cy = yS(c.total_rent_jpy_month / 10000);
-    const r = 9;
+    const cy = yS((c.total_cost_jpy_month||c.total_rent_jpy_month)/10000);
     const fill = isPareto ? '#2563eb' : '#9ca3af';
-    const opacity = isPareto ? '.85' : '.65';
-    const offNames = (c.per_office || []).map(o => o.name).join('+');
-    const label = offNames.length > 9 ? offNames.substring(0, 9) + '…' : offNames;
-    html += `
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" fill-opacity="${opacity}"
-        stroke="${fill}" stroke-width="1.5" class="sp" data-id="${escHtml(c.combination_id)}" style="cursor:pointer"/>
-      <text x="${cx}" y="${cy - r - 4}" text-anchor="middle" font-size="10"
-        fill="${isPareto ? '#1d4ed8' : '#6b7280'}" pointer-events="none">${escHtml(label)}</text>
-    `;
+    const op   = isPareto ? '.85' : '.65';
+    html += `<circle cx="${cx}" cy="${cy}" r="9" fill="${fill}" fill-opacity="${op}"
+      stroke="${fill}" stroke-width="1.5" class="sp"
+      data-id="${escHtml(c.combination_id)}" style="cursor:pointer"/>`;
   };
+  combos.filter(c => !paretoIds.includes(c.combination_id)).forEach(c => renderPt(c, false));
+  combos.filter(c =>  paretoIds.includes(c.combination_id)).forEach(c => renderPt(c, true));
 
-  combos.filter(c => !paretoIds.includes(c.combination_id)).forEach(c => renderPoint(c, false));
-  combos.filter(c =>  paretoIds.includes(c.combination_id)).forEach(c => renderPoint(c, true));
-
-  html += `</g>`;
+  html += '</g>';
   svg.innerHTML = html;
-
-  // Highlight selected
   highlightScatterSelected();
 
-  // Event listeners
+  // ツールチップ
   const tooltip = document.getElementById('scatter-tooltip');
   svg.querySelectorAll('.sp').forEach(el => {
     const id = el.getAttribute('data-id');
     const combo = combos.find(c => c.combination_id === id);
-
     el.addEventListener('click', () => selectCombo(id));
-
     el.addEventListener('mouseenter', e => {
       if (!combo) return;
-      const rentM = Math.round(combo.total_rent_jpy_month / 10000);
+      const rent  = Math.round(combo.total_rent_jpy_month / 10000);
+      const total = combo.total_cost_jpy_month
+        ? Math.round(combo.total_cost_jpy_month / 10000) : rent;
+      const name  = (combo.per_office||[]).map(o => o.name).join(' + ') || id;
       tooltip.innerHTML = `
-        <strong>${escHtml((combo.per_office || []).map(o => o.name).join(' + ') || id)}</strong><br>
-        通勤 p95：${combo.p95_trip_minutes} 分<br>
-        平均通勤：${(combo.avg_trip_minutes || 0).toFixed(1)} 分<br>
-        月額賃料：${rentM} 万円<br>
-        60分超：${combo.exceed_60_count} 人
+        <strong>${escHtml(name)}</strong><br>
+        通勤 p95：${combo.p95_trip_minutes}分 / 平均：${(combo.avg_trip_minutes||0).toFixed(1)}分<br>
+        月額賃料：${rent}万円 / 合計：${total}万円<br>
+        60分超：${combo.exceed_60_count}人
       `;
       tooltip.style.display = 'block';
-      moveTooltip(e);
+      moveTip(e);
     });
-
-    el.addEventListener('mousemove', moveTooltip);
-
-    el.addEventListener('mouseleave', () => {
-      tooltip.style.display = 'none';
-    });
+    el.addEventListener('mousemove', moveTip);
+    el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
   });
 
-  function moveTooltip(e) {
-    const wrap = svg.parentElement;
-    const rect = wrap.getBoundingClientRect();
-    let left = e.clientX - rect.left + 12;
-    let top  = e.clientY - rect.top  - 10;
-    // keep inside
-    if (left + 200 > rect.width) left = e.clientX - rect.left - 210;
-    tooltip.style.left = left + 'px';
-    tooltip.style.top  = top  + 'px';
+  function moveTip(e) {
+    const r = svg.parentElement.getBoundingClientRect();
+    let l = e.clientX - r.left + 12;
+    let t = e.clientY - r.top  - 10;
+    if (l + 240 > r.width) l = e.clientX - r.left - 250;
+    tooltip.style.left = l + 'px';
+    tooltip.style.top  = t + 'px';
   }
 }
 
 function highlightScatterSelected() {
   document.querySelectorAll('#scatter-svg .sp').forEach(el => {
-    const selected = el.getAttribute('data-id') === state.selectedComboId;
-    el.setAttribute('r', selected ? '12' : '9');
-    el.setAttribute('stroke-width', selected ? '3' : '1.5');
-    el.setAttribute('stroke', selected ? '#fff' : el.getAttribute('fill'));
-    if (selected) {
-      // Add outer ring
-      el.setAttribute('stroke', '#fff');
-      el.style.filter = 'drop-shadow(0 0 4px rgba(37,99,235,.7))';
-    } else {
-      el.style.filter = '';
-    }
+    const sel = el.getAttribute('data-id') === state.selectedComboId;
+    el.setAttribute('r', sel ? '12' : '9');
+    el.setAttribute('stroke-width', sel ? '3' : '1.5');
+    el.setAttribute('stroke', sel ? '#fff' : el.getAttribute('fill'));
+    el.style.filter = sel ? 'drop-shadow(0 0 4px rgba(37,99,235,.7))' : '';
   });
 }
 
-// ── 詳細パネル ───────────────────────────────────────────────────
+// ─── 候補タブ ────────────────────────────────────────────────────
+function renderComboTabs(combos, paretoIds) {
+  if (!combos || combos.length === 0) return;
+
+  // パレート最適を先頭にソート、次いでp95昇順
+  const sorted = [...combos].sort((a, b) => {
+    const ap = paretoIds.includes(a.combination_id);
+    const bp = paretoIds.includes(b.combination_id);
+    if (ap !== bp) return ap ? -1 : 1;
+    return a.p95_trip_minutes - b.p95_trip_minutes;
+  });
+
+  state.sortedCombos = sorted;
+  state.paretoIds    = paretoIds;
+  state.showAllCombos = false;
+
+  renderTabStrip();
+}
+
+function renderTabStrip() {
+  const { sortedCombos: sorted, paretoIds, showAllCombos } = state;
+  const paretoOnly  = sorted.filter(c => paretoIds.includes(c.combination_id));
+  const visible     = showAllCombos ? sorted : (paretoOnly.length ? paretoOnly : sorted);
+  const allCount    = sorted.length;
+  const paretoCount = paretoOnly.length;
+
+  // フィルタバーを更新
+  const label = document.getElementById('combo-filter-label');
+  const btn   = document.getElementById('toggle-all-combos');
+  if (showAllCombos) {
+    label.textContent = `全${allCount}案を表示中`;
+    btn.textContent   = `★ パレートのみ表示`;
+    btn.style.borderColor = 'var(--blue)';
+    btn.style.color       = 'var(--blue)';
+  } else {
+    label.textContent = `★ パレート最適 ${paretoCount}案 / 全${allCount}案`;
+    btn.textContent   = `全${allCount}案を表示`;
+    btn.style.borderColor = 'var(--gray-bd)';
+    btn.style.color       = '#374151';
+  }
+  // パレートしかない場合はボタン不要
+  btn.style.display = (allCount === paretoCount) ? 'none' : '';
+
+  const strip = document.getElementById('combo-tab-strip');
+  strip.innerHTML = visible.map(c => {
+    const isPareto  = paretoIds.includes(c.combination_id);
+    const names     = (c.per_office || []).map(o => o.name).join('+')
+                      || (c.selected_offices || []).join('+');
+    const shortName = names.length > 16 ? names.substring(0, 15) + '…' : names;
+    const totalM    = c.total_cost_jpy_month
+      ? Math.round(c.total_cost_jpy_month / 10000) : Math.round(c.total_rent_jpy_month / 10000);
+    return `
+      <button class="combo-tab-btn ${isPareto ? 'pareto-tab' : ''}"
+        data-id="${escHtml(c.combination_id)}"
+        onclick="selectCombo('${escHtml(c.combination_id)}')">
+        <span class="combo-tab-name">${escHtml(shortName)}</span>
+        <div class="combo-tab-meta">
+          <span class="badge-mini ${isPareto ? 'pareto' : 'subopt'}">
+            ${isPareto ? '★ パレート' : '劣位'}
+          </span>
+          <span class="combo-tab-p95">p95 ${c.p95_trip_minutes}分</span>
+        </div>
+        <div style="font-size:10px;color:var(--gray);margin-top:1px">計 ${totalM}万円/月</div>
+      </button>
+    `;
+  }).join('');
+
+  // アクティブ状態を再適用
+  document.querySelectorAll('.combo-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.id === state.selectedComboId));
+}
+
+function toggleAllCombos() {
+  state.showAllCombos = !state.showAllCombos;
+  renderTabStrip();
+
+  // パレートのみ表示に戻したとき、選択中が非表示になる場合は先頭へ
+  if (!state.showAllCombos) {
+    const paretoOnly = state.sortedCombos.filter(c => state.paretoIds.includes(c.combination_id));
+    const stillVisible = paretoOnly.find(c => c.combination_id === state.selectedComboId);
+    if (!stillVisible && paretoOnly.length) selectCombo(paretoOnly[0].combination_id);
+  }
+}
+
+// ─── 候補選択 ────────────────────────────────────────────────────
 function selectCombo(id) {
   state.selectedComboId = id;
 
   const combo = (state.data.all_combinations || []).find(c => c.combination_id === id);
   if (!combo) return;
 
-  // Update scatter highlight
+  // タブボタンのアクティブ状態
+  document.querySelectorAll('.combo-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.id === id));
+
+  // 散布図ハイライト
   highlightScatterSelected();
 
-  // Update card highlight
-  document.querySelectorAll('.combo-card').forEach(card => {
-    card.classList.toggle('selected', card.dataset.id === id);
-  });
-
-  // Render detail
-  renderDetailPanel(combo);
-  document.getElementById('section-detail').style.display = '';
-
-  // Render map
-  renderMap(combo);
-
-  // Scroll to detail
-  setTimeout(() => {
-    document.getElementById('section-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+  // 詳細 + 地図を描画
+  renderComboContent(combo);
 }
 
-function closeDetail() {
-  state.selectedComboId = null;
-  document.getElementById('section-detail').style.display = 'none';
-  closeMap();
-  highlightScatterSelected();
-  document.querySelectorAll('.combo-card').forEach(c => c.classList.remove('selected'));
-}
-
-function renderDetailPanel(c) {
+function renderComboContent(combo) {
   const paretoIds = state.data.pareto_frontier_ids || [];
-  const isPareto  = paretoIds.includes(c.combination_id);
-  const officeNames = (c.per_office || []).map(o => o.name).join(' + ');
+  const isPareto  = paretoIds.includes(combo.combination_id);
+  const names     = (combo.per_office || []).map(o => o.name).join(' + ')
+                    || (combo.selected_offices || []).join(' + ');
 
-  document.getElementById('detail-title').textContent =
-    `詳細：${officeNames || c.combination_id} ${isPareto ? '★ パレート最適' : ''}`;
+  const grid = document.getElementById('combo-content-grid');
+  grid.innerHTML = `
+    <div class="combo-detail-pane" id="combo-detail-inner"></div>
+    <div class="combo-map-pane">
+      <div class="combo-map-header" id="combo-map-header">通勤マップ</div>
+      <div id="combo-map-container"></div>
+      <div class="map-legend">
+        <span><i class="dot" style="background:#22c55e"></i>30分未満</span>
+        <span><i class="dot" style="background:#3b82f6"></i>30〜60分</span>
+        <span><i class="dot" style="background:#f59e0b"></i>60〜90分</span>
+        <span><i class="dot" style="background:#ef4444"></i>90分超</span>
+        <span style="margin-left:auto;font-size:10px">円の大きさ = 社員数</span>
+      </div>
+    </div>
+  `;
 
+  document.getElementById('combo-map-header').textContent = `通勤マップ：${names}`;
+
+  // 詳細ペイン
+  renderDetailInner(combo, isPareto, names);
+
+  // 地図
+  renderMap(combo);
+}
+
+function renderDetailInner(c, isPareto, names) {
   const dist  = c.distribution || {};
   const total = c.total_population || 1;
-
-  // 通勤分布バー
-  const pcts = {
-    s0: ((dist.under_30   || 0) / total * 100).toFixed(1),
-    s1: ((dist['30_to_60']|| 0) / total * 100).toFixed(1),
-    s2: ((dist['60_to_90']|| 0) / total * 100).toFixed(1),
-    s3: ((dist.over_90    || 0) / total * 100).toFixed(1),
+  const pcts  = {
+    s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
+    s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
+    s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
+    s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
   };
 
-  const distHtml = `
-    <div class="detail-block">
-      <div class="detail-block-title">通勤時間分布</div>
-      <div class="dist-bar" style="height:14px; border-radius:7px; margin-bottom:8px">
+  const p95Cls   = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
+  const rentM    = Math.round(c.total_rent_jpy_month / 10000);
+  const commuteM = c.total_commute_cost_jpy_month != null
+    ? Math.round(c.total_commute_cost_jpy_month / 10000) : null;
+  const totalM   = c.total_cost_jpy_month != null
+    ? Math.round(c.total_cost_jpy_month / 10000) : rentM;
+
+  const inCompare = state.compareIds.includes(c.combination_id);
+  const canAdd    = !inCompare && state.compareIds.length >= 2;
+
+  // 収容バー
+  const capRows = (c.per_office || []).map(o => {
+    const pct = o.capacity > 0 ? Math.round(o.assigned_population / o.capacity * 100) : 0;
+    const cls = pct >= 95 ? 'full' : pct >= 80 ? 'tight' : '';
+    return `
+      <div class="cap-office">
+        <div class="cap-office-header">
+          <span class="cap-office-name">${escHtml(o.name)}</span>
+          <span class="cap-office-nums">${o.assigned_population}人/${o.capacity}人${o.capacity_estimated ? '（推定）' : ''} — 余裕${o.capacity_headroom}人</span>
+        </div>
+        <div class="cap-bar-bg">
+          <div class="cap-bar-fill ${cls}" style="width:${pct}%"></div>
+        </div>
+        <div class="cap-note">使用率 ${pct}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // 配置チップ
+  const chips = (c.per_office || []).map(o => {
+    const groups = (c.assignment || [])
+      .filter(a => a.assigned_office_id === o.office_id)
+      .map(a => `${a.group}(${a.population}人)`).join('、');
+    return `
+      <div class="office-chip">
+        <div class="office-chip-name">${escHtml(o.name)}</div>
+        <div class="office-chip-sub">${escHtml(groups) || '—'}</div>
+      </div>
+    `;
+  }).join('');
+
+  const explain = (c.explain || {}).commute;
+
+  document.getElementById('combo-detail-inner').innerHTML = `
+    <div class="combo-detail-title">
+      ${escHtml(names)}
+      <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
+        ${isPareto ? '★ パレート最適' : 'パレート劣位'}
+      </span>
+      <span class="badge badge-k">${c.num_offices}拠点</span>
+      <button class="compare-toggle-btn ${inCompare ? 'active' : ''}"
+        id="compare-toggle-btn-inner"
+        onclick="toggleCompareInner('${escHtml(c.combination_id)}')"
+        ${canAdd ? 'disabled' : ''}>
+        ${inCompare ? '比較中 ✓' : '比較に追加'}
+      </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-item">
+        <span class="kpi-label">通勤 p95</span>
+        <span class="kpi-value ${p95Cls}">${c.p95_trip_minutes}</span>
+        <span class="kpi-unit">分</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">平均通勤</span>
+        <span class="kpi-value">${(c.avg_trip_minutes||0).toFixed(1)}</span>
+        <span class="kpi-unit">分</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">60分超</span>
+        <span class="kpi-value ${c.exceed_60_count > 0 ? 'warn' : ''}">${c.exceed_60_count}</span>
+        <span class="kpi-unit">人</span>
+      </div>
+      <div class="kpi-divider"></div>
+      <div class="kpi-item">
+        <span class="kpi-label">社員数</span>
+        <span class="kpi-value">${c.total_population}</span>
+        <span class="kpi-unit">人</span>
+      </div>
+    </div>
+
+    <!-- 通勤分布 -->
+    <div class="dist-wrap">
+      <div class="dist-label">通勤時間分布</div>
+      <div class="dist-bar" style="height:12px;border-radius:6px">
         <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
         <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
         <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
@@ -1032,153 +1235,83 @@ function renderDetailPanel(c) {
         <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
         <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
       </div>
-      <div style="margin-top:10px; font-size:13px;">
-        <span style="font-weight:700">p95：${c.p95_trip_minutes}分</span>
-        &nbsp;|&nbsp;
-        <span>平均：${(c.avg_trip_minutes||0).toFixed(1)}分</span>
-        &nbsp;|&nbsp;
-        <span ${c.exceed_60_count > 0 ? 'style="color:var(--yellow)"' : 'style="color:var(--green)"'}>60分超：${c.exceed_60_count}人</span>
-      </div>
     </div>
-  `;
 
-  // コスト内訳
-  const totalRentMan = Math.round(c.total_rent_jpy_month / 10000);
-  const costRows = (c.per_office || []).map(o => {
-    const rentMan = Math.round(o.rent_jpy_month / 10000);
-    const pct     = (o.rent_jpy_month / c.total_rent_jpy_month * 100).toFixed(0);
-    return `
-      <div class="detail-office-row">
-        <span class="detail-office-name">${escHtml(o.name)}</span>
-        <span class="detail-office-rent">${rentMan}万円</span>
-        <span style="font-size:11px;color:var(--gray)">${pct}%</span>
+    <!-- コスト内訳 -->
+    <div class="cost-summary">
+      <div class="cost-row">
+        <span class="cost-label">月額賃料</span>
+        <span style="font-weight:600">${rentM}万円</span>
       </div>
-    `;
-  }).join('');
-
-  const costHtml = `
-    <div class="detail-block">
-      <div class="detail-block-title">コスト内訳</div>
-      ${costRows}
-      <div style="margin-top:8px; text-align:right; font-size:13px; font-weight:700; color:var(--blue)">
-        合計：${totalRentMan}万円/月
-      </div>
-    </div>
-  `;
-
-  // 部署配置
-  const assignRows = (c.assignment || []).map(a => {
-    const office = (c.per_office || []).find(o => o.office_id === a.assigned_office_id);
-    return `
-      <tr>
-        <td>${escHtml(a.group)}</td>
-        <td>${escHtml(office ? office.name : a.assigned_office_id)}</td>
-        <td style="text-align:right">${a.population}人</td>
-      </tr>
-    `;
-  }).join('');
-
-  const assignHtml = `
-    <div class="detail-block">
-      <div class="detail-block-title">部署配置</div>
-      <table class="assignment-table">
-        <thead><tr><th>部署</th><th>担当オフィス</th><th style="text-align:right">人数</th></tr></thead>
-        <tbody>${assignRows}</tbody>
-      </table>
-    </div>
-  `;
-
-  // 収容余裕
-  const capacityRows = (c.per_office || []).map(o => {
-    const used = o.assigned_population;
-    const cap  = o.capacity;
-    const pct  = cap > 0 ? Math.round(used / cap * 100) : 0;
-    const fillClass = pct >= 95 ? 'full' : pct >= 80 ? 'tight' : '';
-    return `
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="font-weight:600">${escHtml(o.name)}</span>
-          <span style="color:var(--gray)">${used}人 / ${cap}人${o.capacity_estimated ? '（推定）' : ''}</span>
+      ${commuteM != null ? `
+        <div class="cost-row">
+          <span class="cost-label">
+            通勤費
+            ${c.total_commute_cost_estimated ? '<span class="badge-mini est" style="margin-left:4px">推定</span>' : ''}
+          </span>
+          <span style="font-weight:600">${commuteM}万円</span>
         </div>
-        <div class="capacity-bar-bg">
-          <div class="capacity-bar-fill ${fillClass}" style="width:${pct}%"></div>
-        </div>
-        <div style="font-size:11px;color:var(--gray);margin-top:2px">余裕 ${o.capacity_headroom}人（使用率${pct}%）</div>
+      ` : ''}
+      <div class="cost-row total">
+        <span>合計コスト</span>
+        <span>${totalM}万円/月</span>
       </div>
-    `;
-  }).join('');
-
-  const capacityHtml = `
-    <div class="detail-block">
-      <div class="detail-block-title">収容余裕</div>
-      ${capacityRows}
     </div>
-  `;
 
-  // 比較メモ
-  const explain    = c.explain || {};
-  const vsAlts     = explain.vs_alternatives || [];
-  const vsHtml = vsAlts.length ? `
-    <div class="detail-block" style="grid-column:1/-1">
-      <div class="detail-block-title">他案との比較</div>
-      <ul class="vs-list">${vsAlts.map(v => `<li>${escHtml(v)}</li>`).join('')}</ul>
-    </div>
-  ` : '';
+    <!-- 部署配置 -->
+    <div class="office-chips-row">${chips}</div>
 
-  document.getElementById('detail-body').innerHTML = `
-    <div class="detail-grid">
-      ${distHtml}
-      ${costHtml}
-      ${assignHtml}
-      ${capacityHtml}
-      ${vsHtml}
-    </div>
+    <!-- 収容余裕 -->
+    <div class="capacity-section" style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">収容余裕</div>
+    <div class="capacity-section">${capRows}</div>
+
+    ${explain ? `
+      <div class="explain-block">
+        <div class="hl">${escHtml(explain.headline)}</div>
+        <div class="det">${escHtml(explain.detail || '')}</div>
+      </div>
+    ` : ''}
   `;
 }
 
-// ── 比較機能 ─────────────────────────────────────────────────────
-function toggleCompare(id, btn) {
+// ─── 比較（候補詳細ペインから） ───────────────────────────────────
+function toggleCompareInner(id) {
   const idx = state.compareIds.indexOf(id);
   if (idx >= 0) {
     state.compareIds.splice(idx, 1);
   } else {
-    if (state.compareIds.length >= 2) return; // 最大2件
+    if (state.compareIds.length >= 2) return;
     state.compareIds.push(id);
   }
   updateCompareBar();
-  updateCompareBtns();
-}
-
-function updateCompareBtns() {
-  document.querySelectorAll('.compare-btn').forEach(btn => {
-    const id = btn.dataset.id;
-    const active = state.compareIds.includes(id);
-    btn.classList.toggle('active', active);
-    btn.textContent = active ? '比較中 ✓' : '比較に追加';
-    btn.disabled = !active && state.compareIds.length >= 2;
-  });
+  // 詳細ペインのボタンを更新
+  const btn = document.getElementById('compare-toggle-btn-inner');
+  if (btn) {
+    const inCompare = state.compareIds.includes(id);
+    const canAdd    = !inCompare && state.compareIds.length >= 2;
+    btn.classList.toggle('active', inCompare);
+    btn.textContent = inCompare ? '比較中 ✓' : '比較に追加';
+    btn.disabled = canAdd;
+  }
 }
 
 function updateCompareBar() {
-  const bar   = document.getElementById('compare-bar');
+  const bar  = document.getElementById('compare-bar');
   const items = document.getElementById('compare-bar-items');
   const btn   = document.getElementById('compare-show-btn');
 
-  if (state.compareIds.length === 0) {
-    bar.style.display = 'none';
-    return;
-  }
+  if (state.compareIds.length === 0) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   btn.disabled = state.compareIds.length < 2;
 
   const combos = state.data.all_combinations || [];
   items.innerHTML = state.compareIds.map(id => {
     const c = combos.find(x => x.combination_id === id);
-    const name = c ? (c.per_office || []).map(o => o.name).join('+') : id;
+    const name = c ? (c.per_office||[]).map(o => o.name).join('+') : id;
     return `
       <span class="compare-bar-chip">
         ${escHtml(name)}
-        <button class="remove-btn" onclick="removeFromCompare('${escHtml(id)}')" title="削除">✕</button>
+        <button class="remove-btn" onclick="removeFromCompare('${escHtml(id)}')">✕</button>
       </span>
     `;
   }).join('');
@@ -1187,14 +1320,26 @@ function updateCompareBar() {
 function removeFromCompare(id) {
   state.compareIds = state.compareIds.filter(x => x !== id);
   updateCompareBar();
-  updateCompareBtns();
+  // 現在表示中の候補のボタンも更新
+  if (state.selectedComboId) {
+    const btn = document.getElementById('compare-toggle-btn-inner');
+    if (btn) {
+      const inCompare = state.compareIds.includes(state.selectedComboId);
+      const canAdd    = !inCompare && state.compareIds.length >= 2;
+      btn.classList.toggle('active', inCompare);
+      btn.textContent = inCompare ? '比較中 ✓' : '比較に追加';
+      btn.disabled = canAdd;
+    }
+  }
 }
 
 function clearCompare() {
   state.compareIds = [];
   updateCompareBar();
-  updateCompareBtns();
   document.getElementById('section-compare').style.display = 'none';
+  // 現在表示中の詳細ボタンをリセット
+  const btn = document.getElementById('compare-toggle-btn-inner');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '比較に追加'; btn.disabled = false; }
 }
 
 function showCompare() {
@@ -1214,77 +1359,75 @@ function closeCompare() {
 }
 
 function renderComparePanel(c1, c2) {
-  const name1 = (c1.per_office || []).map(o => o.name).join('+') || c1.combination_id;
-  const name2 = (c2.per_office || []).map(o => o.name).join('+') || c2.combination_id;
+  const name1 = (c1.per_office||[]).map(o=>o.name).join('+') || c1.combination_id;
+  const name2 = (c2.per_office||[]).map(o=>o.name).join('+') || c2.combination_id;
   const paretoIds = state.data.pareto_frontier_ids || [];
 
-  // KPI rows definition: label, accessor, unit, lower-is-better
   const kpiDefs = [
-    { label: '通勤 p95',   get: c => c.p95_trip_minutes,                fmt: v => `${v}分`,          lowerBetter: true  },
-    { label: '平均通勤',   get: c => c.avg_trip_minutes,                fmt: v => `${v.toFixed(1)}分`, lowerBetter: true  },
-    { label: '月額賃料',   get: c => c.total_rent_jpy_month / 10000,    fmt: v => `${Math.round(v)}万円`, lowerBetter: true  },
-    { label: '60分超人数', get: c => c.exceed_60_count,                 fmt: v => `${v}人`,           lowerBetter: true  },
-    { label: '社員数',     get: c => c.total_population,                fmt: v => `${v}人`,           lowerBetter: false },
+    { lbl: '通勤 p95',       get: c => c.p95_trip_minutes,                              fmt: v => `${v}分`,              lb: true  },
+    { lbl: '平均通勤',       get: c => c.avg_trip_minutes,                              fmt: v => `${v.toFixed(1)}分`,   lb: true  },
+    { lbl: '60分超',         get: c => c.exceed_60_count,                               fmt: v => `${v}人`,              lb: true  },
+    { lbl: '月額賃料',       get: c => c.total_rent_jpy_month / 10000,                  fmt: v => `${Math.round(v)}万円`, lb: true  },
+    { lbl: '通勤費（推計）', get: c => (c.total_commute_cost_jpy_month||0) / 10000,     fmt: v => `${Math.round(v)}万円`, lb: true,
+      skip: c => c.total_commute_cost_jpy_month == null },
+    { lbl: '合計コスト',     get: c => (c.total_cost_jpy_month||c.total_rent_jpy_month) / 10000, fmt: v => `${Math.round(v)}万円`, lb: true },
+    { lbl: '社員数',         get: c => c.total_population,                              fmt: v => `${v}人`,              lb: false },
   ];
 
   function colHtml(c, other, name) {
     const isPareto = paretoIds.includes(c.combination_id);
-    const rows = kpiDefs.map(def => {
-      const v1 = def.get(c);
-      const v2 = def.get(other);
+    const rows = kpiDefs.filter(d => !d.skip || !d.skip(c)).map(d => {
+      const v1 = d.get(c), v2 = d.get(other);
       const diff = v1 - v2;
-      let cls = 'same', diffLabel = '同じ';
+      let cls = 'same', dlbl = '同じ';
       if (diff !== 0) {
-        const better = def.lowerBetter ? diff < 0 : diff > 0;
+        const better = d.lb ? diff < 0 : diff > 0;
         cls = better ? 'better' : 'worse';
-        diffLabel = (diff > 0 ? '+' : '') + (Number.isInteger(v1) && Number.isInteger(v2) ? diff : diff.toFixed(1));
+        dlbl = (diff > 0 ? '+' : '') + (Number.isInteger(v1) && Number.isInteger(v2) ? diff : diff.toFixed(1));
       }
       return `
         <div class="compare-kpi-row">
-          <span class="compare-kpi-label">${def.label}</span>
-          <span style="display:flex;align-items:center;gap:8px">
-            <span class="compare-kpi-value ${cls}">${def.fmt(v1)}</span>
-            ${diff !== 0 ? `<span class="diff-badge ${cls}">${diffLabel}</span>` : ''}
+          <span class="compare-kpi-label">${d.lbl}</span>
+          <span style="display:flex;align-items:center;gap:7px">
+            <span class="compare-kpi-value ${cls}">${d.fmt(v1)}</span>
+            ${diff !== 0 ? `<span class="diff-badge ${cls}">${dlbl}</span>` : ''}
           </span>
         </div>
       `;
     }).join('');
 
-    const distRows = (() => {
-      const dist  = c.distribution || {};
-      const total = c.total_population || 1;
-      const pcts  = {
-        s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
-        s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
-        s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
-        s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
-      };
-      return `
-        <div style="padding:12px 14px;border-bottom:1px solid var(--gray-bd)">
-          <div style="font-size:11px;color:var(--gray);margin-bottom:6px">通勤分布</div>
-          <div class="dist-bar" style="height:12px;border-radius:6px">
-            <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
-            <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
-            <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
-            <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
-          </div>
-          <div class="dist-legend" style="margin-top:4px">
-            <span><i class="dot" style="background:#22c55e"></i>${dist.under_30||0}</span>
-            <span><i class="dot" style="background:#3b82f6"></i>${dist['30_to_60']||0}</span>
-            <span><i class="dot" style="background:#f59e0b"></i>${dist['60_to_90']||0}</span>
-            <span><i class="dot" style="background:#ef4444"></i>${dist.over_90||0}</span>
-          </div>
+    const dist  = c.distribution || {};
+    const total = c.total_population || 1;
+    const pcts  = {
+      s0: ((dist.under_30    ||0)/total*100).toFixed(1),
+      s1: ((dist['30_to_60'] ||0)/total*100).toFixed(1),
+      s2: ((dist['60_to_90'] ||0)/total*100).toFixed(1),
+      s3: ((dist.over_90     ||0)/total*100).toFixed(1),
+    };
+    const distHtml = `
+      <div style="padding:10px 14px;border-bottom:1px solid var(--gray-bd)">
+        <div style="font-size:11px;color:var(--gray);margin-bottom:5px">通勤分布</div>
+        <div class="dist-bar" style="height:10px;border-radius:5px">
+          <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
+          <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
+          <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
+          <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
         </div>
-      `;
-    })();
-
+        <div class="dist-legend" style="margin-top:4px">
+          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
+          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
+          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
+          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
+        </div>
+      </div>
+    `;
     return `
       <div class="compare-col">
         <div class="compare-col-header ${isPareto ? 'winner' : ''}">
           ${isPareto ? '★ ' : ''}${escHtml(name)} （${c.num_offices}拠点）
         </div>
         ${rows}
-        ${distRows}
+        ${distHtml}
       </div>
     `;
   }
@@ -1294,172 +1437,17 @@ function renderComparePanel(c1, c2) {
       ${colHtml(c1, c2, name1)}
       ${colHtml(c2, c1, name2)}
     </div>
-    <p style="margin-top:10px;font-size:11px;color:var(--gray)">
-      ※ 緑は相手案より優れた値、赤は劣った値、差分は 左 − 右 で表示
+    <p style="margin-top:8px;font-size:11px;color:var(--gray)">
+      ※ 緑は相手案より優れた値、赤は劣った値。差分は 左 − 右
     </p>
   `;
 }
 
-// ── 候補一覧 ─────────────────────────────────────────────────────
-function renderComboList(combos, paretoIds) {
-  const list = document.getElementById('combo-list');
-  if (!combos || combos.length === 0) {
-    list.innerHTML = '<div class="empty-state">候補がありません</div>';
-    return;
-  }
-
-  const sorted = [...combos].sort((a, b) => {
-    const aP = paretoIds.includes(a.combination_id);
-    const bP = paretoIds.includes(b.combination_id);
-    if (aP !== bP) return aP ? -1 : 1;
-    return a.p95_trip_minutes - b.p95_trip_minutes;
-  });
-
-  list.innerHTML = sorted.map(c => renderComboCard(c, paretoIds)).join('');
-
-  // Card click → select combo (but not when clicking compare button)
-  list.querySelectorAll('.combo-card').forEach(card => {
-    card.addEventListener('click', e => {
-      if (e.target.closest('.compare-btn')) return;
-      selectCombo(card.dataset.id);
-    });
-  });
-}
-
-function renderComboCard(c, paretoIds) {
-  const isPareto    = paretoIds.includes(c.combination_id);
-  const cardClass   = isPareto ? 'pareto-optimal' : 'pareto-suboptimal';
-  const officeNames = (c.per_office || []).map(o => o.name);
-  const titleText   = officeNames.length > 0
-    ? officeNames.join(' + ')
-    : (c.selected_offices || []).join(' + ');
-
-  const p95Class   = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
-  const rentMillion = Math.round(c.total_rent_jpy_month / 10000);
-
-  const dist  = c.distribution || {};
-  const total = c.total_population || 1;
-  const pcts  = {
-    s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
-    s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
-    s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
-    s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
-  };
-
-  const officeChips = (c.per_office || []).map(o => {
-    const groups = (c.assignment || [])
-      .filter(a => a.assigned_office_id === o.office_id)
-      .map(a => `${a.group}(${a.population}人)`)
-      .join('、');
-    return `
-      <div class="office-chip">
-        <div class="office-name">${escHtml(o.name)}</div>
-        <div class="office-pop">${escHtml(groups) || '—'} &nbsp;|&nbsp; 余裕${o.capacity_headroom}人${o.capacity_estimated ? '（推定）' : ''}</div>
-      </div>
-    `;
-  }).join('');
-
-  const exceed60 = c.exceed_60_count > 0
-    ? `<span style="color:var(--yellow)">60分超 ${c.exceed_60_count}人</span>`
-    : `<span style="color:var(--green)">60分超 0人</span>`;
-
-  const explain    = c.explain || {};
-  const explainHtml = explain.commute ? `
-    <div class="explain-block">
-      <div class="headline">${escHtml(explain.commute.headline)}</div>
-      <div class="detail">${escHtml(explain.commute.detail || '')}</div>
-    </div>
-  ` : '';
-
-  return `
-    <div class="combo-card ${cardClass}" data-id="${escHtml(c.combination_id)}" title="クリックで詳細表示">
-      <div class="combo-card-header">
-        <div class="combo-card-header-left">
-          <div class="combo-title">${escHtml(titleText)}</div>
-          <span class="badge badge-k">${c.num_offices}拠点</span>
-        </div>
-        <div class="combo-card-header-right">
-          <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
-            ${isPareto ? '★ パレート最適' : 'パレート劣位'}
-          </span>
-          <button class="compare-btn" data-id="${escHtml(c.combination_id)}"
-            onclick="toggleCompare('${escHtml(c.combination_id)}', this)">比較に追加</button>
-        </div>
-      </div>
-
-      <div class="kpi-row">
-        <div class="kpi-item">
-          <span class="kpi-label">通勤 p95</span>
-          <span class="kpi-value ${p95Class}">${c.p95_trip_minutes}</span>
-          <span class="kpi-unit">分</span>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi-item">
-          <span class="kpi-label">平均通勤</span>
-          <span class="kpi-value">${(c.avg_trip_minutes || 0).toFixed(1)}</span>
-          <span class="kpi-unit">分</span>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi-item">
-          <span class="kpi-label">月額賃料</span>
-          <span class="kpi-value">${rentMillion}</span>
-          <span class="kpi-unit">万円/月</span>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi-item">
-          <span class="kpi-label">社員数</span>
-          <span class="kpi-value">${c.total_population}</span>
-          <span class="kpi-unit">人</span>
-        </div>
-        <div class="kpi-divider"></div>
-        <div class="kpi-item">
-          <span class="kpi-label">60分超</span>
-          <div style="font-size:14px; font-weight:600; margin-top:2px">${exceed60}</div>
-        </div>
-      </div>
-
-      <div class="dist-row">
-        <div class="dist-label">通勤時間分布</div>
-        <div class="dist-bar">
-          <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
-          <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
-          <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
-          <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
-        </div>
-        <div class="dist-legend">
-          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
-          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
-          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
-          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
-        </div>
-      </div>
-
-      <div class="assignment-row">${officeChips}</div>
-      ${explainHtml}
-    </div>
-  `;
-}
-
-function escHtml(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-// ── 地図 ──────────────────────────────────────────────────────────
+// ─── 地図 ────────────────────────────────────────────────────────
 function renderMap(combo) {
-  const section   = document.getElementById('section-map');
-  const title     = document.getElementById('map-title');
-  const officeNames = (combo.per_office || []).map(o => o.name).join(' + ');
-  title.textContent = `通勤マップ：${officeNames}`;
-  section.style.display = '';
-
   if (leafletMap) { leafletMap.remove(); leafletMap = null; }
 
-  leafletMap = L.map('map-container').setView([35.68, 139.75], 10);
+  leafletMap = L.map('combo-map-container').setView([35.68, 139.75], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 16,
@@ -1468,116 +1456,184 @@ function renderMap(combo) {
   const inputCandidates = ((state.data.inputs || {}).office_candidates || []);
   const bounds = [];
 
-  // オフィスマーカー
   (combo.per_office || []).forEach((office, i) => {
     const candidate = inputCandidates.find(o => o.office_id === office.office_id);
     const stId = (candidate && candidate.nearest_station_id) || office.office_id;
-    const st = stationMaster[stId];
+    const st   = stationMaster[stId];
     if (!st) return;
-
     const color = OFFICE_COLORS[i % OFFICE_COLORS.length];
-    const icon = L.divIcon({
+    const icon  = L.divIcon({
       className: '',
-      html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;line-height:1">★</div>`,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15],
+      html: `<div style="background:${color};width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">★</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14],
     });
-
     L.marker([st.lat, st.lon], { icon, zIndexOffset: 1000 })
       .addTo(leafletMap)
-      .bindPopup(
-        `<strong>${escHtml(office.name)}</strong><br>` +
-        `配置人数：${office.assigned_population}人<br>` +
-        `収容（推定）：${office.capacity}人<br>` +
-        `余裕：${office.capacity_headroom}人`
-      );
+      .bindPopup(`<strong>${escHtml(office.name)}</strong><br>配置：${office.assigned_population}人<br>余裕：${office.capacity_headroom}人`);
     bounds.push([st.lat, st.lon]);
   });
 
-  // 居住駅サークル（通勤時間で色分け、人数で半径）
   (combo.per_office || []).forEach(office => {
     (office.station_breakdown || []).forEach(sb => {
       if (!sb.reachable) return;
       const st = stationMaster[sb.station_id];
       if (!st) return;
-
-      const color = sb.trip_minutes < 30 ? '#22c55e'
-                  : sb.trip_minutes < 60 ? '#3b82f6'
-                  : sb.trip_minutes < 90 ? '#f59e0b'
-                  : '#ef4444';
-      const radius = Math.max(8, Math.sqrt(sb.count) * 2.8);
-
-      L.circleMarker([st.lat, st.lon], {
-        radius,
-        color: '#fff',
-        weight: 1.5,
-        fillColor: color,
-        fillOpacity: 0.8,
-      }).addTo(leafletMap)
-        .bindPopup(
-          `<strong>${escHtml(st.name)}駅</strong><br>` +
-          `通勤時間：${sb.trip_minutes}分<br>` +
-          `社員数：${sb.count}人`
-        );
+      const color  = sb.trip_minutes < 30 ? '#22c55e'
+                   : sb.trip_minutes < 60 ? '#3b82f6'
+                   : sb.trip_minutes < 90 ? '#f59e0b' : '#ef4444';
+      const radius = Math.max(7, Math.sqrt(sb.count) * 2.8);
+      L.circleMarker([st.lat, st.lon], { radius, color: '#fff', weight: 1.5, fillColor: color, fillOpacity: 0.8 })
+        .addTo(leafletMap)
+        .bindPopup(`<strong>${escHtml(st.name)}駅</strong><br>通勤：${sb.trip_minutes}分<br>社員：${sb.count}人`);
       bounds.push([st.lat, st.lon]);
     });
   });
 
-  if (bounds.length > 0) {
-    leafletMap.fitBounds(bounds, { padding: [40, 40] });
-  }
+  if (bounds.length > 0) leafletMap.fitBounds(bounds, { padding: [40, 40] });
 }
 
-function closeMap() {
-  document.getElementById('section-map').style.display = 'none';
-  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-}
-
-// ── 感度分析 ──────────────────────────────────────────────────────
+// ─── 感度分析 ────────────────────────────────────────────────────
 function renderSensitivity(sensitivity) {
   if (!sensitivity) return;
-  const section = document.getElementById('section-sensitivity');
   const body    = document.getElementById('sensitivity-body');
-  const stable  = sensitivity.ranking_stable;
   const details = sensitivity.details || [];
+  const isNew   = details.length > 0 && Array.isArray(details[0].impacts);
 
-  const detailRows = details.map(d => `
-    <tr>
-      <td>${escHtml(d.parameter)}</td>
-      <td class="${d.ranking_changed ? 'sensitivity-ng' : 'sensitivity-ok'}">
-        ${d.ranking_changed ? '⚠ 変化あり' : '✓ 安定'}
-      </td>
-      <td style="color:#374151">${escHtml(d.description)}</td>
-    </tr>
-  `).join('');
+  let detHtml = '';
+  if (isNew) {
+    detHtml = details.map((d, i) => {
+      const anyChange = (d.impacts || []).some(x => x.diff !== 0);
+      const icon = anyChange ? '⚠' : '✓';
+      const col  = anyChange ? 'var(--yellow)' : 'var(--green)';
+      const rows = (d.impacts || []).map(imp => {
+        const cls = imp.diff > 0 ? 'diff-up' : imp.diff < 0 ? 'diff-down' : 'diff-zero';
+        const str = imp.diff > 0 ? `+${imp.diff}分` : imp.diff < 0 ? `${imp.diff}分` : '変化なし';
+        return `<tr><td>${escHtml(imp.combo_name)}</td><td>${imp.original_p95}分</td><td>${imp.changed_p95}分</td><td class="${cls}">${str}</td></tr>`;
+      }).join('');
+      return `
+        <div class="sens-detail ${i === 0 ? 'open' : ''}" id="sd-${i}">
+          <div class="sens-detail-header" onclick="toggleSens(${i})">
+            <div>
+              <span class="sens-detail-title" style="color:${col}">${icon} ${escHtml(d.parameter)}</span>
+              <span class="sens-detail-desc"> — ${escHtml(d.description || '')}</span>
+            </div>
+            <span class="sens-chevron">▼</span>
+          </div>
+          <div class="sens-detail-body">
+            <table class="impacts-table">
+              <thead><tr><th>候補案</th><th>変更前 p95</th><th>変更後 p95</th><th>差分</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    const stable = sensitivity.ranking_stable;
+    const oldRows = details.map(d => `
+      <tr>
+        <td>${escHtml(d.parameter)}</td>
+        <td class="${d.ranking_changed ? 'diff-up' : 'diff-down'}">${d.ranking_changed ? '⚠ 変化あり' : '✓ 安定'}</td>
+        <td>${escHtml(d.description)}</td>
+      </tr>
+    `).join('');
+    detHtml = `
+      <div style="margin-bottom:12px">
+        <span style="padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;${stable ? 'background:#dcfce7;color:#15803d' : 'background:#fee2e2;color:#b91c1c'}">
+          ${stable ? '✓ 安定' : '⚠ 不安定'}
+        </span>
+      </div>
+      ${details.length ? `<table class="impacts-table"><thead><tr><th>パラメータ</th><th>順位変化</th><th>説明</th></tr></thead><tbody>${oldRows}</tbody></table>` : ''}
+    `;
+  }
 
   body.innerHTML = `
-    <div class="sensitivity-header">
-      <span class="sensitivity-badge ${stable ? 'stable' : 'unstable'}">
-        ${stable ? '✓ 結果は安定しています' : '⚠ 結果が不安定です'}
-      </span>
-    </div>
     <div class="sensitivity-summary">${escHtml(sensitivity.summary || '')}</div>
-    ${details.length > 0 ? `
-      <table class="sensitivity-table">
-        <thead>
-          <tr>
-            <th>変動パラメータ</th>
-            <th>順位変化</th>
-            <th>説明</th>
-          </tr>
-        </thead>
-        <tbody>${detailRows}</tbody>
-      </table>
-    ` : ''}
+    ${detHtml}
   `;
-  section.style.display = '';
+  document.getElementById('section-sensitivity').style.display = '';
 }
 
-// ── 起動 ─────────────────────────────────────────────────────────
-init().catch(err => {
-  setStatus('error', `エラー: ${err.message}`);
-});
+function toggleSens(i) {
+  const el = document.getElementById(`sd-${i}`);
+  if (el) el.classList.toggle('open');
+}
+
+// ─── CSV アップロード ────────────────────────────────────────────
+function handleDragOver(e)  { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
+function handleDragLeave(e) { document.getElementById('upload-zone').classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processUploadFile(file);
+}
+function handleFileSelect(e) { const f = e.target.files[0]; if (f) processUploadFile(f); }
+
+function processUploadFile(file) {
+  const result  = document.getElementById('upload-result');
+  const preview = document.getElementById('upload-preview');
+  result.style.display = '';
+  preview.innerHTML = '';
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    result.className = 'upload-result info';
+    result.textContent = `Excel「${file.name}」を受け付けました。API接続時にサーバー側で解析します。`;
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const rows = parseCsvTsv(ev.target.result);
+      if (rows.length === 0) throw new Error('データが見つかりません');
+      const headers = rows[0];
+      const si = headers.findIndex(h => h.toLowerCase() === 'station_id');
+      const ci = headers.findIndex(h => h.toLowerCase() === 'count');
+      if (si < 0 || ci < 0) throw new Error('必須列 station_id / count が見つかりません');
+      const data = rows.slice(1).filter(r => r.length > 1);
+      result.className = 'upload-result success';
+      result.textContent = `✓ 「${file.name}」を読み込みました。${data.length}行を確認。`;
+      const prev = data.slice(0, 10);
+      preview.innerHTML = `
+        <div style="font-size:12px;color:var(--gray);margin-top:10px;margin-bottom:5px">先頭${prev.length}行のプレビュー${data.length>10?'（'+data.length+'行中）':''}:</div>
+        <table class="upload-preview-table">
+          <thead><tr>${headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>
+          <tbody>${prev.map(r => `<tr>${r.map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      `;
+    } catch(err) {
+      result.className = 'upload-result error';
+      result.textContent = `エラー: ${err.message}`;
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCsvTsv(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const delim = (lines[0].split('\t').length > lines[0].split(',').length) ? '\t' : ',';
+  return lines.map(line => {
+    const cells = []; let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === delim && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cells.push(cur.trim());
+    return cells;
+  });
+}
+
+// ─── ユーティリティ ──────────────────────────────────────────────
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ─── 起動 ────────────────────────────────────────────────────────
+init().catch(err => setStatus('error', `エラー: ${err.message}`));
 </script>
 </body>
 </html>

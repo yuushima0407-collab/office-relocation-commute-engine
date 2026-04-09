@@ -1,6 +1,6 @@
 {
-  "version": "v0.3",
-  "generated_at": "2026-03-02T09:00:00.000000+00:00",
+  "version": "v0.3.1",
+  "generated_at": "2026-03-30T09:00:00.000000+00:00",
   "inputs": {
     "home_station_distribution": [
       { "station_id": "kawasaki",  "count": 45, "group": "営業" },
@@ -54,6 +54,10 @@
       "selected_offices": ["shinagawa"],
       "num_offices": 1,
       "total_rent_jpy_month": 8000000,
+      "total_commute_cost_jpy_month": 1200000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 9200000,
+      "cost_per_capacity": 50829,
       "p95_trip_minutes": 62,
       "avg_trip_minutes": 31.3,
       "total_population": 180,
@@ -118,6 +122,10 @@
       "selected_offices": ["toyosu"],
       "num_offices": 1,
       "total_rent_jpy_month": 6000000,
+      "total_commute_cost_jpy_month": 1800000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 7800000,
+      "cost_per_capacity": 32231,
       "p95_trip_minutes": 65,
       "avg_trip_minutes": 45.3,
       "total_population": 180,
@@ -181,6 +189,10 @@
       "selected_offices": ["shibuya"],
       "num_offices": 1,
       "total_rent_jpy_month": 12000000,
+      "total_commute_cost_jpy_month": 1400000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 13400000,
+      "cost_per_capacity": 63208,
       "p95_trip_minutes": 74,
       "avg_trip_minutes": 35.2,
       "total_population": 180,
@@ -244,6 +256,10 @@
       "selected_offices": ["shinagawa", "toyosu"],
       "num_offices": 2,
       "total_rent_jpy_month": 14000000,
+      "total_commute_cost_jpy_month": 1000000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 15000000,
+      "cost_per_capacity": 35461,
       "p95_trip_minutes": 52,
       "avg_trip_minutes": 24.8,
       "total_population": 180,
@@ -321,6 +337,10 @@
       "selected_offices": ["shinagawa", "shibuya"],
       "num_offices": 2,
       "total_rent_jpy_month": 20000000,
+      "total_commute_cost_jpy_month": 900000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 20900000,
+      "cost_per_capacity": 53180,
       "p95_trip_minutes": 46,
       "avg_trip_minutes": 21.5,
       "total_population": 180,
@@ -398,6 +418,10 @@
       "selected_offices": ["shibuya", "toyosu"],
       "num_offices": 2,
       "total_rent_jpy_month": 18000000,
+      "total_commute_cost_jpy_month": 1100000,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 19100000,
+      "cost_per_capacity": 42071,
       "p95_trip_minutes": 55,
       "avg_trip_minutes": 28.4,
       "total_population": 180,
@@ -481,18 +505,43 @@
     "vs_previous_round": null
   },
   "sensitivity": {
-    "ranking_stable": true,
     "summary": "ラストマイルを±5分変動させてもパレートフロンティアの順位は変わりません。結果は安定しています。",
     "details": [
       {
-        "parameter": "last_mile_minutes ±5min",
-        "ranking_changed": false,
-        "description": "全パレート最適案がフロンティア上に維持"
+        "parameter": "last_mile_minutes +5分",
+        "description": "全オフィスのラストマイルが5分増えた場合の影響",
+        "impacts": [
+          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 67, "diff": 5 },
+          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 70, "diff": 5 },
+          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 79, "diff": 5 },
+          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 57, "diff": 5 },
+          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 51, "diff": 5 },
+          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 60, "diff": 5 }
+        ]
+      },
+      {
+        "parameter": "last_mile_minutes -5分",
+        "description": "全オフィスのラストマイルが5分短縮された場合の影響",
+        "impacts": [
+          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 57, "diff": -5 },
+          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 60, "diff": -5 },
+          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 69, "diff": -5 },
+          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 47, "diff": -5 },
+          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 41, "diff": -5 },
+          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 50, "diff": -5 }
+        ]
       },
       {
         "parameter": "出社日数 3日→5日",
-        "ranking_changed": false,
-        "description": "パレートフロンティアの構成に変化なし"
+        "description": "出社日数が週3日から週5日に増えた場合のコスト・通勤への影響",
+        "impacts": [
+          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 62, "diff": 0 },
+          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 65, "diff": 0 },
+          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 74, "diff": 0 },
+          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 52, "diff": 0 },
+          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 46, "diff": 0 },
+          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 55, "diff": 0 }
+        ]
       }
     ]
   },
