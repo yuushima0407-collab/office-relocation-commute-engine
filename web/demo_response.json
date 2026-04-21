@@ -1,15 +1,50 @@
 {
-  "version": "v0.3.1",
-  "generated_at": "2026-03-30T09:00:00.000000+00:00",
+  "version": "v0.3",
+  "generated_at": "2026-04-21T05:30:23.810443+00:00",
   "inputs": {
     "home_station_distribution": [
-      { "station_id": "kawasaki",  "count": 45, "group": "営業" },
-      { "station_id": "omiya",     "count": 30, "group": "開発" },
-      { "station_id": "shibuya",   "count": 25, "group": "総務" },
-      { "station_id": "yokohama",  "count": 35, "group": "営業" },
-      { "station_id": "chiba",     "count": 20, "group": "開発" },
-      { "station_id": "ikebukuro", "count": 15, "group": "総務" },
-      { "station_id": "kichijoji", "count": 10, "group": "開発" }
+      {
+        "station_id": "kawasaki",
+        "count": 45,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "omiya",
+        "count": 30,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "shibuya",
+        "count": 25,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "yokohama",
+        "count": 35,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "chiba",
+        "count": 20,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "ikebukuro",
+        "count": 15,
+        "segment": null,
+        "office_days_per_week_override": null
+      },
+      {
+        "station_id": "kichijoji",
+        "count": 10,
+        "segment": null,
+        "office_days_per_week_override": null
+      }
     ],
     "office_candidates": [
       {
@@ -17,539 +52,1309 @@
         "name": "品川オフィス",
         "nearest_station_id": "shinagawa",
         "last_mile_minutes": 5,
-        "rent_jpy_month": 8000000,
-        "floor_area_sqm": 600
+        "lat": 35.6285,
+        "lon": 139.7388,
+        "rent_jpy_month": 8000000
       },
       {
         "office_id": "shibuya",
         "name": "渋谷オフィス",
         "nearest_station_id": "shibuya",
         "last_mile_minutes": 7,
-        "rent_jpy_month": 12000000,
-        "floor_area_sqm": 700
+        "lat": 35.658,
+        "lon": 139.7013,
+        "rent_jpy_month": 12000000
       },
       {
         "office_id": "toyosu",
         "name": "豊洲オフィス",
         "nearest_station_id": "toyosu",
         "last_mile_minutes": 10,
-        "rent_jpy_month": 6000000,
-        "floor_area_sqm": 800
+        "lat": 35.6464,
+        "lon": 139.7914,
+        "rent_jpy_month": 6000000
       }
     ],
-    "policy_as_is": { "office_days_per_week": 3.0 },
+    "policy_as_is": {
+      "office_days_per_week": 3
+    },
     "settings": {
-      "num_offices": [1, 2],
-      "fixed_offices": [],
-      "fixed_assignment": [],
-      "group_together": [],
-      "budget_total_rent_jpy_month": null,
-      "max_p95_trip_minutes": null,
-      "max_avg_trip_minutes": null
+      "baseline_office_id": "shinagawa",
+      "thresholds_trip_minutes": [
+        60,
+        90
+      ],
+      "percentiles": [
+        50,
+        95
+      ],
+      "ranking_weights": {
+        "access": 0.6,
+        "financial": 0.3,
+        "environmental": 0.1
+      },
+      "bench_trip_p95_minutes": 90,
+      "bench_rent_jpy_month": 10000000,
+      "robust_flip_rate_threshold": 0.1,
+      "routing": {
+        "graph_id": "tokyo_core_v1",
+        "transfer_penalty_minutes": 0
+      }
     }
   },
   "all_combinations": [
     {
-      "combination_id": "k1_shinagawa",
-      "selected_offices": ["shinagawa"],
+      "selected_offices": [
+        "shinagawa"
+      ],
       "num_offices": 1,
       "total_rent_jpy_month": 8000000,
-      "total_commute_cost_jpy_month": 1200000,
+      "total_commute_cost_jpy_month": 992560,
       "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 9200000,
-      "cost_per_capacity": 50829,
+      "total_cost_jpy_month": 8992560,
+      "total_capacity": null,
+      "rent_per_capacity": null,
       "p95_trip_minutes": 62,
       "avg_trip_minutes": 31.3,
       "total_population": 180,
       "exceed_60_count": 20,
       "exceed_90_count": 0,
-      "distribution": { "under_30": 95, "30_to_60": 65, "60_to_90": 20, "over_90": 0 },
-      "is_pareto_optimal": true,
+      "distribution": {
+        "under_30": 105,
+        "30_to_60": 55,
+        "60_to_90": 20,
+        "over_90": 0
+      },
       "assignment": [
-        { "group": "営業", "assigned_office_id": "shinagawa", "population": 80, "capacity_headroom": 102, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "shinagawa", "population": 60, "capacity_headroom": 102, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "shinagawa", "population": 40, "capacity_headroom": 102, "capacity_estimated": true }
+        {
+          "group": "chiba",
+          "assigned_office_id": "shinagawa",
+          "population": 20,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "ikebukuro",
+          "assigned_office_id": "shinagawa",
+          "population": 15,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kawasaki",
+          "assigned_office_id": "shinagawa",
+          "population": 45,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kichijoji",
+          "assigned_office_id": "shinagawa",
+          "population": 10,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "omiya",
+          "assigned_office_id": "shinagawa",
+          "population": 30,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "shibuya",
+          "assigned_office_id": "shinagawa",
+          "population": 25,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "yokohama",
+          "assigned_office_id": "shinagawa",
+          "population": 35,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        }
       ],
       "per_office": [
         {
           "office_id": "shinagawa",
           "name": "品川オフィス",
           "assigned_population": 180,
-          "capacity": 181,
-          "capacity_headroom": 1,
-          "capacity_estimated": true,
+          "capacity": null,
+          "capacity_headroom": null,
+          "capacity_estimated": false,
           "rent_jpy_month": 8000000,
+          "floor_area_sqm": null,
+          "kpis": {
+            "population": 180,
+            "population_reachable": 180,
+            "trip_minutes": {
+              "avg": 31.278,
+              "p50": 23.0,
+              "p95": 62.0
+            },
+            "round_trip_minutes": {
+              "avg": 62.556,
+              "p50": 46.0,
+              "p95": 124.0
+            },
+            "weekly_minutes": {
+              "avg": 187.667,
+              "p50": 138.0,
+              "p95": 372.0
+            },
+            "thresholds": [
+              {
+                "trip_minutes": 60,
+                "exceed_count": 20,
+                "exceed_share": 0.111111
+              },
+              {
+                "trip_minutes": 90,
+                "exceed_count": 0,
+                "exceed_share": 0.0
+              }
+            ]
+          },
           "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 14, "count": 45, "reachable": true },
-            { "station_id": "omiya",     "trip_minutes": 57, "count": 30, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes": 17, "count": 25, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 23, "count": 35, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 62, "count": 20, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 30, "count": 15, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 37, "count": 10, "reachable": true }
+            {
+              "station_id": "kawasaki",
+              "count": 45,
+              "reachable": true,
+              "trip_minutes": 14,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "omiya",
+              "count": 30,
+              "reachable": true,
+              "trip_minutes": 57,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "shibuya",
+              "count": 25,
+              "reachable": true,
+              "trip_minutes": 17,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "yokohama",
+              "count": 35,
+              "reachable": true,
+              "trip_minutes": 23,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "chiba",
+              "count": 20,
+              "reachable": true,
+              "trip_minutes": 62,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": true
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "ikebukuro",
+              "count": 15,
+              "reachable": true,
+              "trip_minutes": 30,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "kichijoji",
+              "count": 10,
+              "reachable": true,
+              "trip_minutes": 37,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            }
           ]
         }
       ],
-      "explain": {
-        "commute": {
-          "headline": "平均通勤31分、最も長い人でも62分",
-          "detail": "社員180人中、60分超えは20人（千葉方面）",
-          "distribution": "30分未満: 95人 / 30-60分: 65人 / 60分超: 20人"
-        },
-        "cost": {
-          "headline": "月額800万円",
-          "detail": "品川オフィス1拠点"
-        },
-        "capacity": {
-          "headline": "収容余裕わずか1人",
-          "detail": "品川: 180人配置、推定収容181人（余裕1人）",
-          "warning": "ほぼ満杯のため、増員時は移転または拡張が必要",
-          "note": "※推定値（3.3㎡/人換算）。実際の収容人数は設備・レイアウトにより異なります"
-        },
-        "assignment": {
-          "headline": "全3部署が品川に集約",
-          "detail": ["品川 → 営業(80人), 開発(60人), 総務(40人)"],
-          "rationale": "1拠点のため全部署を同一オフィスに配置"
-        },
-        "vs_alternatives": [
-          "豊洲1拠点にすると月200万安いが、通勤平均が+14分悪化",
-          "品川+豊洲の2拠点にすると通勤p95が-10分改善、月額+600万"
-        ]
-      }
-    },
-    {
-      "combination_id": "k1_toyosu",
-      "selected_offices": ["toyosu"],
-      "num_offices": 1,
-      "total_rent_jpy_month": 6000000,
-      "total_commute_cost_jpy_month": 1800000,
-      "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 7800000,
-      "cost_per_capacity": 32231,
-      "p95_trip_minutes": 65,
-      "avg_trip_minutes": 45.3,
-      "total_population": 180,
-      "exceed_60_count": 20,
-      "exceed_90_count": 0,
-      "distribution": { "under_30": 45, "30_to_60": 115, "60_to_90": 20, "over_90": 0 },
-      "is_pareto_optimal": true,
-      "assignment": [
-        { "group": "営業", "assigned_office_id": "toyosu", "population": 80, "capacity_headroom": 162, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "toyosu", "population": 60, "capacity_headroom": 162, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "toyosu", "population": 40, "capacity_headroom": 162, "capacity_estimated": true }
-      ],
-      "per_office": [
+      "department_breakdown": [
         {
-          "office_id": "toyosu",
-          "name": "豊洲オフィス",
-          "assigned_population": 180,
-          "capacity": 242,
-          "capacity_headroom": 62,
-          "capacity_estimated": true,
-          "rent_jpy_month": 6000000,
-          "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 34, "count": 45, "reachable": true },
-            { "station_id": "omiya",     "trip_minutes": 60, "count": 30, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes": 37, "count": 25, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 43, "count": 35, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 65, "count": 20, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 41, "count": 15, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 48, "count": 10, "reachable": true }
-          ]
+          "group": "chiba",
+          "count": 20,
+          "avg_trip_minutes": 62.0,
+          "p95_trip_minutes": 62,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 176660
+        },
+        {
+          "group": "ikebukuro",
+          "count": 15,
+          "avg_trip_minutes": 30.0,
+          "p95_trip_minutes": 30,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 72870
+        },
+        {
+          "group": "kawasaki",
+          "count": 45,
+          "avg_trip_minutes": 14.0,
+          "p95_trip_minutes": 14,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 168930
+        },
+        {
+          "group": "kichijoji",
+          "count": 10,
+          "avg_trip_minutes": 37.0,
+          "p95_trip_minutes": 37,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 55200
+        },
+        {
+          "group": "omiya",
+          "count": 30,
+          "avg_trip_minutes": 57.0,
+          "p95_trip_minutes": 57,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 238470
+        },
+        {
+          "group": "shibuya",
+          "count": 25,
+          "avg_trip_minutes": 17.0,
+          "p95_trip_minutes": 17,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 110400
+        },
+        {
+          "group": "yokohama",
+          "count": 35,
+          "avg_trip_minutes": 23.0,
+          "p95_trip_minutes": 23,
+          "assigned_office": "品川オフィス",
+          "commute_cost_jpy_month": 170030
         }
       ],
+      "conflict_alerts": [
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 62分)とikebukuro(p95: 30分)で32分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 62分)とkawasaki(p95: 14分)で48分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 62分)とkichijoji(p95: 37分)で25分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 62分)とshibuya(p95: 17分)で45分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 62分)とyokohama(p95: 23分)で39分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "ikebukuro(p95: 30分)とkawasaki(p95: 14分)で16分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 57分)とikebukuro(p95: 30分)で27分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "kichijoji(p95: 37分)とkawasaki(p95: 14分)で23分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 57分)とkawasaki(p95: 14分)で43分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 57分)とkichijoji(p95: 37分)で20分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "kichijoji(p95: 37分)とshibuya(p95: 17分)で20分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 57分)とshibuya(p95: 17分)で40分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 57分)とyokohama(p95: 23分)で34分の格差があります",
+          "severity": "warning"
+        }
+      ],
+      "combination_id": "k1_combo_1",
+      "is_pareto_optimal": true,
       "explain": {
         "commute": {
-          "headline": "平均通勤45分、最も長い人でも65分",
-          "detail": "社員180人中、60分超えは20人（千葉方面）",
-          "distribution": "30分未満: 45人 / 30-60分: 115人 / 60分超: 20人"
+          "headline": "平均通勤 31分 / p95 62分",
+          "detail": "対象 180人、60分超は 20人",
+          "distribution": "30分未満: 105人 / 30-60分: 55人 / 60分以上: 20人"
         },
         "cost": {
-          "headline": "月額600万円（最安）",
-          "detail": "豊洲オフィス1拠点"
+          "headline": "月額賃料 800万",
+          "detail": "品川オフィス800万"
         },
         "capacity": {
-          "headline": "収容余裕62人",
-          "detail": "豊洲: 180人配置、推定収容242人（余裕62人）",
-          "note": "※推定値（3.3㎡/人換算）"
+          "headline": "全拠点で収容可能",
+          "detail": "品川オフィス: 180人（定員未設定）"
         },
         "assignment": {
-          "headline": "全3部署が豊洲に集約",
-          "detail": ["豊洲 → 営業(80人), 開発(60人), 総務(40人)"],
-          "rationale": "1拠点のため全部署を同一オフィスに配置"
+          "headline": "7グループを配賦",
+          "detail": [
+            "品川オフィス: chiba(20人), ikebukuro(15人), kawasaki(45人), kichijoji(10人), omiya(30人), shibuya(25人), yokohama(35人)"
+          ],
+          "rationale": "各グループを通勤負荷が低いオフィスに割り当て"
         },
         "vs_alternatives": [
-          "品川1拠点にすると月200万高いが、通勤平均が-14分改善",
-          "品川+豊洲の2拠点にすると通勤p95が-13分改善、月額+800万"
+          "豊洲オフィス: 賃料200万安い, p95が3分長い",
+          "渋谷オフィス: 賃料400万高い, p95が12分長い"
         ]
       }
     },
     {
-      "combination_id": "k1_shibuya",
-      "selected_offices": ["shibuya"],
+      "selected_offices": [
+        "shibuya"
+      ],
       "num_offices": 1,
       "total_rent_jpy_month": 12000000,
-      "total_commute_cost_jpy_month": 1400000,
+      "total_commute_cost_jpy_month": 1021255,
       "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 13400000,
-      "cost_per_capacity": 63208,
+      "total_cost_jpy_month": 13021255,
+      "total_capacity": null,
+      "rent_per_capacity": null,
       "p95_trip_minutes": 74,
       "avg_trip_minutes": 35.2,
       "total_population": 180,
       "exceed_60_count": 20,
       "exceed_90_count": 0,
-      "distribution": { "under_30": 65, "30_to_60": 95, "60_to_90": 20, "over_90": 0 },
-      "is_pareto_optimal": false,
+      "distribution": {
+        "under_30": 95,
+        "30_to_60": 65,
+        "60_to_90": 20,
+        "over_90": 0
+      },
       "assignment": [
-        { "group": "営業", "assigned_office_id": "shibuya", "population": 80, "capacity_headroom": 132, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "shibuya", "population": 60, "capacity_headroom": 132, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "shibuya", "population": 40, "capacity_headroom": 132, "capacity_estimated": true }
+        {
+          "group": "chiba",
+          "assigned_office_id": "shibuya",
+          "population": 20,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "ikebukuro",
+          "assigned_office_id": "shibuya",
+          "population": 15,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kawasaki",
+          "assigned_office_id": "shibuya",
+          "population": 45,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kichijoji",
+          "assigned_office_id": "shibuya",
+          "population": 10,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "omiya",
+          "assigned_office_id": "shibuya",
+          "population": 30,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "shibuya",
+          "assigned_office_id": "shibuya",
+          "population": 25,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "yokohama",
+          "assigned_office_id": "shibuya",
+          "population": 35,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        }
       ],
       "per_office": [
         {
           "office_id": "shibuya",
           "name": "渋谷オフィス",
           "assigned_population": 180,
-          "capacity": 212,
-          "capacity_headroom": 32,
-          "capacity_estimated": true,
+          "capacity": null,
+          "capacity_headroom": null,
+          "capacity_estimated": false,
           "rent_jpy_month": 12000000,
+          "floor_area_sqm": null,
+          "kpis": {
+            "population": 180,
+            "population_reachable": 180,
+            "trip_minutes": {
+              "avg": 35.222,
+              "p50": 28.0,
+              "p95": 74.0
+            },
+            "round_trip_minutes": {
+              "avg": 70.444,
+              "p50": 56.0,
+              "p95": 148.0
+            },
+            "weekly_minutes": {
+              "avg": 211.333,
+              "p50": 168.0,
+              "p95": 444.0
+            },
+            "thresholds": [
+              {
+                "trip_minutes": 60,
+                "exceed_count": 20,
+                "exceed_share": 0.111111
+              },
+              {
+                "trip_minutes": 90,
+                "exceed_count": 0,
+                "exceed_share": 0.0
+              }
+            ]
+          },
           "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 28, "count": 45, "reachable": true },
-            { "station_id": "omiya",     "trip_minutes": 52, "count": 30, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes":  7, "count": 25, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 37, "count": 35, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 74, "count": 20, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 20, "count": 15, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 27, "count": 10, "reachable": true }
+            {
+              "station_id": "kawasaki",
+              "count": 45,
+              "reachable": true,
+              "trip_minutes": 28,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "omiya",
+              "count": 30,
+              "reachable": true,
+              "trip_minutes": 52,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "shibuya",
+              "count": 25,
+              "reachable": true,
+              "trip_minutes": 7,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "yokohama",
+              "count": 35,
+              "reachable": true,
+              "trip_minutes": 37,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "chiba",
+              "count": 20,
+              "reachable": true,
+              "trip_minutes": 74,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": true
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "ikebukuro",
+              "count": 15,
+              "reachable": true,
+              "trip_minutes": 20,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "kichijoji",
+              "count": 10,
+              "reachable": true,
+              "trip_minutes": 27,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            }
           ]
         }
       ],
-      "explain": {
-        "commute": {
-          "headline": "平均通勤35分、最も長い人でも74分",
-          "detail": "社員180人中、60分超えは20人（千葉方面）",
-          "distribution": "30分未満: 65人 / 30-60分: 95人 / 60分超: 20人"
-        },
-        "cost": {
-          "headline": "月額1,200万円（最高額）",
-          "detail": "渋谷オフィス1拠点"
-        },
-        "capacity": {
-          "headline": "収容余裕32人",
-          "detail": "渋谷: 180人配置、推定収容212人（余裕32人）",
-          "note": "※推定値（3.3㎡/人換算）"
-        },
-        "assignment": {
-          "headline": "全3部署が渋谷に集約",
-          "detail": ["渋谷 → 営業(80人), 開発(60人), 総務(40人)"],
-          "rationale": "1拠点のため全部署を同一オフィスに配置"
-        },
-        "vs_alternatives": [
-          "品川1拠点にすると月400万安く、通勤p95も-12分改善",
-          "豊洲1拠点にすると月600万安いが通勤p95は+9分悪化"
-        ]
-      }
-    },
-    {
-      "combination_id": "k2_shinagawa_toyosu",
-      "selected_offices": ["shinagawa", "toyosu"],
-      "num_offices": 2,
-      "total_rent_jpy_month": 14000000,
-      "total_commute_cost_jpy_month": 1000000,
-      "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 15000000,
-      "cost_per_capacity": 35461,
-      "p95_trip_minutes": 52,
-      "avg_trip_minutes": 24.8,
-      "total_population": 180,
-      "exceed_60_count": 0,
-      "exceed_90_count": 0,
-      "distribution": { "under_30": 110, "30_to_60": 70, "60_to_90": 0, "over_90": 0 },
-      "is_pareto_optimal": true,
-      "assignment": [
-        { "group": "営業", "assigned_office_id": "shinagawa", "population": 80, "capacity_headroom": 101, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "toyosu",    "population": 60, "capacity_headroom": 182, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "shinagawa", "population": 40, "capacity_headroom": 61,  "capacity_estimated": true }
-      ],
-      "per_office": [
+      "department_breakdown": [
         {
-          "office_id": "shinagawa",
-          "name": "品川オフィス",
-          "assigned_population": 120,
-          "capacity": 181,
-          "capacity_headroom": 61,
-          "capacity_estimated": true,
-          "rent_jpy_month": 8000000,
-          "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 14, "count": 45, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes": 17, "count": 25, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 23, "count": 35, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 30, "count": 15, "reachable": true }
-          ]
+          "group": "chiba",
+          "count": 20,
+          "avg_trip_minutes": 74.0,
+          "p95_trip_minutes": 74,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 194320
         },
         {
-          "office_id": "toyosu",
-          "name": "豊洲オフィス",
-          "assigned_population": 60,
-          "capacity": 242,
-          "capacity_headroom": 182,
-          "capacity_estimated": true,
-          "rent_jpy_month": 6000000,
-          "station_breakdown": [
-            { "station_id": "omiya",     "trip_minutes": 60, "count": 30, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 45, "count": 20, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 52, "count": 10, "reachable": true }
-          ]
+          "group": "ikebukuro",
+          "count": 15,
+          "avg_trip_minutes": 20.0,
+          "p95_trip_minutes": 20,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 66240
+        },
+        {
+          "group": "kawasaki",
+          "count": 45,
+          "avg_trip_minutes": 28.0,
+          "p95_trip_minutes": 28,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 218610
+        },
+        {
+          "group": "kichijoji",
+          "count": 10,
+          "avg_trip_minutes": 27.0,
+          "p95_trip_minutes": 27,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 48580
+        },
+        {
+          "group": "omiya",
+          "count": 30,
+          "avg_trip_minutes": 52.0,
+          "p95_trip_minutes": 52,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 211980
+        },
+        {
+          "group": "shibuya",
+          "count": 25,
+          "avg_trip_minutes": 7.0,
+          "p95_trip_minutes": 7,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 88325
+        },
+        {
+          "group": "yokohama",
+          "count": 35,
+          "avg_trip_minutes": 37.0,
+          "p95_trip_minutes": 37,
+          "assigned_office": "渋谷オフィス",
+          "commute_cost_jpy_month": 193200
         }
       ],
-      "explain": {
-        "commute": {
-          "headline": "平均通勤25分、最も長い人でも52分",
-          "detail": "社員180人全員が60分以内",
-          "distribution": "30分未満: 110人 / 30-60分: 70人 / 60分超: 0人"
-        },
-        "cost": {
-          "headline": "月額1,400万円",
-          "detail": "品川800万 + 豊洲600万"
-        },
-        "capacity": {
-          "headline": "両拠点とも収容余裕あり",
-          "detail": "品川: 120人配置、推定収容181人（余裕61人） / 豊洲: 60人配置、推定収容242人（余裕182人）",
-          "note": "※推定値（3.3㎡/人換算）"
-        },
-        "assignment": {
-          "headline": "営業・総務は品川、開発は豊洲",
-          "detail": [
-            "品川 → 営業(80人), 総務(40人)",
-            "豊洲 → 開発(60人)"
-          ],
-          "rationale": "各部署を通勤負荷が最小になるオフィスに配置"
-        },
-        "vs_alternatives": [
-          "品川1拠点にすると月600万安いが通勤p95が+10分悪化、60分超が20人発生",
-          "品川+渋谷の2拠点にすると通勤が更に改善するが月額+600万"
-        ]
-      }
-    },
-    {
-      "combination_id": "k2_shinagawa_shibuya",
-      "selected_offices": ["shinagawa", "shibuya"],
-      "num_offices": 2,
-      "total_rent_jpy_month": 20000000,
-      "total_commute_cost_jpy_month": 900000,
-      "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 20900000,
-      "cost_per_capacity": 53180,
-      "p95_trip_minutes": 46,
-      "avg_trip_minutes": 21.5,
-      "total_population": 180,
-      "exceed_60_count": 0,
-      "exceed_90_count": 0,
-      "distribution": { "under_30": 130, "30_to_60": 50, "60_to_90": 0, "over_90": 0 },
-      "is_pareto_optimal": true,
-      "assignment": [
-        { "group": "営業", "assigned_office_id": "shinagawa", "population": 80, "capacity_headroom": 101, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "shibuya",   "population": 60, "capacity_headroom": 152, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "shibuya",   "population": 40, "capacity_headroom": 112, "capacity_estimated": true }
-      ],
-      "per_office": [
+      "conflict_alerts": [
         {
-          "office_id": "shinagawa",
-          "name": "品川オフィス",
-          "assigned_population": 80,
-          "capacity": 181,
-          "capacity_headroom": 101,
-          "capacity_estimated": true,
-          "rent_jpy_month": 8000000,
-          "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 14, "count": 45, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 23, "count": 35, "reachable": true }
-          ]
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とikebukuro(p95: 20分)で54分の格差があります",
+          "severity": "warning"
         },
         {
-          "office_id": "shibuya",
-          "name": "渋谷オフィス",
-          "assigned_population": 100,
-          "capacity": 212,
-          "capacity_headroom": 112,
-          "capacity_estimated": true,
-          "rent_jpy_month": 12000000,
-          "station_breakdown": [
-            { "station_id": "omiya",     "trip_minutes": 52, "count": 30, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes":  7, "count": 25, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 46, "count": 20, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 20, "count": 15, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 27, "count": 10, "reachable": true }
-          ]
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とkawasaki(p95: 28分)で46分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とkichijoji(p95: 27分)で47分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とomiya(p95: 52分)で22分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とshibuya(p95: 7分)で67分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 74分)とyokohama(p95: 37分)で37分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 52分)とikebukuro(p95: 20分)で32分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "yokohama(p95: 37分)とikebukuro(p95: 20分)で17分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 52分)とkawasaki(p95: 28分)で24分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "kawasaki(p95: 28分)とshibuya(p95: 7分)で21分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 52分)とkichijoji(p95: 27分)で25分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "kichijoji(p95: 27分)とshibuya(p95: 7分)で20分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 52分)とshibuya(p95: 7分)で45分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 52分)とyokohama(p95: 37分)で15分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "yokohama(p95: 37分)とshibuya(p95: 7分)で30分の格差があります",
+          "severity": "warning"
         }
       ],
-      "explain": {
-        "commute": {
-          "headline": "平均通勤22分、最も長い人でも46分",
-          "detail": "社員180人全員が60分以内",
-          "distribution": "30分未満: 130人 / 30-60分: 50人 / 60分超: 0人"
-        },
-        "cost": {
-          "headline": "月額2,000万円（最高額）",
-          "detail": "品川800万 + 渋谷1,200万"
-        },
-        "capacity": {
-          "headline": "両拠点とも収容余裕あり",
-          "detail": "品川: 80人配置、推定収容181人（余裕101人） / 渋谷: 100人配置、推定収容212人（余裕112人）",
-          "note": "※推定値（3.3㎡/人換算）"
-        },
-        "assignment": {
-          "headline": "営業は品川、開発・総務は渋谷",
-          "detail": [
-            "品川 → 営業(80人)",
-            "渋谷 → 開発(60人), 総務(40人)"
-          ],
-          "rationale": "各部署を通勤負荷が最小になるオフィスに配置"
-        },
-        "vs_alternatives": [
-          "品川+豊洲にすると月600万安いが通勤p95が+6分悪化",
-          "品川1拠点にすると月1,200万安いが通勤p95が+16分悪化"
-        ]
-      }
-    },
-    {
-      "combination_id": "k2_shibuya_toyosu",
-      "selected_offices": ["shibuya", "toyosu"],
-      "num_offices": 2,
-      "total_rent_jpy_month": 18000000,
-      "total_commute_cost_jpy_month": 1100000,
-      "total_commute_cost_estimated": true,
-      "total_cost_jpy_month": 19100000,
-      "cost_per_capacity": 42071,
-      "p95_trip_minutes": 55,
-      "avg_trip_minutes": 28.4,
-      "total_population": 180,
-      "exceed_60_count": 0,
-      "exceed_90_count": 0,
-      "distribution": { "under_30": 95, "30_to_60": 85, "60_to_90": 0, "over_90": 0 },
+      "combination_id": "k1_combo_2",
       "is_pareto_optimal": false,
+      "explain": {
+        "commute": {
+          "headline": "平均通勤 35分 / p95 74分",
+          "detail": "対象 180人、60分超は 20人",
+          "distribution": "30分未満: 95人 / 30-60分: 65人 / 60分以上: 20人"
+        },
+        "cost": {
+          "headline": "月額賃料 1200万",
+          "detail": "渋谷オフィス1200万"
+        },
+        "capacity": {
+          "headline": "全拠点で収容可能",
+          "detail": "渋谷オフィス: 180人（定員未設定）"
+        },
+        "assignment": {
+          "headline": "7グループを配賦",
+          "detail": [
+            "渋谷オフィス: chiba(20人), ikebukuro(15人), kawasaki(45人), kichijoji(10人), omiya(30人), shibuya(25人), yokohama(35人)"
+          ],
+          "rationale": "各グループを通勤負荷が低いオフィスに割り当て"
+        },
+        "vs_alternatives": [
+          "豊洲オフィス: 賃料600万安い, p95が9分短い",
+          "品川オフィス: 賃料400万安い, p95が12分短い"
+        ]
+      }
+    },
+    {
+      "selected_offices": [
+        "toyosu"
+      ],
+      "num_offices": 1,
+      "total_rent_jpy_month": 6000000,
+      "total_commute_cost_jpy_month": 1192390,
+      "total_commute_cost_estimated": true,
+      "total_cost_jpy_month": 7192390,
+      "total_capacity": null,
+      "rent_per_capacity": null,
+      "p95_trip_minutes": 65,
+      "avg_trip_minutes": 45.3,
+      "total_population": 180,
+      "exceed_60_count": 20,
+      "exceed_90_count": 0,
+      "distribution": {
+        "under_30": 0,
+        "30_to_60": 130,
+        "60_to_90": 50,
+        "over_90": 0
+      },
       "assignment": [
-        { "group": "営業", "assigned_office_id": "shibuya",  "population": 80, "capacity_headroom": 132, "capacity_estimated": true },
-        { "group": "開発", "assigned_office_id": "toyosu",   "population": 60, "capacity_headroom": 182, "capacity_estimated": true },
-        { "group": "総務", "assigned_office_id": "shibuya",  "population": 40, "capacity_headroom": 92,  "capacity_estimated": true }
+        {
+          "group": "chiba",
+          "assigned_office_id": "toyosu",
+          "population": 20,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "ikebukuro",
+          "assigned_office_id": "toyosu",
+          "population": 15,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kawasaki",
+          "assigned_office_id": "toyosu",
+          "population": 45,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "kichijoji",
+          "assigned_office_id": "toyosu",
+          "population": 10,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "omiya",
+          "assigned_office_id": "toyosu",
+          "population": 30,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "shibuya",
+          "assigned_office_id": "toyosu",
+          "population": 25,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        },
+        {
+          "group": "yokohama",
+          "assigned_office_id": "toyosu",
+          "population": 35,
+          "capacity_headroom": null,
+          "capacity_estimated": false
+        }
       ],
       "per_office": [
         {
-          "office_id": "shibuya",
-          "name": "渋谷オフィス",
-          "assigned_population": 120,
-          "capacity": 212,
-          "capacity_headroom": 92,
-          "capacity_estimated": true,
-          "rent_jpy_month": 12000000,
-          "station_breakdown": [
-            { "station_id": "kawasaki",  "trip_minutes": 28, "count": 45, "reachable": true },
-            { "station_id": "shibuya",   "trip_minutes":  7, "count": 25, "reachable": true },
-            { "station_id": "yokohama",  "trip_minutes": 37, "count": 35, "reachable": true },
-            { "station_id": "ikebukuro", "trip_minutes": 20, "count": 15, "reachable": true }
-          ]
-        },
-        {
           "office_id": "toyosu",
           "name": "豊洲オフィス",
-          "assigned_population": 60,
-          "capacity": 242,
-          "capacity_headroom": 182,
-          "capacity_estimated": true,
+          "assigned_population": 180,
+          "capacity": null,
+          "capacity_headroom": null,
+          "capacity_estimated": false,
           "rent_jpy_month": 6000000,
+          "floor_area_sqm": null,
+          "kpis": {
+            "population": 180,
+            "population_reachable": 180,
+            "trip_minutes": {
+              "avg": 45.306,
+              "p50": 43.0,
+              "p95": 65.0
+            },
+            "round_trip_minutes": {
+              "avg": 90.611,
+              "p50": 86.0,
+              "p95": 130.0
+            },
+            "weekly_minutes": {
+              "avg": 271.833,
+              "p50": 258.0,
+              "p95": 390.0
+            },
+            "thresholds": [
+              {
+                "trip_minutes": 60,
+                "exceed_count": 20,
+                "exceed_share": 0.111111
+              },
+              {
+                "trip_minutes": 90,
+                "exceed_count": 0,
+                "exceed_share": 0.0
+              }
+            ]
+          },
           "station_breakdown": [
-            { "station_id": "omiya",     "trip_minutes": 60, "count": 30, "reachable": true },
-            { "station_id": "chiba",     "trip_minutes": 45, "count": 20, "reachable": true },
-            { "station_id": "kichijoji", "trip_minutes": 55, "count": 10, "reachable": true }
+            {
+              "station_id": "kawasaki",
+              "count": 45,
+              "reachable": true,
+              "trip_minutes": 34,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "omiya",
+              "count": 30,
+              "reachable": true,
+              "trip_minutes": 60,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "shibuya",
+              "count": 25,
+              "reachable": true,
+              "trip_minutes": 37,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "yokohama",
+              "count": 35,
+              "reachable": true,
+              "trip_minutes": 43,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "chiba",
+              "count": 20,
+              "reachable": true,
+              "trip_minutes": 65,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": true
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "ikebukuro",
+              "count": 15,
+              "reachable": true,
+              "trip_minutes": 41,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            },
+            {
+              "station_id": "kichijoji",
+              "count": 10,
+              "reachable": true,
+              "trip_minutes": 48,
+              "threshold_results": [
+                {
+                  "trip_minutes": 60,
+                  "exceeds": false
+                },
+                {
+                  "trip_minutes": 90,
+                  "exceeds": false
+                }
+              ],
+              "delta_vs_baseline_trip_minutes": null
+            }
           ]
         }
       ],
+      "department_breakdown": [
+        {
+          "group": "chiba",
+          "count": 20,
+          "avg_trip_minutes": 65.0,
+          "p95_trip_minutes": 65,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 176660
+        },
+        {
+          "group": "ikebukuro",
+          "count": 15,
+          "avg_trip_minutes": 41.0,
+          "p95_trip_minutes": 41,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 96060
+        },
+        {
+          "group": "kawasaki",
+          "count": 45,
+          "avg_trip_minutes": 34.0,
+          "p95_trip_minutes": 34,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 248400
+        },
+        {
+          "group": "kichijoji",
+          "count": 10,
+          "avg_trip_minutes": 48.0,
+          "p95_trip_minutes": 48,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 70660
+        },
+        {
+          "group": "omiya",
+          "count": 30,
+          "avg_trip_minutes": 60.0,
+          "p95_trip_minutes": 60,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 238470
+        },
+        {
+          "group": "shibuya",
+          "count": 25,
+          "avg_trip_minutes": 37.0,
+          "p95_trip_minutes": 37,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 138000
+        },
+        {
+          "group": "yokohama",
+          "count": 35,
+          "avg_trip_minutes": 43.0,
+          "p95_trip_minutes": 43,
+          "assigned_office": "豊洲オフィス",
+          "commute_cost_jpy_month": 224140
+        }
+      ],
+      "conflict_alerts": [
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 65分)とikebukuro(p95: 41分)で24分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 65分)とkawasaki(p95: 34分)で31分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 65分)とkichijoji(p95: 48分)で17分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 65分)とshibuya(p95: 37分)で28分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "chiba(p95: 65分)とyokohama(p95: 43分)で22分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 60分)とikebukuro(p95: 41分)で19分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 60分)とkawasaki(p95: 34分)で26分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 60分)とshibuya(p95: 37分)で23分の格差があります",
+          "severity": "warning"
+        },
+        {
+          "type": "department_gap",
+          "message": "omiya(p95: 60分)とyokohama(p95: 43分)で17分の格差があります",
+          "severity": "warning"
+        }
+      ],
+      "combination_id": "k1_combo_3",
+      "is_pareto_optimal": true,
       "explain": {
         "commute": {
-          "headline": "平均通勤28分、最も長い人でも55分",
-          "detail": "社員180人全員が60分以内",
-          "distribution": "30分未満: 95人 / 30-60分: 85人 / 60分超: 0人"
+          "headline": "平均通勤 45分 / p95 65分",
+          "detail": "対象 180人、60分超は 20人",
+          "distribution": "30分未満: 0人 / 30-60分: 130人 / 60分以上: 50人"
         },
         "cost": {
-          "headline": "月額1,800万円",
-          "detail": "渋谷1,200万 + 豊洲600万"
+          "headline": "月額賃料 600万",
+          "detail": "豊洲オフィス600万"
         },
         "capacity": {
-          "headline": "両拠点とも収容余裕あり",
-          "detail": "渋谷: 120人配置、推定収容212人（余裕92人） / 豊洲: 60人配置、推定収容242人（余裕182人）",
-          "note": "※推定値（3.3㎡/人換算）"
+          "headline": "全拠点で収容可能",
+          "detail": "豊洲オフィス: 180人（定員未設定）"
         },
         "assignment": {
-          "headline": "営業・総務は渋谷、開発は豊洲",
+          "headline": "7グループを配賦",
           "detail": [
-            "渋谷 → 営業(80人), 総務(40人)",
-            "豊洲 → 開発(60人)"
+            "豊洲オフィス: chiba(20人), ikebukuro(15人), kawasaki(45人), kichijoji(10人), omiya(30人), shibuya(25人), yokohama(35人)"
           ],
-          "rationale": "各部署を通勤負荷が最小になるオフィスに配置"
+          "rationale": "各グループを通勤負荷が低いオフィスに割り当て"
         },
         "vs_alternatives": [
-          "品川+豊洲にすると月400万安く通勤p95も-3分改善",
-          "品川+渋谷にすると月+200万だが通勤p95が-9分改善"
+          "品川オフィス: 賃料200万高い, p95が3分短い",
+          "渋谷オフィス: 賃料600万高い, p95が9分長い"
         ]
       }
     }
   ],
-  "pareto_frontier_ids": ["k1_shinagawa", "k1_toyosu", "k2_shinagawa_toyosu", "k2_shinagawa_shibuya"],
+  "pareto_frontier_ids": [
+    "k1_combo_3",
+    "k1_combo_1"
+  ],
   "constraints_impact": {
-    "total_combinations": 6,
-    "after_capacity_filter": 6,
-    "after_budget_filter": 6,
-    "after_commute_filter": 6,
-    "pareto_optimal": 4,
+    "total_combinations": 3,
+    "after_capacity_filter": 3,
+    "after_budget_filter": 3,
+    "after_commute_filter": 3,
+    "pareto_optimal": 2,
     "vs_previous_round": null
   },
-  "sensitivity": {
-    "summary": "ラストマイルを±5分変動させてもパレートフロンティアの順位は変わりません。結果は安定しています。",
-    "details": [
-      {
-        "parameter": "last_mile_minutes +5分",
-        "description": "全オフィスのラストマイルが5分増えた場合の影響",
-        "impacts": [
-          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 67, "diff": 5 },
-          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 70, "diff": 5 },
-          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 79, "diff": 5 },
-          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 57, "diff": 5 },
-          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 51, "diff": 5 },
-          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 60, "diff": 5 }
-        ]
-      },
-      {
-        "parameter": "last_mile_minutes -5分",
-        "description": "全オフィスのラストマイルが5分短縮された場合の影響",
-        "impacts": [
-          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 57, "diff": -5 },
-          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 60, "diff": -5 },
-          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 69, "diff": -5 },
-          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 47, "diff": -5 },
-          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 41, "diff": -5 },
-          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 50, "diff": -5 }
-        ]
-      },
-      {
-        "parameter": "出社日数 3日→5日",
-        "description": "出社日数が週3日から週5日に増えた場合のコスト・通勤への影響",
-        "impacts": [
-          { "combo_name": "品川",      "original_p95": 62, "changed_p95": 62, "diff": 0 },
-          { "combo_name": "豊洲",      "original_p95": 65, "changed_p95": 65, "diff": 0 },
-          { "combo_name": "渋谷",      "original_p95": 74, "changed_p95": 74, "diff": 0 },
-          { "combo_name": "品川+豊洲", "original_p95": 52, "changed_p95": 52, "diff": 0 },
-          { "combo_name": "品川+渋谷", "original_p95": 46, "changed_p95": 46, "diff": 0 },
-          { "combo_name": "渋谷+豊洲", "original_p95": 55, "changed_p95": 55, "diff": 0 }
+  "robustness": [
+    {
+      "combination_id": "k1_combo_1",
+      "rent_tolerance": [
+        {
+          "office_id": "shinagawa",
+          "office_name": "品川オフィス",
+          "current_rent": 8000000,
+          "max_rent_before_drop": null,
+          "tolerance_pct": null
+        }
+      ],
+      "capacity_headroom": {
+        "total_remaining": 0,
+        "bottleneck_office": null,
+        "bottleneck_remaining": null,
+        "per_office": [
+          {
+            "office_id": "shinagawa",
+            "office_name": "品川オフィス",
+            "capacity": null,
+            "assigned": 180,
+            "remaining": null
+          }
         ]
       }
-    ]
-  },
+    },
+    {
+      "combination_id": "k1_combo_3",
+      "rent_tolerance": [
+        {
+          "office_id": "toyosu",
+          "office_name": "豊洲オフィス",
+          "current_rent": 6000000,
+          "max_rent_before_drop": 8000000,
+          "tolerance_pct": 33.3
+        }
+      ],
+      "capacity_headroom": {
+        "total_remaining": 0,
+        "bottleneck_office": null,
+        "bottleneck_remaining": null,
+        "per_office": [
+          {
+            "office_id": "toyosu",
+            "office_name": "豊洲オフィス",
+            "capacity": null,
+            "assigned": 180,
+            "remaining": null
+          }
+        ]
+      }
+    }
+  ],
+  "baseline_diagnosis": null,
   "notices": [
     {
-      "level": "warning",
-      "code": "CAPACITY_TIGHT",
-      "message": "品川1拠点案: 推定収容181人に対し配置180人。余裕わずか1人。増員時は別拠点の追加を検討してください。"
+      "level": "info",
+      "code": "HAZARD_WARNING",
+      "message": "品川オフィス: 浸水想定区域（0.5m）",
+      "action": null,
+      "actionability": "informational"
+    },
+    {
+      "level": "info",
+      "code": "HAZARD_WARNING",
+      "message": "渋谷オフィス: 浸水想定区域（0.3m）",
+      "action": null,
+      "actionability": "informational"
+    },
+    {
+      "level": "info",
+      "code": "HAZARD_WARNING",
+      "message": "豊洲オフィス: 浸水想定区域（1.0m）、地震ランク4",
+      "action": null,
+      "actionability": "informational"
     }
   ]
 }
