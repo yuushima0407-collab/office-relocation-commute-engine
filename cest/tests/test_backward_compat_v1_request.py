@@ -26,7 +26,7 @@ def test_v1_style_input_works_with_v03_pipeline():
     assert "all_combinations" in result
     assert "pareto_frontier_ids" in result
     assert "constraints_impact" in result
-    assert "sensitivity" in result
+    assert "robustness" in result
 
     # パレートフロンティアが空でないこと
     assert len(result["pareto_frontier_ids"]) >= 1
