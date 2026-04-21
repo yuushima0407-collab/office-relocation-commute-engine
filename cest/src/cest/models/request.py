@@ -48,6 +48,17 @@ class FixedAssignmentItem(BaseModel):
     office_id: str
 
 
+class BaselineOffice(BaseModel):
+    """v0.3.2: Before/After比較用の現オフィス情報。"""
+    model_config = ConfigDict(extra="forbid")
+    office_id: str
+    name: str
+    nearest_station_id: str
+    last_mile_minutes: float = Field(ge=0, le=60)
+    rent_jpy_month: Optional[int] = Field(None, ge=0)
+    capacity_people: Optional[int] = Field(None, ge=0)
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     # 拠点数パターン（例: [1,2,3]）
@@ -76,6 +87,8 @@ class Settings(BaseModel):
     # "ignore": 通勤費を考慮しない
     commute_cost_policy: Literal["full", "capped", "ignore"] = "full"
     commute_cost_cap_jpy_month: Optional[int] = Field(None, ge=0)
+    # v0.3.2: Before/After比較用の現オフィス
+    baseline: Optional[BaselineOffice] = None
     # 後方互換フィールド（v0.1.x/v0.2）
     baseline_office_id: Optional[str] = None
     ranking_weights: Optional[Dict[str, float]] = None

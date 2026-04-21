@@ -1,5 +1,5 @@
 """
-CEST v0.3 — 組み合わせ列挙・パレートフロンティア抽出・感度分析・explain 生成
+CEST v0.3.2 — 組み合わせ列挙・パレートフロンティア・部署別影響・注意点分析・explain 生成
 """
 from __future__ import annotations
 
@@ -275,9 +275,14 @@ def evaluate_combo(
     # 収容人数合計
     _total_capacity = sum(_get_capacity(o, sqm_per_person) or 0 for o in offices)
     total_cost = (total_rent + total_commute_cost) if total_commute_cost is not None else None
-    cost_per_capacity = round(total_cost / _total_capacity) if (_total_capacity > 0 and total_cost is not None) else (
-        round(total_rent / _total_capacity) if _total_capacity > 0 else None
+    rent_per_capacity = round(total_rent / _total_capacity) if _total_capacity > 0 else None
+
+    # 部署別影響（v0.3.2）
+    dept_breakdown = _compute_department_breakdown(
+        home_stations, assignment, per_office, policy_days,
+        commute_cost_policy, commute_cost_cap_jpy_month,
     )
+    conflict_alerts = _compute_conflict_alerts(dept_breakdown)
 
     return {
         "selected_offices": [o["office_id"] for o in offices],
@@ -287,7 +292,7 @@ def evaluate_combo(
         "total_commute_cost_estimated": commute_cost_estimated,
         "total_cost_jpy_month": total_cost,
         "total_capacity": _total_capacity if _total_capacity > 0 else None,
-        "cost_per_capacity": cost_per_capacity,
+        "rent_per_capacity": rent_per_capacity,
         "p95_trip_minutes": round(p95_trip, 1) if p95_trip is not None else None,
         "avg_trip_minutes": round(avg_trip, 1),
         "total_population": total_population,
@@ -301,7 +306,114 @@ def evaluate_combo(
         },
         "assignment": _build_assignment_summary(assignment, offices, home_stations, sqm_per_person),
         "per_office": per_office,
+        "department_breakdown": dept_breakdown,
+        "conflict_alerts": conflict_alerts,
     }
+
+
+# ── 部署別影響（v0.3.2）──────────────────────────────────────────────────────
+
+_CONFLICT_GAP_THRESHOLD_MINUTES = 15
+
+
+def _compute_department_breakdown(
+    home_stations: List[Dict[str, Any]],
+    assignment: Dict[str, str],
+    per_office: List[Dict[str, Any]],
+    policy_days: float,
+    commute_cost_policy: str,
+    commute_cost_cap: Optional[int],
+) -> List[Dict[str, Any]]:
+    """部署（group）ごとの通勤統計を算出する。"""
+    # station_breakdownからtrip_minutesを引くためのルックアップ
+    trip_lookup: Dict[str, Dict[str, float]] = {}  # office_id -> {station_id: minutes}
+    for po in per_office:
+        oid = po["office_id"]
+        trip_lookup[oid] = {}
+        for sb in po.get("station_breakdown", []):
+            if sb.get("reachable") and sb.get("trip_minutes") is not None:
+                trip_lookup[oid][sb["station_id"]] = sb["trip_minutes"]
+
+    office_name_map = {po["office_id"]: po.get("name", po["office_id"]) for po in per_office}
+
+    # group ごとに集計
+    groups: Dict[str, List[Dict[str, Any]]] = {}
+    for hs in home_stations:
+        g = _get_group(hs)
+        groups.setdefault(g, []).append(hs)
+
+    breakdown: List[Dict[str, Any]] = []
+    cap = commute_cost_cap if commute_cost_policy == "capped" else None
+
+    for g, stations in sorted(groups.items()):
+        oid = assignment.get(g)
+        if not oid or oid not in trip_lookup:
+            continue
+
+        trips: List[Tuple[float, int]] = []
+        commute_cost = 0
+        for hs in stations:
+            t = trip_lookup[oid].get(hs["station_id"])
+            if t is None:
+                continue
+            trips.append((t, hs["count"]))
+            if commute_cost_policy != "ignore":
+                if hs.get("commute_allowance_jpy_month") is not None:
+                    per_person = hs["commute_allowance_jpy_month"]
+                    if cap is not None:
+                        per_person = min(per_person, cap)
+                else:
+                    per_person = estimate_monthly_commute_cost(t, policy_days, cap)
+                commute_cost += per_person * hs["count"]
+
+        if not trips:
+            continue
+
+        total_pop = sum(c for _, c in trips)
+        avg_trip = sum(t * c for t, c in trips) / total_pop if total_pop else 0
+        sorted_t = sorted(trips, key=lambda x: x[0])
+        p95_threshold = 0.95 * total_pop
+        cum = 0
+        p95_trip = 0.0
+        for t, c in sorted_t:
+            cum += c
+            if cum >= p95_threshold:
+                p95_trip = t
+                break
+
+        breakdown.append({
+            "group": g,
+            "count": total_pop,
+            "avg_trip_minutes": round(avg_trip, 1),
+            "p95_trip_minutes": round(p95_trip, 1),
+            "assigned_office": office_name_map.get(oid, oid),
+            "commute_cost_jpy_month": commute_cost if commute_cost_policy != "ignore" else None,
+        })
+
+    return breakdown
+
+
+def _compute_conflict_alerts(
+    dept_breakdown: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """部署間の通勤格差が大きいペアを検出する。"""
+    alerts: List[Dict[str, Any]] = []
+    if len(dept_breakdown) < 2:
+        return alerts
+
+    for i, a in enumerate(dept_breakdown):
+        for b in dept_breakdown[i + 1:]:
+            gap = abs(a["p95_trip_minutes"] - b["p95_trip_minutes"])
+            if gap >= _CONFLICT_GAP_THRESHOLD_MINUTES:
+                worse = a if a["p95_trip_minutes"] > b["p95_trip_minutes"] else b
+                better = b if worse is a else a
+                alerts.append({
+                    "type": "department_gap",
+                    "message": f"{worse['group']}(p95: {worse['p95_trip_minutes']}分)と{better['group']}(p95: {better['p95_trip_minutes']}分)で{gap:.0f}分の格差があります",
+                    "severity": "warning",
+                })
+
+    return alerts
 
 
 def _build_assignment_summary(
@@ -342,19 +454,26 @@ def _build_assignment_summary(
 # ── パレートフロンティア抽出 ────────────────────────────────────────────────
 
 def _is_pareto_dominated(combo: Dict[str, Any], all_combos: List[Dict[str, Any]]) -> bool:
-    """Return True when combo is Pareto-dominated by another combo."""
-    avg_a  = combo.get("avg_trip_minutes") or math.inf
-    cost_a = combo.get("total_cost_jpy_month") or combo.get("total_rent_jpy_month") or math.inf
+    """Return True when combo is Pareto-dominated by another combo.
+
+    パレート軸: (total_rent, p95_trip, total_capacity) の3軸。
+    - total_rent: 低いほど良い
+    - p95_trip: 低いほど良い
+    - total_capacity: 高いほど良い
+    散布図のX軸（デフォルト total_rent、切替で rent_per_capacity）とは独立。
+    """
+    p95_a  = combo.get("p95_trip_minutes") or math.inf
+    rent_a = combo.get("total_rent_jpy_month") or math.inf
     cap_a  = combo.get("total_capacity") or 0
     for other in all_combos:
         if other is combo:
             continue
-        avg_b  = other.get("avg_trip_minutes") or math.inf
-        cost_b = other.get("total_cost_jpy_month") or other.get("total_rent_jpy_month") or math.inf
+        p95_b  = other.get("p95_trip_minutes") or math.inf
+        rent_b = other.get("total_rent_jpy_month") or math.inf
         cap_b  = other.get("total_capacity") or 0
-        # B が A を支配: avg ≤, cost ≤, capacity ≥ かつ少なくとも1つ厳密に優位
-        if avg_b <= avg_a and cost_b <= cost_a and cap_b >= cap_a:
-            if avg_b < avg_a or cost_b < cost_a or cap_b > cap_a:
+        # B が A を支配: rent ≤, p95 ≤, capacity ≥ かつ少なくとも1つ厳密に優位
+        if rent_b <= rent_a and p95_b <= p95_a and cap_b >= cap_a:
+            if rent_b < rent_a or p95_b < p95_a or cap_b > cap_a:
                 return True
     return False
 
@@ -377,97 +496,148 @@ def mark_pareto_frontier(
         if not dominated:
             pareto_ids.append(combo["combination_id"])
 
-    # Sort pareto_ids by avg commute ascending
+    # Sort pareto_ids by total_rent ascending (default scatter X axis)
     pareto_combos = [c for c in combinations if c["is_pareto_optimal"]]
-    pareto_combos.sort(key=lambda c: c.get("avg_trip_minutes") or math.inf)
+    pareto_combos.sort(key=lambda c: c.get("total_rent_jpy_month") or math.inf)
     pareto_ids = [c["combination_id"] for c in pareto_combos]
 
     return pareto_ids
 
 
-# ── 感度分析（v0.3.1）────────────────────────────────────────────────────────
+# ── 注意点分析（v0.3.2: robustness）───────────────────────────────────────────
+
+# 賃料耐性の閾値: tolerance_pct がこの値未満なら警告
+_RENT_TOLERANCE_WARNING_PCT = 10.0
 
 def _combo_display_name(combo: Dict[str, Any]) -> str:
     return "+".join(po.get("name", po.get("office_id", "")) for po in combo.get("per_office", []))
 
 
-def compute_sensitivity_v3(
-    G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    offices_all: List[Dict[str, Any]],
+def compute_robustness(
     all_combos: List[Dict[str, Any]],
-    settings: Dict[str, Any],
-    policy_days: float,
-) -> Dict[str, Any]:
-    """
-    感度分析: 「条件が変わるとどの案がどれだけ影響を受けるか」を具体的な数値で返す。
-    パレート最適な案を対象に、影響が大きい上位3件を表示する。
+) -> List[Dict[str, Any]]:
+    """各パレート最適案の注意点を算出する。
+
+    賃料耐性: 各オフィスの賃料が何%上がるとパレートから脱落するか逆算。
+    収容余裕: オフィスごとの残り人数とボトルネック検出。
     """
     pareto = [c for c in all_combos if c.get("is_pareto_optimal")]
-    details = []
+    non_pareto = [c for c in all_combos if not c.get("is_pareto_optimal")]
+    result: List[Dict[str, Any]] = []
 
-    # ── 1. last_mile +5min の影響 ──────────────────────────────────────────
-    # p95 は全拠点に +5min 加算なので p95 も一律 +5min 変化する
-    # p95 が高い案ほど利用者への影響が大きいため、p95 降順の上位3件を表示
-    top_by_p95 = sorted(pareto, key=lambda c: c.get("p95_trip_minutes") or 0, reverse=True)[:3]
-    lm_impacts = []
-    for c in top_by_p95:
-        orig = c.get("p95_trip_minutes") or 0
-        lm_impacts.append({
-            "combo_name": _combo_display_name(c),
-            "original_p95": round(orig),
-            "changed_p95": round(orig + 5),
-            "diff": 5,
+    for combo in pareto:
+        rent_tolerance = _compute_rent_tolerance(combo, pareto, non_pareto)
+        capacity_headroom = _compute_capacity_headroom(combo)
+        result.append({
+            "combination_id": combo["combination_id"],
+            "rent_tolerance": rent_tolerance,
+            "capacity_headroom": capacity_headroom,
         })
 
-    details.append({
-        "parameter": "last_mile_minutes +5min",
-        "description": "ラストマイルが5分増えた場合の通勤最長(p95)への影響",
-        "impacts": lm_impacts,
-    })
+    return result
 
-    # ── 2. 出社日数変更の影響（週間通勤時間）────────────────────────────────
-    # 週間通勤時間 = p95 × 2（往復）× 出社日数
-    alt_days = 5.0 if policy_days <= 3 else 3.0
-    top_by_weekly_diff = sorted(
-        pareto,
-        key=lambda c: (c.get("p95_trip_minutes") or 0) * 2 * abs(alt_days - policy_days),
-        reverse=True,
-    )[:3]
-    days_impacts = []
-    for c in top_by_weekly_diff:
-        p95 = c.get("p95_trip_minutes") or 0
-        orig_weekly = round(p95 * 2 * policy_days)
-        new_weekly = round(p95 * 2 * alt_days)
-        days_impacts.append({
-            "combo_name": _combo_display_name(c),
-            "original_weekly_minutes": orig_weekly,
-            "changed_weekly_minutes": new_weekly,
-            "diff": new_weekly - orig_weekly,
+
+def _compute_rent_tolerance(
+    combo: Dict[str, Any],
+    pareto: List[Dict[str, Any]],
+    non_pareto: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """各オフィスの賃料がいくら上がるとパレートから脱落するか逆算する。
+
+    3軸パレート (total_rent, p95_trip, total_capacity) での脱落条件:
+    他の案 B が combo A を支配する = rent_B ≤ rent_A かつ p95_B ≤ p95_A かつ cap_B ≥ cap_A。
+    賃料が上���っても p95 と capacity は変わらないので、
+    p95 と capacity で combo を支配しうる案（p95 ≤ combo かつ cap ≥ combo）を探し、
+    その案の total_rent まで上がったら脱落。
+    """
+    combo_p95  = combo.get("p95_trip_minutes") or math.inf
+    combo_rent = combo.get("total_rent_jpy_month") or 0
+    combo_cap  = combo.get("total_capacity") or 0
+
+    # combo を支配しうる案: p95 と capacity の両方で combo に勝てる案
+    potential_dominators = []
+    for other in pareto + non_pareto:
+        if other is combo:
+            continue
+        other_p95  = other.get("p95_trip_minutes") or math.inf
+        other_rent = other.get("total_rent_jpy_month") or math.inf
+        other_cap  = other.get("total_capacity") or 0
+        if other_p95 <= combo_p95 and other_cap >= combo_cap:
+            potential_dominators.append(other)
+
+    if not potential_dominators:
+        # p95 と capacity で勝てる案がない → 賃料がいくら上がっても脱���しない
+        tolerances = []
+        for po in combo.get("per_office", []):
+            tolerances.append({
+                "office_id": po["office_id"],
+                "office_name": po.get("name", po["office_id"]),
+                "current_rent": po.get("rent_jpy_month") or 0,
+                "max_rent_before_drop": None,
+                "tolerance_pct": None,
+            })
+        return tolerances
+
+    # 最も厳しい dominator: total_rent が最も��い案
+    # combo の total_rent がこの値を超えると、その案に3軸すべてで負ける
+    min_dominator_rent = min(
+        d.get("total_rent_jpy_month") or math.inf for d in potential_dominators
+    )
+
+    rent_headroom = min_dominator_rent - combo_rent
+
+    tolerances = []
+    for po in combo.get("per_office", []):
+        office_rent = po.get("rent_jpy_month") or 0
+        if office_rent > 0 and rent_headroom >= 0:
+            max_office_rent = office_rent + rent_headroom
+            tolerance_pct = round((rent_headroom / office_rent) * 100, 1)
+        else:
+            max_office_rent = None
+            tolerance_pct = None
+
+        tolerances.append({
+            "office_id": po["office_id"],
+            "office_name": po.get("name", po["office_id"]),
+            "current_rent": office_rent,
+            "max_rent_before_drop": max_office_rent,
+            "tolerance_pct": tolerance_pct,
         })
 
-    scenario_label = f"出社日数 {policy_days:.0f}日→{alt_days:.0f}日"
-    details.append({
-        "parameter": scenario_label,
-        "description": f"出社日数が変わった場合の週間通勤時間（p95基準・往復）への影響",
-        "impacts": days_impacts,
-    })
+    return tolerances
 
-    # サマリ生成
-    summary_parts = []
-    if lm_impacts:
-        c = lm_impacts[0]
-        summary_parts.append(
-            f"ラストマイル+5分で最大影響は{c['combo_name']}案（p95: {c['original_p95']}→{c['changed_p95']}分）"
-        )
-    if days_impacts:
-        max_diff = max(abs(d["diff"]) for d in days_impacts)
-        summary_parts.append(f"出社{alt_days:.0f}日では週間通勤が最大{max_diff}分変化")
-    summary = "。".join(summary_parts) + "。" if summary_parts else "評価対象案なし。"
+
+def _compute_capacity_headroom(combo: Dict[str, Any]) -> Dict[str, Any]:
+    """オフィスごとの収容余裕とボトルネック検出。"""
+    per_office_info = []
+    total_remaining = 0
+    bottleneck_office = None
+    bottleneck_remaining = math.inf
+
+    for po in combo.get("per_office", []):
+        cap = po.get("capacity")
+        assigned = po.get("assigned_population", 0)
+        remaining = (cap - assigned) if cap is not None else None
+
+        per_office_info.append({
+            "office_id": po["office_id"],
+            "office_name": po.get("name", po["office_id"]),
+            "capacity": cap,
+            "assigned": assigned,
+            "remaining": remaining,
+        })
+
+        if remaining is not None:
+            total_remaining += remaining
+            if remaining < bottleneck_remaining:
+                bottleneck_remaining = remaining
+                bottleneck_office = po.get("name", po["office_id"])
 
     return {
-        "summary": summary,
-        "details": details,
+        "total_remaining": total_remaining,
+        "bottleneck_office": bottleneck_office,
+        "bottleneck_remaining": bottleneck_remaining if bottleneck_remaining < math.inf else None,
+        "per_office": per_office_info,
     }
 
 
@@ -582,6 +752,201 @@ def generate_explain(
         "vs_alternatives": vs,
     }
 
+# ── Before/After 比較（v0.3.2）────────────────────────────────────────────────
+
+def _compute_baseline_trips(
+    G: nx.Graph,
+    home_stations: List[Dict[str, Any]],
+    baseline: Dict[str, Any],
+) -> Dict[str, Optional[float]]:
+    """baselineオフィスへの各駅からの通勤時間を計算。"""
+    trips: Dict[str, Optional[float]] = {}
+    for hs in home_stations:
+        t = calc_trip_minutes(
+            G, hs["station_id"],
+            baseline["nearest_station_id"],
+            baseline["last_mile_minutes"],
+        )
+        trips[hs["station_id"]] = t
+    return trips
+
+
+def compute_baseline_diagnosis(
+    baseline: Dict[str, Any],
+    home_stations: List[Dict[str, Any]],
+    baseline_trips: Dict[str, Optional[float]],
+    policy_days: float,
+    commute_cost_policy: str,
+    commute_cost_cap: Optional[int],
+) -> Dict[str, Any]:
+    """現オフィスの診断情報を生成する。"""
+    cap = commute_cost_cap if commute_cost_policy == "capped" else None
+    trips: List[Tuple[float, int]] = []
+    total_pop = 0
+    commute_cost = 0
+
+    for hs in home_stations:
+        bt = baseline_trips.get(hs["station_id"])
+        if bt is None:
+            continue
+        trips.append((bt, hs["count"]))
+        total_pop += hs["count"]
+        if commute_cost_policy != "ignore":
+            if hs.get("commute_allowance_jpy_month") is not None:
+                per = hs["commute_allowance_jpy_month"]
+                if cap is not None:
+                    per = min(per, cap)
+            else:
+                per = estimate_monthly_commute_cost(bt, policy_days, cap)
+            commute_cost += per * hs["count"]
+
+    if total_pop == 0:
+        return {}
+
+    weighted = sum(t * c for t, c in trips)
+    avg_trip = weighted / total_pop
+
+    sorted_trips = sorted(trips, key=lambda x: x[0])
+    p95_th = 0.95 * total_pop
+    cum = 0
+    p95_trip = 0.0
+    for t, c in sorted_trips:
+        cum += c
+        if cum >= p95_th:
+            p95_trip = t
+            break
+
+    over_60 = sum(c for t, c in trips if t > 60)
+    over_90 = sum(c for t, c in trips if t > 90)
+
+    capacity = baseline.get("capacity_people")
+    occupancy_pct = round((total_pop / capacity) * 100, 1) if capacity and capacity > 0 else None
+    rent = baseline.get("rent_jpy_month") or 0
+    rent_per_person = round(rent / total_pop) if total_pop > 0 and rent > 0 else None
+
+    alerts: List[str] = []
+    if occupancy_pct is not None and occupancy_pct > 100:
+        alerts.append(f"収容率が100%を超えています（{occupancy_pct}%）")
+    if over_90 > 0:
+        alerts.append(f"通勤90分超の社員が{over_90}人（{round(over_90 / total_pop * 100)}%）います")
+    if over_60 > total_pop * 0.3:
+        alerts.append(f"通勤60分超の社員が{over_60}人（{round(over_60 / total_pop * 100)}%）で、全体の3割を超えています")
+
+    return {
+        "office_name": baseline.get("name", "現オフィス"),
+        "employee_count": total_pop,
+        "capacity_people": capacity,
+        "occupancy_pct": occupancy_pct,
+        "avg_trip_minutes": round(avg_trip, 1),
+        "p95_trip_minutes": round(p95_trip, 1),
+        "over_60min_count": over_60,
+        "over_60min_pct": round(over_60 / total_pop * 100, 1) if total_pop > 0 else 0,
+        "over_90min_count": over_90,
+        "over_90min_pct": round(over_90 / total_pop * 100, 1) if total_pop > 0 else 0,
+        "total_commute_cost_jpy_month": commute_cost if commute_cost_policy != "ignore" else None,
+        "rent_per_person": rent_per_person,
+        "alerts": alerts,
+    }
+
+
+def compute_vs_baseline(
+    combo: Dict[str, Any],
+    home_stations: List[Dict[str, Any]],
+    assignment: Dict[str, str],
+    baseline: Dict[str, Any],
+    baseline_trips: Dict[str, Optional[float]],
+    policy_days: float,
+    commute_cost_policy: str,
+    commute_cost_cap: Optional[int],
+) -> Dict[str, Any]:
+    """案とbaselineの差分を計算する。"""
+    # baseline集計
+    b_weighted = 0.0
+    b_total_pop = 0
+    b_trip_list: List[Tuple[float, int]] = []
+    b_commute_cost = 0
+    cap = commute_cost_cap if commute_cost_policy == "capped" else None
+
+    for hs in home_stations:
+        bt = baseline_trips.get(hs["station_id"])
+        if bt is None:
+            continue
+        b_trip_list.append((bt, hs["count"]))
+        b_weighted += bt * hs["count"]
+        b_total_pop += hs["count"]
+        if commute_cost_policy != "ignore":
+            if hs.get("commute_allowance_jpy_month") is not None:
+                per = hs["commute_allowance_jpy_month"]
+                if cap is not None:
+                    per = min(per, cap)
+            else:
+                per = estimate_monthly_commute_cost(bt, policy_days, cap)
+            b_commute_cost += per * hs["count"]
+
+    if b_total_pop == 0:
+        return {}
+
+    b_avg = b_weighted / b_total_pop
+    b_sorted = sorted(b_trip_list, key=lambda x: x[0])
+    b_p95_th = 0.95 * b_total_pop
+    cum = 0
+    b_p95 = 0.0
+    for t, c in b_sorted:
+        cum += c
+        if cum >= b_p95_th:
+            b_p95 = t
+            break
+
+    b_rent = baseline.get("rent_jpy_month") or 0
+
+    # combo値
+    c_avg = combo.get("avg_trip_minutes") or 0
+    c_p95 = combo.get("p95_trip_minutes") or 0
+    c_rent = combo.get("total_rent_jpy_month") or 0
+    c_commute = combo.get("total_commute_cost_jpy_month") or 0
+
+    # 人数比較: comboの各社員がbaselineと比べて改善/悪化
+    # combo側のtrip_minutesを per_office.station_breakdown から取得
+    combo_trip_by_station: Dict[str, float] = {}
+    for po in combo.get("per_office", []):
+        oid = po["office_id"]
+        for sb in po.get("station_breakdown", []):
+            if sb.get("reachable") and sb.get("trip_minutes") is not None:
+                sid = sb["station_id"]
+                # assignmentからこの駅の社員がこのオフィスに配置されてるか確認
+                for hs in home_stations:
+                    if hs["station_id"] == sid and assignment.get(_get_group(hs)) == oid:
+                        combo_trip_by_station[sid] = sb["trip_minutes"]
+
+    worse = 0
+    better = 0
+    unchanged = 0
+    for hs in home_stations:
+        sid = hs["station_id"]
+        bt = baseline_trips.get(sid)
+        ct = combo_trip_by_station.get(sid)
+        if bt is None or ct is None:
+            continue
+        diff = ct - bt
+        if diff > 1:
+            worse += hs["count"]
+        elif diff < -1:
+            better += hs["count"]
+        else:
+            unchanged += hs["count"]
+
+    return {
+        "avg_trip_change": round(c_avg - b_avg, 1),
+        "p95_trip_change": round(c_p95 - b_p95, 1),
+        "rent_change": c_rent - b_rent,
+        "commute_cost_change": (c_commute - b_commute_cost) if commute_cost_policy != "ignore" else None,
+        "total_cost_change": (c_rent + c_commute) - (b_rent + b_commute_cost) if commute_cost_policy != "ignore" else c_rent - b_rent,
+        "worse_count": worse,
+        "better_count": better,
+        "unchanged_count": unchanged,
+    }
+
+
 def run_v3_pipeline(
     G: nx.Graph,
     home_stations: List[Dict[str, Any]],
@@ -680,10 +1045,27 @@ def run_v3_pipeline(
         collector.no_pareto_candidates()
 
 
-    # 感度分析
-    sensitivity = compute_sensitivity_v3(
-        G, home_stations, offices, evaluated, settings, policy_days
-    )
+    # 注意点分析（v0.3.2: 賃料耐性 + 収容余裕）
+    robustness = compute_robustness(evaluated)
+
+    # Before/After 比較（v0.3.2）
+    baseline_cfg = settings.get("baseline")
+    baseline_diagnosis = None
+    if baseline_cfg:
+        baseline_trips = _compute_baseline_trips(G, home_stations, baseline_cfg)
+        baseline_diagnosis = compute_baseline_diagnosis(
+            baseline_cfg, home_stations, baseline_trips,
+            policy_days, commute_cost_policy, commute_cost_cap,
+        )
+        for combo in evaluated:
+            combo_offices_for = [o for o in offices if o["office_id"] in combo["selected_offices"]]
+            asgn = build_group_assignment(
+                G, home_stations, combo_offices_for, fixed_assignment, group_together,
+            )
+            combo["vs_baseline"] = compute_vs_baseline(
+                combo, home_stations, asgn, baseline_cfg, baseline_trips,
+                policy_days, commute_cost_policy, commute_cost_cap,
+            )
 
     # Explain 生成（全コンボに対して）
     for combo in evaluated:
@@ -702,5 +1084,6 @@ def run_v3_pipeline(
         "all_combinations": evaluated,
         "pareto_frontier_ids": pareto_frontier_ids,
         "constraints_impact": constraints_impact,
-        "sensitivity": sensitivity,
+        "robustness": robustness,
+        "baseline_diagnosis": baseline_diagnosis,
     }

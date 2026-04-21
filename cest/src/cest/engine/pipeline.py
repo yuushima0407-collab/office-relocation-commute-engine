@@ -88,7 +88,8 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
         "all_combinations": result["all_combinations"],
         "pareto_frontier_ids": result["pareto_frontier_ids"],
         "constraints_impact": result["constraints_impact"],
-        "sensitivity": result["sensitivity"],
+        "robustness": result["robustness"],
+        "baseline_diagnosis": result.get("baseline_diagnosis"),
         "notices": collector.notices,
     }
 
@@ -107,9 +108,7 @@ def _build_empty_report(collector: NoticeCollector) -> Dict[str, Any]:
             "pareto_optimal": 0,
             "vs_previous_round": None,
         },
-        "sensitivity": {
-            "summary": "",
-            "details": [],
-        },
+        "robustness": [],
+        "baseline_diagnosis": None,
         "notices": collector.notices,
     }
