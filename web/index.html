@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CEST v0.3.1 — オフィス配置シミュレーション</title>
+  <title>CEST v0.3.2 — オフィス配置シミュレーション</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -20,585 +20,313 @@
       --radius:  8px;
       --shadow:  0 1px 3px rgba(0,0,0,.1);
     }
-    body {
-      font-family: "Hiragino Sans", "Meiryo", sans-serif;
-      font-size: 14px;
-      color: #111827;
-      background: #f9fafb;
-      line-height: 1.6;
-    }
+    body { font-family: "Hiragino Sans","Meiryo",sans-serif; font-size:14px; color:#111827; background:#f9fafb; line-height:1.6; }
 
-    /* ── Header ─────────────────────────────────────────────── */
-    .page-header {
-      background: #1e3a5f;
-      color: #fff;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .page-header h1 { font-size: 16px; font-weight: 600; }
-    .page-header .version { font-size: 11px; opacity: .65; }
+    /* Header */
+    .page-header { background:#1e3a5f; color:#fff; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .page-header h1 { font-size:16px; font-weight:600; }
+    .page-header .version { font-size:11px; opacity:.65; }
 
-    /* ── Layout ──────────────────────────────────────────────── */
-    .main { max-width: 1100px; margin: 0 auto; padding: 14px 16px 100px; }
+    /* Layout */
+    .main { max-width:1200px; margin:0 auto; padding:14px 16px 100px; }
 
-    /* ── Status bar ──────────────────────────────────────────── */
-    #status-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-radius: var(--radius);
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-    #status-bar.api    { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    #status-bar.demo   { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
-    #status-bar.error  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-    #status-bar.loading{ background: #f3f4f6; color: var(--gray); border: 1px solid var(--gray-bd); }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .api    .status-dot { background: #16a34a; }
-    .demo   .status-dot { background: #ca8a04; }
-    .error  .status-dot { background: #dc2626; }
-    .loading .status-dot { background: var(--gray); }
+    /* Status bar */
+    #status-bar { display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:var(--radius); font-size:12px; margin-bottom:10px; }
+    #status-bar.api    { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+    #status-bar.demo   { background:#fef9c3; color:#854d0e; border:1px solid #fde68a; }
+    #status-bar.error  { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
+    #status-bar.loading{ background:#f3f4f6; color:var(--gray); border:1px solid var(--gray-bd); }
+    .status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .api .status-dot    { background:#16a34a; }
+    .demo .status-dot   { background:#ca8a04; }
+    .error .status-dot  { background:#dc2626; }
+    .loading .status-dot{ background:var(--gray); }
 
-    /* ── Top-level tabs ──────────────────────────────────────── */
-    .top-tab-nav {
-      display: flex;
-      gap: 2px;
-      border-bottom: 2px solid var(--gray-bd);
-      margin-bottom: 14px;
-    }
-    .top-tab-btn {
-      padding: 8px 20px;
-      border: none;
-      background: none;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--gray);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      border-radius: 6px 6px 0 0;
-      white-space: nowrap;
-      transition: color .15s;
-    }
-    .top-tab-btn:hover { color: #374151; background: #f3f4f6; }
-    .top-tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: #fff; }
-    .top-tab-panel { display: none; }
-    .top-tab-panel.active { display: block; }
+    /* Top tabs */
+    .top-tab-nav { display:flex; gap:2px; border-bottom:2px solid var(--gray-bd); margin-bottom:14px; }
+    .top-tab-btn { padding:8px 20px; border:none; background:none; font-size:13px; font-weight:600; color:var(--gray); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; border-radius:6px 6px 0 0; white-space:nowrap; transition:color .15s; }
+    .top-tab-btn:hover { color:#374151; background:#f3f4f6; }
+    .top-tab-btn.active { color:var(--blue); border-bottom-color:var(--blue); background:#fff; }
+    .top-tab-panel { display:none; }
+    .top-tab-panel.active { display:block; }
 
-    /* ── Section card ────────────────────────────────────────── */
-    .section {
-      background: #fff;
-      border: 1px solid var(--gray-bd);
-      border-radius: var(--radius);
-      margin-bottom: 14px;
-      box-shadow: var(--shadow);
-    }
-    .section-header {
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--gray-bd);
-      font-weight: 600;
-      font-size: 13px;
-      color: #374151;
-      background: var(--gray-lt);
-      border-radius: var(--radius) var(--radius) 0 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .section-body { padding: 14px 16px; }
+    /* Section card */
+    .section { background:#fff; border:1px solid var(--gray-bd); border-radius:var(--radius); margin-bottom:14px; box-shadow:var(--shadow); }
+    .section-header { padding:10px 16px; border-bottom:1px solid var(--gray-bd); font-weight:600; font-size:13px; color:#374151; background:var(--gray-lt); border-radius:var(--radius) var(--radius) 0 0; display:flex; align-items:center; justify-content:space-between; }
+    .section-body { padding:14px 16px; }
 
-    /* ── Summary grid ────────────────────────────────────────── */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-    }
-    .summary-item {
-      background: var(--gray-lt);
-      border-radius: 6px;
-      padding: 9px 12px;
-    }
-    .summary-item .lbl { font-size: 11px; color: var(--gray); margin-bottom: 1px; }
-    .summary-item .val { font-size: 20px; font-weight: 700; }
-    .summary-item .unt { font-size: 11px; color: var(--gray); }
+    /* Summary grid */
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+    .summary-item { background:var(--gray-lt); border-radius:6px; padding:9px 12px; }
+    .summary-item .lbl { font-size:11px; color:var(--gray); margin-bottom:1px; }
+    .summary-item .val { font-size:20px; font-weight:700; }
+    .summary-item .unt { font-size:11px; color:var(--gray); }
 
-    /* ── Notices ─────────────────────────────────────────────── */
-    .notice {
-      display: flex;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-    .notice.warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
-    .notice.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    /* Notices */
+    .notice { display:flex; gap:8px; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:8px; }
+    .notice.warning { background:#fef3c7; border:1px solid #fde68a; color:#92400e; }
+    .notice.info    { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; }
+    .notice.success { background:#dcfce7; border:1px solid #bbf7d0; color:#15803d; }
 
-    /* ── Scatter ─────────────────────────────────────────────── */
-    .scatter-wrap { position: relative; overflow: hidden; }
-    #scatter-svg { display: block; width: 100%; }
-    .scatter-tooltip {
-      position: absolute;
-      background: #1e293b;
-      color: #fff;
-      border-radius: 6px;
-      padding: 7px 11px;
-      font-size: 12px;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 10;
-      display: none;
-      line-height: 1.8;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-    }
-    .scatter-legend {
-      display: flex;
-      gap: 16px;
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--gray);
-      flex-wrap: wrap;
-    }
-    .scatter-legend span { display: flex; align-items: center; gap: 5px; }
+    /* Scatter grid (2 plots) */
+    .scatter-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:720px){ .scatter-grid { grid-template-columns:1fr; } }
+    .scatter-panel { }
+    .scatter-panel-title { font-size:12px; font-weight:600; color:#374151; margin-bottom:6px; }
+    .scatter-wrap { position:relative; overflow:hidden; }
+    .scatter-svg  { display:block; width:100%; }
+    .scatter-tooltip { position:absolute; background:#1e293b; color:#fff; border-radius:6px; padding:7px 11px; font-size:12px; pointer-events:none; white-space:nowrap; z-index:10; display:none; line-height:1.8; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    .scatter-legend { display:flex; gap:16px; margin-top:8px; font-size:11px; color:var(--gray); flex-wrap:wrap; }
+    .scatter-legend span { display:flex; align-items:center; gap:5px; }
 
-    /* ── Funnel ──────────────────────────────────────────────── */
-    .funnel {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-    .funnel-step { display: flex; align-items: center; gap: 3px; }
-    .funnel-step .n { font-weight: 700; color: var(--blue); }
-    .funnel-step .lbl { color: var(--gray); }
-    .funnel-arrow { color: var(--gray-bd); }
-    .funnel-step.pareto .n { color: var(--green); }
+    /* Funnel */
+    .funnel { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; margin-bottom:12px; }
+    .funnel-step { display:flex; align-items:center; gap:3px; }
+    .funnel-step .n { font-weight:700; color:var(--blue); }
+    .funnel-step .lbl { color:var(--gray); }
+    .funnel-arrow { color:var(--gray-bd); }
+    .funnel-step.pareto .n { color:var(--green); }
 
-    /* ── Combo candidate tabs ────────────────────────────────── */
-    .combo-tab-strip {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      margin-bottom: 14px;
-      scrollbar-width: thin;
-    }
-    .combo-tab-strip::-webkit-scrollbar { height: 4px; }
-    .combo-tab-strip::-webkit-scrollbar-track { background: var(--gray-lt); }
-    .combo-tab-strip::-webkit-scrollbar-thumb { background: var(--gray-bd); border-radius: 2px; }
+    /* Combo tabs */
+    .combo-tab-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:thin; }
+    .combo-tab-strip::-webkit-scrollbar { height:4px; }
+    .combo-tab-strip::-webkit-scrollbar-track { background:var(--gray-lt); }
+    .combo-tab-strip::-webkit-scrollbar-thumb { background:var(--gray-bd); border-radius:2px; }
+    .combo-tab-btn { flex-shrink:0; padding:8px 14px; border:1.5px solid var(--gray-bd); border-radius:var(--radius); background:#fff; cursor:pointer; text-align:left; min-width:110px; max-width:180px; transition:border-color .15s,background .15s,box-shadow .15s; position:relative; }
+    .combo-tab-btn:hover { border-color:var(--blue); box-shadow:0 2px 6px rgba(37,99,235,.15); }
+    .combo-tab-btn.active { border-color:var(--blue); background:var(--blue-lt); box-shadow:0 2px 6px rgba(37,99,235,.2); }
+    .combo-tab-btn.pareto-tab { border-left:3px solid var(--blue); }
+    .combo-tab-name { font-weight:700; font-size:13px; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .combo-tab-btn.active .combo-tab-name { color:var(--blue); }
+    .combo-tab-meta { display:flex; gap:6px; align-items:center; margin-top:3px; flex-wrap:wrap; }
+    .combo-tab-p95 { font-size:11px; color:var(--gray); }
+    .combo-tab-btn.active .combo-tab-p95 { color:#3b82f6; }
+    .badge-mini { font-size:10px; font-weight:600; padding:1px 6px; border-radius:8px; white-space:nowrap; }
+    .badge-mini.pareto { background:var(--blue-lt); color:var(--blue); }
+    .badge-mini.subopt { background:var(--gray-lt); color:var(--gray); }
+    .badge-mini.est    { background:#fef3c7; color:#92400e; }
 
-    .combo-tab-btn {
-      flex-shrink: 0;
-      padding: 8px 14px;
-      border: 1.5px solid var(--gray-bd);
-      border-radius: var(--radius);
-      background: #fff;
-      cursor: pointer;
-      text-align: left;
-      min-width: 110px;
-      max-width: 180px;
-      transition: border-color .15s, background .15s, box-shadow .15s;
-      position: relative;
-    }
-    .combo-tab-btn:hover { border-color: var(--blue); box-shadow: 0 2px 6px rgba(37,99,235,.15); }
-    .combo-tab-btn.active {
-      border-color: var(--blue);
-      background: var(--blue-lt);
-      box-shadow: 0 2px 6px rgba(37,99,235,.2);
-    }
-    .combo-tab-btn.pareto-tab { border-left: 3px solid var(--blue); }
-    .combo-tab-btn.pareto-tab.active { border-left-color: var(--blue); }
-    .combo-tab-name {
-      font-weight: 700;
-      font-size: 13px;
-      color: #111827;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-    }
-    .combo-tab-btn.active .combo-tab-name { color: var(--blue); }
-    .combo-tab-meta {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      margin-top: 3px;
-      flex-wrap: wrap;
-    }
-    .combo-tab-p95 { font-size: 11px; color: var(--gray); }
-    .combo-tab-btn.active .combo-tab-p95 { color: #3b82f6; }
-    .badge-mini {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 1px 6px;
-      border-radius: 8px;
-      white-space: nowrap;
-    }
-    .badge-mini.pareto    { background: var(--blue-lt); color: var(--blue); }
-    .badge-mini.subopt    { background: var(--gray-lt); color: var(--gray); }
-    .badge-mini.est       { background: #fef3c7; color: #92400e; }
+    /* Combo content grid */
+    .combo-content-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+    @media(max-width:740px){ .combo-content-grid { grid-template-columns:1fr; } }
 
-    /* ── Combo content grid (detail + map) ───────────────────── */
-    .combo-content-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    @media (max-width: 740px) { .combo-content-grid { grid-template-columns: 1fr; } }
+    /* Detail pane */
+    .combo-detail-title { font-size:16px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .badge { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
+    .badge-pareto      { background:var(--blue-lt); color:var(--blue); }
+    .badge-suboptimal  { background:var(--gray-lt); color:var(--gray); }
+    .badge-k           { background:#f0fdf4; color:var(--green); }
 
-    /* ── Combo detail pane ───────────────────────────────────── */
-    .combo-detail-pane { }
-    .combo-detail-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .badge-pareto   { background: var(--blue-lt); color: var(--blue); }
-    .badge-suboptimal { background: var(--gray-lt); color: var(--gray); }
-    .badge-k        { background: #f0fdf4; color: var(--green); }
-    .badge-est-full { background: #fef3c7; color: #92400e; font-size: 11px; }
+    /* KPI row */
+    .kpi-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; padding:10px 12px; background:var(--gray-lt); border-radius:6px; }
+    .kpi-item { display:flex; flex-direction:column; min-width:80px; }
+    .kpi-label { font-size:10px; color:var(--gray); }
+    .kpi-value { font-size:17px; font-weight:700; }
+    .kpi-unit  { font-size:10px; color:var(--gray); }
+    .kpi-value.warn   { color:var(--yellow); }
+    .kpi-value.danger { color:var(--red); }
+    .kpi-divider { width:1px; background:var(--gray-bd); margin:0 2px; align-self:stretch; }
 
-    /* ── KPI row ─────────────────────────────────────────────── */
-    .kpi-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-      padding: 10px 12px;
-      background: var(--gray-lt);
-      border-radius: 6px;
-    }
-    .kpi-item { display: flex; flex-direction: column; min-width: 80px; }
-    .kpi-label { font-size: 10px; color: var(--gray); }
-    .kpi-value { font-size: 17px; font-weight: 700; }
-    .kpi-unit  { font-size: 10px; color: var(--gray); }
-    .kpi-value.warn   { color: var(--yellow); }
-    .kpi-value.danger { color: var(--red); }
-    .kpi-divider { width: 1px; background: var(--gray-bd); margin: 0 2px; align-self: stretch; }
+    /* Distribution bar */
+    .dist-wrap { margin-bottom:12px; }
+    .dist-label { font-size:11px; color:var(--gray); margin-bottom:4px; }
+    .dist-bar { display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--gray-bd); }
+    .dist-seg { height:100%; }
+    .dist-seg.s0 { background:#22c55e; }
+    .dist-seg.s1 { background:#3b82f6; }
+    .dist-seg.s2 { background:#f59e0b; }
+    .dist-seg.s3 { background:#ef4444; }
+    .dist-legend { display:flex; gap:8px; margin-top:4px; font-size:11px; color:var(--gray); flex-wrap:wrap; }
+    .dist-legend span { display:flex; align-items:center; gap:3px; }
+    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
 
-    /* ── Distribution bar ────────────────────────────────────── */
-    .dist-wrap { margin-bottom: 12px; }
-    .dist-label { font-size: 11px; color: var(--gray); margin-bottom: 4px; }
-    .dist-bar {
-      display: flex;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      background: var(--gray-bd);
-    }
-    .dist-seg { height: 100%; }
-    .dist-seg.s0 { background: #22c55e; }
-    .dist-seg.s1 { background: #3b82f6; }
-    .dist-seg.s2 { background: #f59e0b; }
-    .dist-seg.s3 { background: #ef4444; }
-    .dist-legend {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-      font-size: 11px;
-      color: var(--gray);
-      flex-wrap: wrap;
-    }
-    .dist-legend span { display: flex; align-items: center; gap: 3px; }
-    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    /* Office chips */
+    .office-chips-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+    .office-chip { background:var(--gray-lt); border:1px solid var(--gray-bd); border-radius:6px; padding:6px 10px; font-size:12px; }
+    .office-chip-name { font-weight:600; margin-bottom:2px; }
+    .office-chip-sub  { color:var(--gray); font-size:11px; }
 
-    /* ── Office chips ────────────────────────────────────────── */
-    .office-chips-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .office-chip {
-      background: var(--gray-lt);
-      border: 1px solid var(--gray-bd);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-    .office-chip-name { font-weight: 600; margin-bottom: 2px; }
-    .office-chip-sub  { color: var(--gray); font-size: 11px; }
+    /* Cost summary */
+    .cost-summary { padding:10px 12px; background:var(--gray-lt); border-radius:6px; font-size:12px; margin-bottom:10px; }
+    .cost-row { display:flex; justify-content:space-between; padding:3px 0; }
+    .cost-row.total { border-top:1px solid var(--gray-bd); margin-top:4px; padding-top:6px; font-weight:700; font-size:13px; color:var(--blue); }
+    .cost-label { color:var(--gray); }
 
-    /* ── Cost summary ────────────────────────────────────────── */
-    .cost-summary {
-      padding: 10px 12px;
-      background: var(--gray-lt);
-      border-radius: 6px;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-    .cost-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 3px 0;
-    }
-    .cost-row.total {
-      border-top: 1px solid var(--gray-bd);
-      margin-top: 4px;
-      padding-top: 6px;
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--blue);
-    }
-    .cost-label { color: var(--gray); }
+    /* Capacity bars */
+    .capacity-section { margin-bottom:10px; }
+    .cap-office { margin-bottom:8px; }
+    .cap-office-header { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
+    .cap-office-name { font-weight:600; }
+    .cap-office-nums { color:var(--gray); font-size:11px; }
+    .cap-bar-bg { height:7px; background:var(--gray-bd); border-radius:4px; overflow:hidden; }
+    .cap-bar-fill { height:100%; border-radius:4px; background:var(--blue); }
+    .cap-bar-fill.tight { background:var(--yellow); }
+    .cap-bar-fill.full  { background:var(--red); }
+    .cap-note { font-size:10px; color:var(--gray); margin-top:1px; }
 
-    /* ── Capacity bars ───────────────────────────────────────── */
-    .capacity-section { margin-bottom: 10px; }
-    .cap-office { margin-bottom: 8px; }
-    .cap-office-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 3px;
-    }
-    .cap-office-name { font-weight: 600; }
-    .cap-office-nums { color: var(--gray); font-size: 11px; }
-    .cap-bar-bg {
-      height: 7px;
-      background: var(--gray-bd);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .cap-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--blue);
-    }
-    .cap-bar-fill.tight { background: var(--yellow); }
-    .cap-bar-fill.full  { background: var(--red); }
-    .cap-note { font-size: 10px; color: var(--gray); margin-top: 1px; }
+    /* Explain block */
+    .explain-block { padding:8px 10px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; font-size:12px; margin-top:8px; }
+    .explain-block .hl  { font-weight:600; color:#0369a1; }
+    .explain-block .det { color:#374151; margin-top:2px; }
 
-    /* ── Explain block ───────────────────────────────────────── */
-    .explain-block {
-      padding: 8px 10px;
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-top: 8px;
-    }
-    .explain-block .hl  { font-weight: 600; color: #0369a1; }
-    .explain-block .det { color: #374151; margin-top: 2px; }
+    /* Department breakdown table */
+    .dept-section { margin-bottom:12px; }
+    .dept-section-title { font-size:12px; font-weight:600; color:#374151; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; }
+    .dept-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .dept-table th { text-align:left; padding:5px 8px; font-size:11px; color:var(--gray); border-bottom:1px solid var(--gray-bd); background:var(--gray-lt); }
+    .dept-table td { padding:5px 8px; border-bottom:1px solid var(--gray-bd); }
+    .dept-table tr:last-child td { border-bottom:none; }
+    .dept-table tr:hover td { background:#f9fafb; }
 
-    /* ── Compare button ──────────────────────────────────────── */
-    .compare-toggle-btn {
-      font-size: 11px;
-      padding: 4px 12px;
-      border-radius: 14px;
-      border: 1.5px solid var(--gray-bd);
-      background: #fff;
-      cursor: pointer;
-      color: var(--gray);
-      font-weight: 600;
-      transition: all .15s;
-    }
-    .compare-toggle-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .compare-toggle-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
-    .compare-toggle-btn:disabled { opacity: .4; cursor: default; }
+    /* Conflict alerts */
+    .conflict-alerts { margin-bottom:12px; }
+    .conflict-alert { display:flex; gap:8px; align-items:flex-start; padding:7px 10px; border-radius:6px; font-size:12px; margin-bottom:6px; }
+    .conflict-alert.warning { background:#fef3c7; border:1px solid #fde68a; color:#92400e; }
+    .conflict-alert:last-child { margin-bottom:0; }
 
-    /* ── Map pane ────────────────────────────────────────────── */
-    .combo-map-pane {
-      border: 1px solid var(--gray-bd);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .combo-map-header {
-      padding: 8px 12px;
-      background: var(--gray-lt);
-      border-bottom: 1px solid var(--gray-bd);
-      font-size: 12px;
-      font-weight: 600;
-      color: #374151;
-    }
-    #combo-map-container { height: 380px; }
-    .map-legend {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 7px 12px;
-      font-size: 11px;
-      color: var(--gray);
-      flex-wrap: wrap;
-      border-top: 1px solid var(--gray-bd);
-      background: var(--gray-lt);
-    }
-    .map-legend span { display: flex; align-items: center; gap: 4px; }
+    /* Robustness */
+    .robustness-section { margin-top:10px; padding:10px 12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; font-size:12px; }
+    .robustness-title { font-size:12px; font-weight:700; color:#15803d; margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+    .robustness-item { display:flex; align-items:flex-start; gap:6px; margin-bottom:5px; font-size:12px; color:#374151; }
+    .robustness-item:last-child { margin-bottom:0; }
+    .robustness-ok   { color:#16a34a; font-size:13px; }
+    .robustness-warn { color:#ca8a04; font-size:13px; }
 
-    /* ── Compare bar (fixed bottom) ──────────────────────────── */
-    #compare-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #1e3a5f;
-      color: #fff;
-      padding: 10px 24px;
-      display: none;
-      align-items: center;
-      gap: 14px;
-      z-index: 200;
-      box-shadow: 0 -4px 16px rgba(0,0,0,.25);
-      flex-wrap: wrap;
-    }
-    .compare-bar-label { font-size: 13px; font-weight: 600; flex-shrink: 0; }
-    .compare-bar-items { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
-    .compare-bar-chip {
-      background: rgba(255,255,255,.15);
-      border-radius: 20px;
-      padding: 3px 12px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .remove-btn {
-      background: none; border: none;
-      color: rgba(255,255,255,.7);
-      cursor: pointer; font-size: 13px;
-      line-height: 1; padding: 0;
-    }
-    .remove-btn:hover { color: #fff; }
-    .compare-show-btn {
-      background: #fff; color: #1e3a5f; border: none;
-      border-radius: 20px; padding: 5px 16px;
-      font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0;
-    }
-    .compare-show-btn:hover { background: #e0f2fe; }
-    .compare-show-btn:disabled { opacity: .5; cursor: default; }
-    .compare-clear-btn {
-      background: none; border: 1px solid rgba(255,255,255,.4);
-      color: rgba(255,255,255,.8); border-radius: 20px;
-      padding: 4px 12px; font-size: 12px; cursor: pointer; flex-shrink: 0;
-    }
-    .compare-clear-btn:hover { background: rgba(255,255,255,.1); }
+    /* Baseline diagnosis */
+    .baseline-section { padding:12px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:6px; margin-bottom:12px; }
+    .baseline-title { font-size:13px; font-weight:700; color:#c2410c; margin-bottom:8px; }
+    .baseline-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:8px; }
+    .baseline-kpi { background:#fff; border:1px solid #fed7aa; border-radius:6px; padding:7px 10px; }
+    .baseline-kpi .lbl { font-size:10px; color:#9a3412; }
+    .baseline-kpi .val { font-size:16px; font-weight:700; color:#c2410c; }
+    .baseline-kpi .unt { font-size:10px; color:#9a3412; }
 
-    /* ── Compare panel ───────────────────────────────────────── */
-    .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
-    .compare-col { border: 1px solid var(--gray-bd); border-radius: var(--radius); overflow: hidden; }
-    .compare-col-header {
-      background: var(--gray-lt); padding: 9px 14px;
-      font-weight: 700; font-size: 13px;
-      border-bottom: 1px solid var(--gray-bd);
-    }
-    .compare-col-header.winner { background: var(--blue-lt); color: var(--blue); }
-    .compare-kpi-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 14px; border-bottom: 1px solid var(--gray-bd); font-size: 13px;
-    }
-    .compare-kpi-row:last-child { border-bottom: none; }
-    .compare-kpi-label { color: var(--gray); font-size: 12px; }
-    .compare-kpi-value { font-weight: 700; font-size: 15px; }
-    .compare-kpi-value.better { color: var(--green); }
-    .compare-kpi-value.worse  { color: var(--red); }
-    .compare-kpi-value.same   { color: var(--gray); }
-    .diff-badge {
-      font-size: 10px; font-weight: 600;
-      padding: 1px 6px; border-radius: 8px;
-    }
-    .diff-badge.better { background: #dcfce7; color: var(--green); }
-    .diff-badge.worse  { background: #fee2e2; color: var(--red); }
-    .diff-badge.same   { background: var(--gray-lt); color: var(--gray); }
-    .compare-close-btn {
-      background: none; border: none; cursor: pointer;
-      font-size: 17px; color: var(--gray); line-height: 1; padding: 0 4px;
-    }
-    .compare-close-btn:hover { color: #111; }
+    /* Compare toggle btn */
+    .compare-toggle-btn { font-size:11px; padding:4px 12px; border-radius:14px; border:1.5px solid var(--gray-bd); background:#fff; cursor:pointer; color:var(--gray); font-weight:600; transition:all .15s; }
+    .compare-toggle-btn:hover { border-color:var(--blue); color:var(--blue); }
+    .compare-toggle-btn.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .compare-toggle-btn:disabled { opacity:.4; cursor:default; }
 
-    /* ── Sensitivity ─────────────────────────────────────────── */
-    .sensitivity-summary {
-      font-size: 13px; color: #374151;
-      padding: 10px 12px; background: var(--gray-lt);
-      border-radius: 6px; margin-bottom: 14px;
-    }
-    .sens-detail {
-      border: 1px solid var(--gray-bd);
-      border-radius: 6px; margin-bottom: 8px; overflow: hidden;
-    }
-    .sens-detail-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; background: var(--gray-lt);
-      cursor: pointer; user-select: none; font-size: 13px;
-    }
-    .sens-detail-header:hover { background: #e9eaf0; }
-    .sens-detail-title { font-weight: 600; }
-    .sens-detail-desc { font-size: 12px; color: var(--gray); }
-    .sens-chevron { font-size: 11px; color: var(--gray); transition: transform .2s; }
-    .sens-detail.open .sens-chevron { transform: rotate(180deg); }
-    .sens-detail-body { display: none; }
-    .sens-detail.open .sens-detail-body { display: block; }
-    .impacts-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .impacts-table th {
-      text-align: left; padding: 6px 14px; font-size: 11px;
-      color: var(--gray); border-bottom: 1px solid var(--gray-bd); background: var(--gray-lt);
-    }
-    .impacts-table td { padding: 7px 14px; border-bottom: 1px solid var(--gray-bd); }
-    .impacts-table tr:last-child td { border-bottom: none; }
-    .diff-up   { color: var(--red);   font-weight: 600; }
-    .diff-down { color: var(--green); font-weight: 600; }
-    .diff-zero { color: var(--gray); }
+    /* Map pane */
+    .combo-map-pane { border:1px solid var(--gray-bd); border-radius:var(--radius); overflow:hidden; }
+    .combo-map-header { padding:8px 12px; background:var(--gray-lt); border-bottom:1px solid var(--gray-bd); font-size:12px; font-weight:600; color:#374151; }
+    #combo-map-container { height:380px; }
+    .map-legend { display:flex; align-items:center; gap:12px; padding:7px 12px; font-size:11px; color:var(--gray); flex-wrap:wrap; border-top:1px solid var(--gray-bd); background:var(--gray-lt); }
+    .map-legend span { display:flex; align-items:center; gap:4px; }
 
-    /* ── CSV Upload ──────────────────────────────────────────── */
-    .upload-zone {
-      border: 2px dashed var(--gray-bd); border-radius: var(--radius);
-      padding: 36px 24px; text-align: center; color: var(--gray);
-      cursor: pointer; transition: border-color .15s, background .15s;
-      position: relative;
-    }
-    .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--blue); background: var(--blue-lt); color: var(--blue);
-    }
-    .upload-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0;
-      cursor: pointer; width: 100%; height: 100%;
-    }
-    .upload-icon { font-size: 32px; margin-bottom: 8px; }
-    .upload-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .upload-hint { font-size: 12px; }
-    .upload-result {
-      margin-top: 14px; padding: 10px 14px; border-radius: 6px;
-      font-size: 13px; display: none;
-    }
-    .upload-result.success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .upload-result.error   { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-    .upload-preview-table {
-      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
-    }
-    .upload-preview-table th {
-      background: var(--gray-lt); padding: 5px 10px; text-align: left;
-      font-size: 11px; color: var(--gray); border-bottom: 1px solid var(--gray-bd);
-    }
-    .upload-preview-table td { padding: 5px 10px; border-bottom: 1px solid var(--gray-bd); }
-    .upload-preview-table tr:last-child td { border-bottom: none; }
+    /* Compare bar */
+    #compare-bar { position:fixed; bottom:0; left:0; right:0; background:#1e3a5f; color:#fff; padding:10px 24px; display:none; align-items:center; gap:14px; z-index:200; box-shadow:0 -4px 16px rgba(0,0,0,.25); flex-wrap:wrap; }
+    .compare-bar-label { font-size:13px; font-weight:600; flex-shrink:0; }
+    .compare-bar-items { display:flex; gap:8px; flex:1; flex-wrap:wrap; }
+    .compare-bar-chip { background:rgba(255,255,255,.15); border-radius:20px; padding:3px 12px; font-size:12px; display:flex; align-items:center; gap:7px; }
+    .remove-btn { background:none; border:none; color:rgba(255,255,255,.7); cursor:pointer; font-size:13px; line-height:1; padding:0; }
+    .remove-btn:hover { color:#fff; }
+    .compare-show-btn { background:#fff; color:#1e3a5f; border:none; border-radius:20px; padding:5px 16px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; }
+    .compare-show-btn:hover { background:#e0f2fe; }
+    .compare-show-btn:disabled { opacity:.5; cursor:default; }
+    .compare-clear-btn { background:none; border:1px solid rgba(255,255,255,.4); color:rgba(255,255,255,.8); border-radius:20px; padding:4px 12px; font-size:12px; cursor:pointer; flex-shrink:0; }
+    .compare-clear-btn:hover { background:rgba(255,255,255,.1); }
 
-    /* ── Misc ────────────────────────────────────────────────── */
-    .loading-spinner { text-align: center; padding: 40px; color: var(--gray); font-size: 14px; }
-    code { font-size: 12px; background: var(--gray-lt); padding: 1px 4px; border-radius: 3px; }
+    /* Compare panel */
+    .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:600px){ .compare-grid { grid-template-columns:1fr; } }
+    .compare-col { border:1px solid var(--gray-bd); border-radius:var(--radius); overflow:hidden; }
+    .compare-col-header { background:var(--gray-lt); padding:9px 14px; font-weight:700; font-size:13px; border-bottom:1px solid var(--gray-bd); }
+    .compare-col-header.winner { background:var(--blue-lt); color:var(--blue); }
+    .compare-kpi-row { display:flex; justify-content:space-between; align-items:center; padding:8px 14px; border-bottom:1px solid var(--gray-bd); font-size:13px; }
+    .compare-kpi-row:last-child { border-bottom:none; }
+    .compare-kpi-label { color:var(--gray); font-size:12px; }
+    .compare-kpi-value { font-weight:700; font-size:15px; }
+    .compare-kpi-value.better { color:var(--green); }
+    .compare-kpi-value.worse  { color:var(--red); }
+    .compare-kpi-value.same   { color:var(--gray); }
+    .diff-badge { font-size:10px; font-weight:600; padding:1px 6px; border-radius:8px; }
+    .diff-badge.better { background:#dcfce7; color:var(--green); }
+    .diff-badge.worse  { background:#fee2e2; color:var(--red); }
+    .diff-badge.same   { background:var(--gray-lt); color:var(--gray); }
+    .compare-close-btn { background:none; border:none; cursor:pointer; font-size:17px; color:var(--gray); line-height:1; padding:0 4px; }
+    .compare-close-btn:hover { color:#111; }
+
+    /* Upload zone */
+    .upload-zone { border:2px dashed var(--gray-bd); border-radius:var(--radius); padding:28px 24px; text-align:center; color:var(--gray); cursor:pointer; transition:border-color .15s,background .15s; position:relative; }
+    .upload-zone:hover,.upload-zone.dragover { border-color:var(--blue); background:var(--blue-lt); color:var(--blue); }
+    .upload-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .upload-icon  { font-size:28px; margin-bottom:6px; }
+    .upload-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+    .upload-hint  { font-size:12px; }
+    .upload-result { margin-top:12px; padding:8px 12px; border-radius:6px; font-size:13px; display:none; }
+    .upload-result.success { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+    .upload-result.error   { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; }
+    .upload-result.info    { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+    .upload-preview-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+    .upload-preview-table th { background:var(--gray-lt); padding:5px 10px; text-align:left; font-size:11px; color:var(--gray); border-bottom:1px solid var(--gray-bd); }
+    .upload-preview-table td { padding:5px 10px; border-bottom:1px solid var(--gray-bd); }
+    .upload-preview-table tr:last-child td { border-bottom:none; }
+
+    /* Office candidate input */
+    .office-input-tabs { display:flex; gap:0; border:1px solid var(--gray-bd); border-radius:6px; overflow:hidden; margin-bottom:14px; width:fit-content; }
+    .office-input-tab-btn { padding:6px 16px; border:none; background:var(--gray-lt); font-size:12px; font-weight:600; color:var(--gray); cursor:pointer; border-right:1px solid var(--gray-bd); transition:background .15s; }
+    .office-input-tab-btn:last-child { border-right:none; }
+    .office-input-tab-btn.active { background:var(--blue); color:#fff; }
+    .office-input-panel { display:none; }
+    .office-input-panel.active { display:block; }
+
+    /* Office form */
+    .office-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+    @media(max-width:600px){ .office-form-grid { grid-template-columns:1fr; } }
+    .form-field { display:flex; flex-direction:column; gap:3px; }
+    .form-field label { font-size:11px; color:var(--gray); font-weight:600; }
+    .form-field input, .form-field select {
+      padding:6px 10px; border:1px solid var(--gray-bd); border-radius:6px; font-size:13px;
+      color:#111827; background:#fff; outline:none; transition:border-color .15s;
+    }
+    .form-field input:focus, .form-field select:focus { border-color:var(--blue); }
+    .form-field input[type="number"] { -moz-appearance:textfield; }
+    .form-field input[type="number"]::-webkit-outer-spin-button,
+    .form-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; }
+
+    /* Office candidate list */
+    .candidate-list { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+    .candidate-item { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--gray-lt); border:1px solid var(--gray-bd); border-radius:6px; font-size:12px; }
+    .candidate-item-info { display:flex; flex-direction:column; gap:1px; }
+    .candidate-item-name { font-weight:600; color:#111827; }
+    .candidate-item-sub  { color:var(--gray); font-size:11px; }
+    .candidate-remove-btn { background:none; border:none; color:var(--gray); cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
+    .candidate-remove-btn:hover { color:var(--red); background:#fee2e2; }
+
+    /* Settings */
+    .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media(max-width:600px){ .settings-grid { grid-template-columns:1fr; } }
+    .collapsible-section { border:1px solid var(--gray-bd); border-radius:var(--radius); margin-bottom:14px; overflow:hidden; }
+    .collapsible-header { padding:10px 16px; background:var(--gray-lt); display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; font-size:13px; font-weight:600; color:#374151; }
+    .collapsible-header:hover { background:#e9eaf0; }
+    .collapsible-chevron { font-size:11px; color:var(--gray); transition:transform .2s; }
+    .collapsible-section.open .collapsible-chevron { transform:rotate(180deg); }
+    .collapsible-body { display:none; padding:14px 16px; border-top:1px solid var(--gray-bd); background:#fff; }
+    .collapsible-section.open .collapsible-body { display:block; }
+
+    /* Run button */
+    .run-btn-wrap { margin-top:6px; }
+    .run-btn { width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:var(--radius); font-size:15px; font-weight:700; cursor:pointer; transition:background .15s,opacity .15s; }
+    .run-btn:hover:not(:disabled) { background:#1d4ed8; }
+    .run-btn:disabled { opacity:.45; cursor:not-allowed; }
+    .run-btn-hint { font-size:12px; color:var(--gray); margin-top:6px; text-align:center; }
+
+    /* Misc */
+    .loading-spinner { text-align:center; padding:40px; color:var(--gray); font-size:14px; }
+    .section-subtitle { font-size:12px; color:var(--gray); font-weight:normal; margin-left:8px; }
+    code { font-size:12px; background:var(--gray-lt); padding:1px 4px; border-radius:3px; }
+    .btn-sm { font-size:12px; padding:5px 12px; border-radius:6px; border:1px solid var(--gray-bd); background:#fff; cursor:pointer; color:#374151; font-weight:600; white-space:nowrap; transition:border-color .15s; }
+    .btn-sm:hover { border-color:var(--blue); color:var(--blue); }
+    .btn-primary-sm { background:var(--blue); color:#fff; border-color:var(--blue); }
+    .btn-primary-sm:hover { background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
   </style>
 </head>
 <body>
 
 <header class="page-header">
   <h1>オフィス配置シミュレーション</h1>
-  <span class="version">CEST v0.3.1</span>
+  <span class="version">CEST v0.3.2</span>
 </header>
 
 <main class="main">
@@ -608,17 +336,208 @@
     <span id="status-text">接続確認中…</span>
   </div>
 
-  <!-- ── トップタブ: データ入力 / 結果 / 感度分析 ─── -->
-  <nav class="top-tab-nav" id="top-tab-nav">
-    <button class="top-tab-btn active" data-tab="upload"      onclick="switchTopTab('upload')">データ入力</button>
-    <button class="top-tab-btn"        data-tab="main"        onclick="switchTopTab('main')">結果</button>
-    <button class="top-tab-btn"        data-tab="sensitivity" onclick="switchTopTab('sensitivity')">感度分析</button>
+  <nav class="top-tab-nav">
+    <button class="top-tab-btn active" data-tab="upload" onclick="switchTopTab('upload')">データ入力</button>
+    <button class="top-tab-btn"        data-tab="main"   onclick="switchTopTab('main')">結果</button>
   </nav>
 
-  <!-- ══════════════ タブ: 結果 ══════════════ -->
+  <!-- ══════ タブ: データ入力 ══════ -->
+  <div class="top-tab-panel active" id="panel-upload">
+
+    <!-- 社員データ -->
+    <div class="section">
+      <div class="section-header">
+        社員データ（居住地）
+        <span class="section-subtitle">必須列: station_id, count  /  任意列: group</span>
+      </div>
+      <div class="section-body">
+        <div class="upload-zone" id="upload-zone"
+          ondragover="handleDragOver(event,'upload-zone')"
+          ondragleave="handleDragLeave(event,'upload-zone')"
+          ondrop="handleEmployeeDrop(event)">
+          <input type="file" id="file-input" accept=".csv,.tsv,.txt" onchange="handleEmployeeSelect(event)">
+          <div class="upload-icon">📂</div>
+          <div class="upload-title">CSVをドロップ、またはクリックして選択</div>
+          <div class="upload-hint">CSV / TSV に対応  |  必須列: station_id, count</div>
+        </div>
+        <div class="upload-result" id="employee-upload-result"></div>
+        <div id="employee-preview"></div>
+      </div>
+    </div>
+
+    <!-- オフィス候補 -->
+    <div class="section">
+      <div class="section-header">オフィス候補</div>
+      <div class="section-body">
+        <div class="office-input-tabs">
+          <button class="office-input-tab-btn active" onclick="switchOfficeInputTab('manual')">手入力</button>
+          <button class="office-input-tab-btn"        onclick="switchOfficeInputTab('csv')">CSV</button>
+        </div>
+
+        <!-- 手入力パネル -->
+        <div class="office-input-panel active" id="office-panel-manual">
+          <div class="office-form-grid">
+            <div class="form-field">
+              <label>オフィス名 *</label>
+              <input type="text" id="oc-name" placeholder="例: 渋谷オフィス">
+            </div>
+            <div class="form-field">
+              <label>最寄駅 *</label>
+              <input type="text" id="oc-station" placeholder="例: shibuya" list="station-list">
+              <datalist id="station-list"></datalist>
+            </div>
+            <div class="form-field">
+              <label>ラストマイル（分）</label>
+              <input type="number" id="oc-lastmile" placeholder="5" min="0" max="60">
+            </div>
+            <div class="form-field">
+              <label>月額賃料（円）</label>
+              <input type="number" id="oc-rent" placeholder="5000000" min="0">
+            </div>
+            <div class="form-field">
+              <label>収容人数（人）</label>
+              <input type="number" id="oc-capacity" placeholder="100" min="1">
+            </div>
+          </div>
+          <button class="btn-sm btn-primary-sm" onclick="addOfficeCandidate()">＋ 候補を追加</button>
+          <div id="office-candidate-list" class="candidate-list"></div>
+        </div>
+
+        <!-- CSVパネル -->
+        <div class="office-input-panel" id="office-panel-csv">
+          <p style="font-size:12px;color:var(--gray);margin-bottom:10px">
+            列: <code>name, nearest_station_id, last_mile_minutes, rent_jpy_month, capacity</code>
+          </p>
+          <div class="upload-zone" id="office-csv-zone"
+            ondragover="handleDragOver(event,'office-csv-zone')"
+            ondragleave="handleDragLeave(event,'office-csv-zone')"
+            ondrop="handleOfficeCsvDrop(event)">
+            <input type="file" id="office-csv-input" accept=".csv,.tsv,.txt" onchange="handleOfficeCsvSelect(event)">
+            <div class="upload-icon">📂</div>
+            <div class="upload-title">CSVをドロップ、またはクリックして選択</div>
+          </div>
+          <div class="upload-result" id="office-csv-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基本設定 -->
+    <div class="section">
+      <div class="section-header">基本設定</div>
+      <div class="section-body">
+        <div class="settings-grid">
+          <div class="form-field">
+            <label>出社日数（日/週）</label>
+            <input type="number" id="s-office-days" value="3" min="1" max="7">
+          </div>
+          <div class="form-field">
+            <label>拠点数パターン（カンマ区切り）</label>
+            <input type="text" id="s-num-offices" value="1,2" placeholder="例: 1,2,3">
+          </div>
+          <div class="form-field">
+            <label>通勤上限 p95（分、空欄=なし）</label>
+            <input type="number" id="s-max-p95" placeholder="例: 90" min="0">
+          </div>
+          <div class="form-field">
+            <label>予算上限（円/月、空欄=なし）</label>
+            <input type="number" id="s-budget" placeholder="例: 15000000" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 詳細設定（折りたたみ） -->
+    <div class="collapsible-section" id="advanced-section">
+      <div class="collapsible-header" onclick="toggleCollapsible('advanced-section')">
+        <span>詳細設定</span>
+        <span class="collapsible-chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="settings-grid" style="margin-bottom:12px">
+          <div class="form-field">
+            <label>平均通勤上限（分、空欄=なし）</label>
+            <input type="number" id="s-max-avg" placeholder="例: 60" min="0">
+          </div>
+          <div class="form-field">
+            <label>1人あたり面積（㎡）</label>
+            <input type="number" id="s-sqm" value="3.3" min="1" step="0.1">
+          </div>
+          <div class="form-field">
+            <label>通勤費の扱い</label>
+            <select id="s-commute-policy" onchange="updateCommuteCap()">
+              <option value="full">全額支給</option>
+              <option value="capped">上限あり</option>
+              <option value="ignore">計算しない</option>
+            </select>
+          </div>
+          <div class="form-field" id="s-commute-cap-wrap" style="display:none">
+            <label>通勤費上限（円/月）</label>
+            <input type="number" id="s-commute-cap" placeholder="例: 30000" min="0">
+          </div>
+          <div class="form-field" style="grid-column:1/-1">
+            <label>必ず採用するオフィスID（カンマ区切り、空欄=なし）</label>
+            <input type="text" id="s-fixed-offices" placeholder="例: shibuya,shinjuku">
+          </div>
+        </div>
+        <div class="form-field" style="margin-bottom:10px">
+          <label>部署→オフィス固定配置（JSON、例: [{"group":"営業部","office_id":"shibuya"}]）</label>
+          <textarea id="s-fixed-assignment" rows="2"
+            style="padding:6px 10px;border:1px solid var(--gray-bd);border-radius:6px;font-size:12px;font-family:monospace;resize:vertical;width:100%"
+            placeholder='[]'></textarea>
+        </div>
+        <div class="form-field">
+          <label>同拠点グループ（JSON、例: [["営業部","マーケ部"]]）</label>
+          <textarea id="s-group-together" rows="2"
+            style="padding:6px 10px;border:1px solid var(--gray-bd);border-radius:6px;font-size:12px;font-family:monospace;resize:vertical;width:100%"
+            placeholder='[]'></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 現在のオフィス（任意） -->
+    <div class="collapsible-section" id="baseline-section">
+      <div class="collapsible-header" onclick="toggleCollapsible('baseline-section')">
+        <span>現在のオフィス（任意）<span style="font-size:11px;font-weight:normal;color:var(--gray);margin-left:6px">Before/After比較に使います</span></span>
+        <span class="collapsible-chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="office-form-grid">
+          <div class="form-field">
+            <label>オフィス名</label>
+            <input type="text" id="bl-name" placeholder="例: 現本社">
+          </div>
+          <div class="form-field">
+            <label>最寄駅ID</label>
+            <input type="text" id="bl-station" placeholder="例: shinagawa" list="station-list">
+          </div>
+          <div class="form-field">
+            <label>ラストマイル（分）</label>
+            <input type="number" id="bl-lastmile" placeholder="5" min="0">
+          </div>
+          <div class="form-field">
+            <label>月額賃料（円）</label>
+            <input type="number" id="bl-rent" placeholder="8000000" min="0">
+          </div>
+          <div class="form-field">
+            <label>収容人数（人）</label>
+            <input type="number" id="bl-capacity" placeholder="200" min="1">
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--gray)">すべて空欄の場合は baseline を送信しません。</p>
+      </div>
+    </div>
+
+    <!-- 計算実行ボタン -->
+    <div class="run-btn-wrap">
+      <button class="run-btn" id="run-btn" onclick="runEvaluate()">計算実行</button>
+      <div class="run-btn-hint" id="run-btn-hint"></div>
+    </div>
+
+  </div><!-- /panel-upload -->
+
+  <!-- ══════ タブ: 結果 ══════ -->
   <div class="top-tab-panel" id="panel-main">
 
-    <!-- 概要エリア（入力確認 + 散布図） -->
     <div id="section-summary" class="section" style="display:none">
       <div class="section-header">入力データ確認</div>
       <div class="section-body">
@@ -628,43 +547,51 @@
 
     <div id="notices-container"></div>
 
+    <!-- baseline_diagnosis -->
+    <div id="section-baseline-diag" style="display:none">
+      <div class="section">
+        <div class="section-header">現状診断</div>
+        <div class="section-body" id="baseline-diag-body"></div>
+      </div>
+    </div>
+
+    <!-- 散布図 2枚 -->
     <div id="section-scatter" class="section" style="display:none">
-      <div class="section-header">通勤 × 合計コスト トレードオフ</div>
+      <div class="section-header">トレードオフ散布図</div>
       <div class="section-body">
-        <div class="scatter-wrap">
-          <svg id="scatter-svg" viewBox="0 0 800 280" style="height:280px"></svg>
-          <div id="scatter-tooltip" class="scatter-tooltip"></div>
+        <div class="scatter-grid">
+          <div class="scatter-panel">
+            <div class="scatter-panel-title">月額賃料 × 通勤 p95</div>
+            <div class="scatter-wrap">
+              <svg id="scatter-svg-1" class="scatter-svg" viewBox="0 0 480 240" style="height:240px"></svg>
+              <div id="scatter-tooltip-1" class="scatter-tooltip"></div>
+            </div>
+          </div>
+          <div class="scatter-panel">
+            <div class="scatter-panel-title">1人あたり賃料 × 通勤 p95</div>
+            <div class="scatter-wrap">
+              <svg id="scatter-svg-2" class="scatter-svg" viewBox="0 0 480 240" style="height:240px"></svg>
+              <div id="scatter-tooltip-2" class="scatter-tooltip"></div>
+            </div>
+          </div>
         </div>
-        <div class="scatter-legend">
-          <span>
-            <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#2563eb" opacity=".85"/></svg>
-            パレート最適
-          </span>
-          <span>
-            <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#9ca3af" opacity=".7"/></svg>
-            パレート劣位
-          </span>
-          <span>
-            <svg width="22" height="12"><line x1="0" y1="6" x2="22" y2="6" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/></svg>
-            パレートフロンティア
-          </span>
-          <span style="font-size:11px;color:var(--gray);margin-left:auto">クリックで候補を選択</span>
+        <div class="scatter-legend" style="margin-top:6px">
+          <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#2563eb" opacity=".85"/></svg>パレート最適</span>
+          <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#9ca3af" opacity=".7"/></svg>パレート劣位</span>
+          <span><svg width="22" height="12"><line x1="0" y1="6" x2="22" y2="6" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" opacity=".6"/></svg>パレートフロンティア</span>
+          <span style="font-size:11px;color:var(--gray);margin-left:auto">クリックで候補を選択（2図は連動）</span>
         </div>
       </div>
     </div>
 
-    <!-- 候補一覧エリア（同一ページ・タブ切り替え） -->
+    <!-- 候補一覧 -->
     <div id="section-candidates" class="section" style="display:none">
       <div class="section-header">
         <span>オフィス組み合わせ候補</span>
         <span id="funnel-text" style="font-weight:normal;font-size:12px;color:var(--gray)"></span>
       </div>
       <div class="section-body">
-
-        <!-- ファネル -->
         <div class="funnel" id="funnel-row"></div>
-
-        <!-- 候補フィルタバー + タブストリップ -->
         <div id="combo-filter-bar" style="display:flex;align-items:center;justify-content:space-between;padding:2px 0 6px">
           <span id="combo-filter-label" style="font-size:12px;color:var(--gray)"></span>
           <button id="toggle-all-combos" onclick="toggleAllCombos()"
@@ -672,16 +599,13 @@
           </button>
         </div>
         <div class="combo-tab-strip" id="combo-tab-strip"></div>
-
-        <!-- 選択候補の詳細 + 地図（2カラム） -->
         <div class="combo-content-grid" id="combo-content-grid">
           <div class="loading-spinner" style="grid-column:1/-1">候補を選択してください</div>
         </div>
-
       </div>
     </div>
 
-    <!-- 比較パネル（2案選択後に表示） -->
+    <!-- 比較パネル -->
     <div id="section-compare" class="section" style="display:none">
       <div class="section-header">
         <span>2案比較</span>
@@ -692,42 +616,8 @@
 
   </div><!-- /panel-main -->
 
-  <!-- ══════════════ タブ: 感度分析 ══════════════ -->
-  <div class="top-tab-panel" id="panel-sensitivity">
-    <div id="section-sensitivity" class="section" style="display:none">
-      <div class="section-header">感度分析</div>
-      <div class="section-body" id="sensitivity-body"></div>
-    </div>
-  </div>
-
-  <!-- ══════════════ タブ: データ入力 ══════════════ -->
-  <div class="top-tab-panel active" id="panel-upload">
-    <div class="section">
-      <div class="section-header">CSVデータアップロード</div>
-      <div class="section-body">
-        <p style="font-size:13px;color:#374151;margin-bottom:14px">
-          社員の居住駅データをCSV・TSV・Excelファイルでアップロードできます。<br>
-          必須列: <code>station_id</code>, <code>count</code>  /  任意列: <code>group</code>
-        </p>
-        <div class="upload-zone" id="upload-zone"
-          ondragover="handleDragOver(event)"
-          ondragleave="handleDragLeave(event)"
-          ondrop="handleDrop(event)">
-          <input type="file" id="file-input" accept=".csv,.tsv,.txt,.xlsx"
-            onchange="handleFileSelect(event)">
-          <div class="upload-icon">📂</div>
-          <div class="upload-title">ファイルをドロップ、またはクリックして選択</div>
-          <div class="upload-hint">CSV / TSV / Excel (.xlsx) に対応</div>
-        </div>
-        <div class="upload-result" id="upload-result"></div>
-        <div id="upload-preview"></div>
-      </div>
-    </div>
-  </div>
-
 </main>
 
-<!-- 比較バー（固定フッター） -->
 <div id="compare-bar">
   <span class="compare-bar-label">比較中</span>
   <div class="compare-bar-items" id="compare-bar-items"></div>
@@ -747,36 +637,52 @@ const state = {
   sortedCombos: [],
   paretoIds: [],
   showAllCombos: false,
+  isApiConnected: false,
+  officeCandidates: [],
+  employeeData: null,       // parsed array of {station_id, count, group}
 };
 
 const stationMaster = {};
 let leafletMap = null;
-const OFFICE_COLORS = ['#1e3a5f', '#16a34a', '#9333ea', '#ea580c'];
+const OFFICE_COLORS = ['#1e3a5f','#16a34a','#9333ea','#ea580c'];
 
-// ─── ステーションマスター ────────────────────────────────────────
+// ── Station master ───────────────────────────────────────────────
 async function loadStationMaster() {
   try {
     const res = await fetch('station_master.json');
     if (!res.ok) return;
     const json = await res.json();
     (json.stations || []).forEach(s => { stationMaster[s.station_id] = s; });
+    // populate datalist
+    const dl = document.getElementById('station-list');
+    if (dl) {
+      (json.stations || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.station_id;
+        opt.label = s.name;
+        dl.appendChild(opt);
+      });
+    }
   } catch(e) {}
 }
 
-// ─── 起動 ────────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────
 async function init() {
   await loadStationMaster();
   let data;
   try {
     const h = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
     if (!h.ok) throw new Error();
+    state.isApiConnected = true;
     data = await loadDemo();
-    setStatus('api', 'APIに接続しました（デモデータ表示中）');
+    setStatus('api', 'APIに接続しました — データ入力タブからお試しください');
   } catch {
+    state.isApiConnected = false;
     data = await loadDemo();
     setStatus('demo', 'APIに接続できないためデモデータを表示しています');
   }
   state.data = data;
+  updateRunButton();
   render(data);
 }
 
@@ -792,7 +698,7 @@ function setStatus(type, text) {
   document.getElementById('status-text').textContent = text;
 }
 
-// ─── トップタブ切替 ──────────────────────────────────────────────
+// ── Top tab switch ────────────────────────────────────────────────
 function switchTopTab(name) {
   document.querySelectorAll('.top-tab-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.tab === name));
@@ -800,21 +706,346 @@ function switchTopTab(name) {
     p.classList.toggle('active', p.id === 'panel-' + name));
 }
 
-// ─── レンダリング ────────────────────────────────────────────────
+// ── Collapsible ───────────────────────────────────────────────────
+function toggleCollapsible(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Run button state ──────────────────────────────────────────────
+function updateRunButton() {
+  const btn  = document.getElementById('run-btn');
+  const hint = document.getElementById('run-btn-hint');
+  if (!state.isApiConnected) {
+    btn.disabled = true;
+    hint.textContent = 'API接続が必要です。APIを起動してからページを再読み込みしてください。';
+    return;
+  }
+  const hasEmployee = state.employeeData && state.employeeData.length > 0;
+  const hasOffices  = state.officeCandidates.length > 0;
+  if (!hasEmployee && !hasOffices) {
+    btn.disabled = true;
+    hint.textContent = '社員データとオフィス候補を入力してください。';
+  } else if (!hasEmployee) {
+    btn.disabled = true;
+    hint.textContent = '社員データ（CSV）を入力してください。';
+  } else if (!hasOffices) {
+    btn.disabled = true;
+    hint.textContent = 'オフィス候補を1件以上入力してください。';
+  } else {
+    btn.disabled = false;
+    hint.textContent = `${state.officeCandidates.length}件のオフィス候補 × ${state.employeeData.reduce((s,r) => s+(r.count||0), 0)}人の社員データで計算します。`;
+  }
+}
+
+// ── Office candidate management ───────────────────────────────────
+function switchOfficeInputTab(name) {
+  document.querySelectorAll('.office-input-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.trim() === (name === 'manual' ? '手入力' : 'CSV')));
+  document.querySelectorAll('.office-input-panel').forEach(p =>
+    p.classList.toggle('active', p.id === 'office-panel-' + name));
+}
+
+function addOfficeCandidate() {
+  const name     = document.getElementById('oc-name').value.trim();
+  const stationId= document.getElementById('oc-station').value.trim();
+  const lastMile = parseInt(document.getElementById('oc-lastmile').value) || 5;
+  const rent     = parseInt(document.getElementById('oc-rent').value) || 0;
+  const capacity = parseInt(document.getElementById('oc-capacity').value) || null;
+
+  if (!name || !stationId) {
+    alert('オフィス名と最寄駅は必須です。');
+    return;
+  }
+  const id = 'oc_' + Date.now();
+  state.officeCandidates.push({
+    office_id: id,
+    name,
+    nearest_station_id: stationId,
+    last_mile_minutes: lastMile,
+    rent_jpy_month: rent,
+    capacity: capacity,
+  });
+
+  // clear form
+  ['oc-name','oc-station','oc-lastmile','oc-rent','oc-capacity'].forEach(fid => {
+    document.getElementById(fid).value = '';
+  });
+
+  renderOfficeCandidateList();
+  updateRunButton();
+}
+
+function removeOfficeCandidate(id) {
+  state.officeCandidates = state.officeCandidates.filter(c => c.office_id !== id);
+  renderOfficeCandidateList();
+  updateRunButton();
+}
+
+function renderOfficeCandidateList() {
+  const list = document.getElementById('office-candidate-list');
+  if (state.officeCandidates.length === 0) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = state.officeCandidates.map(c => {
+    const rentM = c.rent_jpy_month ? Math.round(c.rent_jpy_month/10000) + '万円/月' : '賃料未設定';
+    const cap   = c.capacity ? `収容${c.capacity}人` : '';
+    return `
+      <div class="candidate-item">
+        <div class="candidate-item-info">
+          <span class="candidate-item-name">${escHtml(c.name)}</span>
+          <span class="candidate-item-sub">${escHtml(c.nearest_station_id)}駅 + ${c.last_mile_minutes}分　${rentM}　${cap}</span>
+        </div>
+        <button class="candidate-remove-btn" onclick="removeOfficeCandidate('${escHtml(c.office_id)}')">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Office CSV upload ─────────────────────────────────────────────
+function handleDragOver(e, zoneId) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+function handleDragLeave(e, zoneId) {
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+
+function handleOfficeCsvDrop(e) {
+  e.preventDefault();
+  document.getElementById('office-csv-zone').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) processOfficeCsvFile(f);
+}
+function handleOfficeCsvSelect(e) {
+  const f = e.target.files[0]; if (f) processOfficeCsvFile(f);
+}
+
+function processOfficeCsvFile(file) {
+  const result = document.getElementById('office-csv-result');
+  result.style.display = '';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const rows = parseCsvTsv(ev.target.result);
+      if (rows.length < 2) throw new Error('データが見つかりません');
+      const headers = rows[0].map(h => h.toLowerCase());
+      const nameIdx  = headers.indexOf('name');
+      const stIdx    = headers.indexOf('nearest_station_id');
+      const lmIdx    = headers.indexOf('last_mile_minutes');
+      const rentIdx  = headers.indexOf('rent_jpy_month');
+      const capIdx   = headers.indexOf('capacity');
+      if (nameIdx < 0 || stIdx < 0) throw new Error('必須列 name / nearest_station_id が見つかりません');
+
+      const newCandidates = rows.slice(1).filter(r => r.length > 1 && r[nameIdx]).map(r => ({
+        office_id: 'csv_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+        name: r[nameIdx] || '',
+        nearest_station_id: stIdx >= 0 ? r[stIdx] : '',
+        last_mile_minutes: lmIdx >= 0 ? (parseInt(r[lmIdx]) || 5) : 5,
+        rent_jpy_month: rentIdx >= 0 ? (parseInt(r[rentIdx]) || 0) : 0,
+        capacity: capIdx >= 0 && r[capIdx] ? (parseInt(r[capIdx]) || null) : null,
+      }));
+
+      state.officeCandidates = [...state.officeCandidates, ...newCandidates];
+      renderOfficeCandidateList();
+      updateRunButton();
+      result.className = 'upload-result success';
+      result.textContent = `✓ ${newCandidates.length}件のオフィス候補を読み込みました。`;
+    } catch(err) {
+      result.className = 'upload-result error';
+      result.textContent = `エラー: ${err.message}`;
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── Employee CSV upload ───────────────────────────────────────────
+function handleEmployeeDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) processEmployeeFile(f);
+}
+function handleEmployeeSelect(e) {
+  const f = e.target.files[0]; if (f) processEmployeeFile(f);
+}
+
+function processEmployeeFile(file) {
+  const result  = document.getElementById('employee-upload-result');
+  const preview = document.getElementById('employee-preview');
+  result.style.display = '';
+  preview.innerHTML = '';
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const rows = parseCsvTsv(ev.target.result);
+      if (rows.length < 2) throw new Error('データが見つかりません');
+      const headers = rows[0];
+      const si = headers.findIndex(h => h.toLowerCase() === 'station_id');
+      const ci = headers.findIndex(h => h.toLowerCase() === 'count');
+      const gi = headers.findIndex(h => h.toLowerCase() === 'group');
+      if (si < 0 || ci < 0) throw new Error('必須列 station_id / count が見つかりません');
+
+      const data = rows.slice(1).filter(r => r.length > 1 && r[si]);
+      state.employeeData = data.map(r => ({
+        station_id: r[si],
+        count: parseInt(r[ci]) || 0,
+        group: gi >= 0 ? (r[gi] || null) : null,
+        segment: null,
+        office_days_per_week_override: null,
+      }));
+
+      const totalPop = state.employeeData.reduce((s,r) => s + r.count, 0);
+      result.className = 'upload-result success';
+      result.textContent = `✓ 「${file.name}」を読み込みました。${data.length}行、合計 ${totalPop}人。この社員データで計算します。`;
+
+      const prev = data.slice(0, 8);
+      preview.innerHTML = `
+        <div style="font-size:12px;color:var(--gray);margin-top:10px;margin-bottom:5px">先頭${prev.length}行のプレビュー${data.length>8?'（'+data.length+'行中）':''}:</div>
+        <table class="upload-preview-table">
+          <thead><tr>${headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>
+          <tbody>${prev.map(r => `<tr>${r.map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      `;
+      updateRunButton();
+    } catch(err) {
+      result.className = 'upload-result error';
+      result.textContent = `エラー: ${err.message}`;
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── commute cap visibility ────────────────────────────────────────
+function updateCommuteCap() {
+  const policy = document.getElementById('s-commute-policy').value;
+  document.getElementById('s-commute-cap-wrap').style.display =
+    policy === 'capped' ? '' : 'none';
+}
+
+// ── Collect settings from DOM ─────────────────────────────────────
+function collectSettings() {
+  const numOfficesRaw = document.getElementById('s-num-offices').value.trim();
+  const numOffices = numOfficesRaw
+    ? numOfficesRaw.split(',').map(x => parseInt(x.trim())).filter(n => !isNaN(n))
+    : [1, 2];
+
+  const fixedOfficesRaw = document.getElementById('s-fixed-offices').value.trim();
+  const fixedOffices = fixedOfficesRaw
+    ? fixedOfficesRaw.split(',').map(x => x.trim()).filter(Boolean)
+    : [];
+
+  let fixedAssignment = [];
+  try { fixedAssignment = JSON.parse(document.getElementById('s-fixed-assignment').value || '[]'); } catch(e) {}
+
+  let groupTogether = [];
+  try { groupTogether = JSON.parse(document.getElementById('s-group-together').value || '[]'); } catch(e) {}
+
+  const maxP95   = parseInt(document.getElementById('s-max-p95').value) || null;
+  const maxAvg   = parseFloat(document.getElementById('s-max-avg').value) || null;
+  const budget   = parseInt(document.getElementById('s-budget').value) || null;
+  const sqm      = parseFloat(document.getElementById('s-sqm').value) || 3.3;
+  const policy   = document.getElementById('s-commute-policy').value;
+  const cap      = policy === 'capped' ? (parseInt(document.getElementById('s-commute-cap').value) || null) : null;
+
+  const settings = {
+    num_offices: numOffices,
+    fixed_offices: fixedOffices,
+    fixed_assignment: fixedAssignment,
+    group_together: groupTogether,
+    max_p95_trip_minutes: maxP95,
+    max_avg_trip_minutes: maxAvg,
+    budget_total_rent_jpy_month: budget,
+    sqm_per_person: sqm,
+    commute_cost_policy: policy,
+    commute_cost_cap_jpy_month: cap,
+  };
+
+  // baseline
+  const blName    = document.getElementById('bl-name').value.trim();
+  const blStation = document.getElementById('bl-station').value.trim();
+  const blLastMile= parseInt(document.getElementById('bl-lastmile').value) || 5;
+  const blRent    = parseInt(document.getElementById('bl-rent').value) || null;
+  const blCap     = parseInt(document.getElementById('bl-capacity').value) || null;
+  if (blName && blStation) {
+    settings.baseline = {
+      office_id: 'baseline',
+      name: blName,
+      nearest_station_id: blStation,
+      last_mile_minutes: blLastMile,
+      rent_jpy_month: blRent,
+      capacity: blCap,
+    };
+  }
+
+  return settings;
+}
+
+// ── Run evaluate ──────────────────────────────────────────────────
+async function runEvaluate() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = '計算中…';
+  setStatus('loading', '計算中…');
+
+  try {
+    const days     = parseInt(document.getElementById('s-office-days').value) || 3;
+    const settings = collectSettings();
+
+    const payload = {
+      office_candidates: state.officeCandidates,
+      home_station_distribution: state.employeeData,
+      policy_as_is: { office_days_per_week: days },
+      settings,
+    };
+
+    const res = await fetch(`${API_BASE}/evaluate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`APIエラー (${res.status}): ${err}`);
+    }
+
+    const data = await res.json();
+    state.data = data;
+    render(data);
+    setStatus('api', '計算完了');
+    switchTopTab('main');
+  } catch(err) {
+    setStatus('error', `エラー: ${err.message}`);
+    btn.disabled = false;
+    btn.textContent = '計算実行';
+    alert(`計算エラー:\n${err.message}`);
+  } finally {
+    if (!btn.disabled) {
+      btn.textContent = '計算実行';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '計算実行';
+    }
+    updateRunButton();
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────
 function render(data) {
   renderSummary(data);
   renderNotices(data.notices || []);
   renderConstraintsImpact(data.constraints_impact);
-  renderScatterPlot(data.all_combinations, data.pareto_frontier_ids || []);
-  renderComboTabs(data.all_combinations, data.pareto_frontier_ids || []);
-  renderSensitivity(data.sensitivity);
+  renderBaselineDiagnosis(data.baseline_diagnosis);
+  renderScatterPlots(data.all_combinations || [], data.pareto_frontier_ids || []);
+  renderComboTabs(data.all_combinations || [], data.pareto_frontier_ids || []);
 
   switchTopTab('main');
-  document.getElementById('section-summary').style.display = '';
-  document.getElementById('section-scatter').style.display = '';
+  document.getElementById('section-summary').style.display    = '';
+  document.getElementById('section-scatter').style.display    = '';
   document.getElementById('section-candidates').style.display = '';
 
-  // 最初のパレート最適案を選択
   const first = (data.pareto_frontier_ids || [])[0]
     || (data.all_combinations || [])[0]?.combination_id;
   if (first) selectCombo(first);
@@ -825,15 +1056,15 @@ function renderSummary(data) {
   const dist    = inputs.home_station_distribution || [];
   const offices = inputs.office_candidates || [];
   const days    = (inputs.policy_as_is || {}).office_days_per_week || '—';
-  const totalPop = dist.reduce((s, d) => s + (d.count || 0), 0);
+  const totalPop = dist.reduce((s,d) => s + (d.count||0), 0);
   const groups   = [...new Set(dist.map(d => d.group).filter(Boolean))];
 
   document.getElementById('summary-grid').innerHTML = [
-    { lbl: '社員数',       val: totalPop,        unt: '人' },
-    { lbl: '部署数',       val: groups.length || '—', unt: groups.length ? '部署' : '' },
-    { lbl: 'オフィス候補', val: offices.length,  unt: '件' },
-    { lbl: '出社日数',     val: days,            unt: '日/週' },
-  ].map(({ lbl, val, unt }) => `
+    { lbl:'社員数',       val:totalPop,           unt:'人' },
+    { lbl:'部署数',       val:groups.length||'—', unt:groups.length?'部署':'' },
+    { lbl:'オフィス候補', val:offices.length,     unt:'件' },
+    { lbl:'出社日数',     val:days,               unt:'日/週' },
+  ].map(({ lbl,val,unt }) => `
     <div class="summary-item">
       <div class="lbl">${lbl}</div>
       <div class="val">${val}<span class="unt"> ${unt}</span></div>
@@ -842,9 +1073,9 @@ function renderSummary(data) {
 }
 
 function renderNotices(notices) {
-  document.getElementById('notices-container').innerHTML = notices.map(n => `
-    <div class="notice ${n.level === 'warning' ? 'warning' : 'info'}">
-      <span>${n.level === 'warning' ? '⚠' : 'ℹ'}</span>
+  document.getElementById('notices-container').innerHTML = (notices||[]).map(n => `
+    <div class="notice ${n.level==='warning'?'warning':'info'}">
+      <span>${n.level==='warning'?'⚠':'ℹ'}</span>
       <span>${escHtml(n.message)}</span>
     </div>
   `).join('');
@@ -853,40 +1084,101 @@ function renderNotices(notices) {
 function renderConstraintsImpact(ci) {
   if (!ci) return;
   const steps = [
-    { n: ci.total_combinations,    lbl: '全組み合わせ' },
-    { n: ci.after_capacity_filter, lbl: '収容フィルタ後' },
-    { n: ci.after_budget_filter,   lbl: '予算フィルタ後' },
-    { n: ci.after_commute_filter,  lbl: '通勤フィルタ後' },
-    { n: ci.pareto_optimal,        lbl: 'パレート最適', cls: 'pareto' },
+    { n:ci.total_combinations,    lbl:'全組み合わせ' },
+    { n:ci.after_capacity_filter, lbl:'収容フィルタ後' },
+    { n:ci.after_budget_filter,   lbl:'予算フィルタ後' },
+    { n:ci.after_commute_filter,  lbl:'通勤フィルタ後' },
+    { n:ci.pareto_optimal,        lbl:'パレート最適', cls:'pareto' },
   ];
-  document.getElementById('funnel-row').innerHTML = steps.map((s, i) => `
-    ${i > 0 ? '<span class="funnel-arrow">→</span>' : ''}
-    <span class="funnel-step ${s.cls || ''}">
+  document.getElementById('funnel-row').innerHTML = steps.map((s,i) => `
+    ${i>0?'<span class="funnel-arrow">→</span>':''}
+    <span class="funnel-step ${s.cls||''}">
       <span class="n">${s.n}件</span>
       <span class="lbl">${s.lbl}</span>
     </span>
   `).join('');
 }
 
-// ─── 散布図 ──────────────────────────────────────────────────────
-function renderScatterPlot(combos, paretoIds) {
-  const svg = document.getElementById('scatter-svg');
-  const VW = 800, VH = 280;
-  const margin = { top: 20, right: 20, bottom: 50, left: 72 };
-  const plotW = VW - margin.left - margin.right;
-  const plotH = VH - margin.top - margin.bottom;
+function renderBaselineDiagnosis(bd) {
+  const sec = document.getElementById('section-baseline-diag');
+  if (!bd) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  const kpis = [
+    { lbl:'オフィス',  val: escHtml(bd.office_name||'—'),     unt:'' },
+    { lbl:'収容率',    val: bd.occupancy_rate!=null ? Math.round(bd.occupancy_rate*100)+'%' : '—', unt:'' },
+    { lbl:'平均通勤',  val: bd.avg_trip_minutes!=null ? bd.avg_trip_minutes.toFixed(1) : '—', unt:'分' },
+    { lbl:'p95通勤',   val: bd.p95_trip_minutes!=null ? bd.p95_trip_minutes : '—', unt:'分' },
+    { lbl:'90分超',    val: bd.exceed_90_count!=null ? bd.exceed_90_count : '—', unt:'人' },
+  ];
+  const alerts = (bd.alerts||[]).map(a => `
+    <div class="notice warning" style="margin-top:6px"><span>⚠</span><span>${escHtml(a)}</span></div>
+  `).join('');
 
-  const xVals = combos.map(c => c.p95_trip_minutes);
-  const yVals = combos.map(c => (c.total_cost_jpy_month || c.total_rent_jpy_month) / 10000);
-  const xPad = (Math.max(...xVals) - Math.min(...xVals)) * 0.2 || 10;
-  const yPad = Math.max(...yVals) * 0.18;
-  const xMin = Math.max(0, Math.min(...xVals) - xPad);
-  const xMax = Math.max(...xVals) + xPad;
-  const yMin = 0;
-  const yMax = Math.max(...yVals) + yPad;
+  document.getElementById('baseline-diag-body').innerHTML = `
+    <div class="baseline-section">
+      <div class="baseline-title">現状オフィス</div>
+      <div class="baseline-grid">
+        ${kpis.map(k => `
+          <div class="baseline-kpi">
+            <div class="lbl">${k.lbl}</div>
+            <div class="val">${k.val}<span class="unt"> ${k.unt}</span></div>
+          </div>
+        `).join('')}
+      </div>
+      ${alerts}
+    </div>
+  `;
+}
+
+// ── Scatter plots (2 parallel) ────────────────────────────────────
+function renderScatterPlots(combos, paretoIds) {
+  if (!combos.length) return;
+
+  renderSingleScatter(
+    'scatter-svg-1', 'scatter-tooltip-1', combos, paretoIds,
+    c => c.p95_trip_minutes,
+    c => c.total_rent_jpy_month / 10000,
+    '通勤 p95（分）', '月額賃料（万円/月）',
+    v => Math.round(v) + '万円'
+  );
+
+  // Plot 2: only combos where rent_per_capacity is not null
+  const combos2 = combos.filter(c => c.rent_per_capacity != null);
+  if (combos2.length > 0) {
+    renderSingleScatter(
+      'scatter-svg-2', 'scatter-tooltip-2', combos, paretoIds,
+      c => c.p95_trip_minutes,
+      c => c.rent_per_capacity != null ? c.rent_per_capacity / 10000 : null,
+      '通勤 p95（分）', '1人あたり賃料（万円/月）',
+      v => Math.round(v * 10) / 10 + '万円'
+    );
+  } else {
+    const svg2 = document.getElementById('scatter-svg-2');
+    svg2.innerHTML = '<text x="50%" y="50%" text-anchor="middle" font-size="12" fill="#9ca3af" dominant-baseline="middle">収容人数が設定されていないため表示できません</text>';
+  }
+}
+
+function renderSingleScatter(svgId, tooltipId, allCombos, paretoIds, xGetter, yGetter, xLabel, yLabel, yFmt) {
+  const svg = document.getElementById(svgId);
+  const VW = 480, VH = 240;
+  const margin = { top:16, right:16, bottom:44, left:60 };
+  const plotW  = VW - margin.left - margin.right;
+  const plotH  = VH - margin.top  - margin.bottom;
+
+  // Filter out combos with null y
+  const combos = allCombos.filter(c => yGetter(c) != null);
+
+  const xVals = combos.map(c => xGetter(c));
+  const yVals = combos.map(c => yGetter(c));
+  const xPad  = ((Math.max(...xVals) - Math.min(...xVals)) * 0.2) || 10;
+  const yPad  = Math.max(...yVals) * 0.18;
+  const xMin  = Math.max(0, Math.min(...xVals) - xPad);
+  const xMax  = Math.max(...xVals) + xPad;
+  const yMin  = 0;
+  const yMax  = Math.max(...yVals) + yPad;
 
   const xS = v => margin.left + (v - xMin) / (xMax - xMin) * plotW;
-  const yS = v => margin.top + plotH - (v - yMin) / (yMax - yMin) * plotH;
+  const yS = v => margin.top  + plotH - (v - yMin) / (yMax - yMin) * plotH;
 
   function niceTicks(mn, mx, n) {
     const raw = (mx - mn) / n;
@@ -900,43 +1192,45 @@ function renderScatterPlot(combos, paretoIds) {
     return ticks;
   }
 
-  const xTicks = niceTicks(xMin, xMax, 6);
-  const yTicks = niceTicks(yMin, yMax, 5);
+  const xTicks = niceTicks(xMin, xMax, 5);
+  const yTicks = niceTicks(yMin, yMax, 4);
   let html = '<g>';
 
   xTicks.forEach(v => {
     const x = xS(v);
     html += `<line x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top+plotH}" stroke="#e5e7eb" stroke-width="1"/>`;
-    html += `<line x1="${x}" y1="${margin.top+plotH}" x2="${x}" y2="${margin.top+plotH+5}" stroke="#9ca3af" stroke-width="1"/>`;
-    html += `<text x="${x}" y="${margin.top+plotH+17}" text-anchor="middle" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
+    html += `<line x1="${x}" y1="${margin.top+plotH}" x2="${x}" y2="${margin.top+plotH+4}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${x}" y="${margin.top+plotH+14}" text-anchor="middle" font-size="10" fill="#6b7280">${Math.round(v)}</text>`;
   });
   yTicks.forEach(v => {
     const y = yS(v);
     html += `<line x1="${margin.left}" y1="${y}" x2="${margin.left+plotW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
-    html += `<line x1="${margin.left-5}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="#9ca3af" stroke-width="1"/>`;
-    html += `<text x="${margin.left-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#6b7280">${Math.round(v)}</text>`;
+    html += `<line x1="${margin.left-4}" y1="${y}" x2="${margin.left}" y2="${y}" stroke="#9ca3af" stroke-width="1"/>`;
+    html += `<text x="${margin.left-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#6b7280">${Math.round(v)}</text>`;
   });
   html += `<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top+plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
   html += `<line x1="${margin.left}" y1="${margin.top+plotH}" x2="${margin.left+plotW}" y2="${margin.top+plotH}" stroke="#9ca3af" stroke-width="1.5"/>`;
-  html += `<text x="${margin.left+plotW/2}" y="${VH-5}" text-anchor="middle" font-size="12" fill="#374151">通勤 p95（分）</text>`;
-  html += `<text x="13" y="${margin.top+plotH/2}" text-anchor="middle" font-size="12" fill="#374151" transform="rotate(-90,13,${margin.top+plotH/2})">合計コスト（万円/月）</text>`;
+  html += `<text x="${margin.left+plotW/2}" y="${VH-4}" text-anchor="middle" font-size="10" fill="#374151">${xLabel}</text>`;
+  html += `<text x="11" y="${margin.top+plotH/2}" text-anchor="middle" font-size="10" fill="#374151" transform="rotate(-90,11,${margin.top+plotH/2})">${yLabel}</text>`;
 
-  // パレートフロンティア線
+  // Pareto frontier line
   const pFront = combos.filter(c => paretoIds.includes(c.combination_id))
-    .sort((a, b) => a.p95_trip_minutes - b.p95_trip_minutes);
+    .sort((a,b) => xGetter(a) - xGetter(b));
   if (pFront.length >= 2) {
     html += `<polyline points="${pFront.map(c =>
-      `${xS(c.p95_trip_minutes)},${yS((c.total_cost_jpy_month||c.total_rent_jpy_month)/10000)}`
+      `${xS(xGetter(c))},${yS(yGetter(c))}`
     ).join(' ')}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,4" opacity=".55"/>`;
   }
 
-  // ポイント（テキストラベルなし）
+  // Points
   const renderPt = (c, isPareto) => {
-    const cx = xS(c.p95_trip_minutes);
-    const cy = yS((c.total_cost_jpy_month||c.total_rent_jpy_month)/10000);
+    const cx   = xS(xGetter(c));
+    const cy   = yS(yGetter(c));
     const fill = isPareto ? '#2563eb' : '#9ca3af';
     const op   = isPareto ? '.85' : '.65';
-    html += `<circle cx="${cx}" cy="${cy}" r="9" fill="${fill}" fill-opacity="${op}"
+    // dot size by total_capacity if available (else fixed)
+    const r = 8;
+    html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" fill-opacity="${op}"
       stroke="${fill}" stroke-width="1.5" class="sp"
       data-id="${escHtml(c.combination_id)}" style="cursor:pointer"/>`;
   };
@@ -947,111 +1241,108 @@ function renderScatterPlot(combos, paretoIds) {
   svg.innerHTML = html;
   highlightScatterSelected();
 
-  // ツールチップ
-  const tooltip = document.getElementById('scatter-tooltip');
+  // Tooltip + click
+  const tooltip = document.getElementById(tooltipId);
   svg.querySelectorAll('.sp').forEach(el => {
-    const id = el.getAttribute('data-id');
-    const combo = combos.find(c => c.combination_id === id);
+    const id    = el.getAttribute('data-id');
+    const combo = allCombos.find(c => c.combination_id === id);
     el.addEventListener('click', () => selectCombo(id));
     el.addEventListener('mouseenter', e => {
       if (!combo) return;
-      const rent  = Math.round(combo.total_rent_jpy_month / 10000);
-      const total = combo.total_cost_jpy_month
-        ? Math.round(combo.total_cost_jpy_month / 10000) : rent;
-      const name  = (combo.per_office||[]).map(o => o.name).join(' + ') || id;
+      const rentM  = Math.round(combo.total_rent_jpy_month / 10000);
+      const perCap = combo.rent_per_capacity != null
+        ? Math.round(combo.rent_per_capacity / 10000 * 10) / 10 + '万円'
+        : '—';
+      const name   = (combo.per_office||[]).map(o => o.name).join(' + ') || id;
       tooltip.innerHTML = `
         <strong>${escHtml(name)}</strong><br>
         通勤 p95：${combo.p95_trip_minutes}分 / 平均：${(combo.avg_trip_minutes||0).toFixed(1)}分<br>
-        月額賃料：${rent}万円 / 合計：${total}万円<br>
+        月額賃料：${rentM}万円 / 1人あたり：${perCap}<br>
         60分超：${combo.exceed_60_count}人
       `;
       tooltip.style.display = 'block';
-      moveTip(e);
+      moveTip(e, svg, tooltip);
     });
-    el.addEventListener('mousemove', moveTip);
+    el.addEventListener('mousemove', e => moveTip(e, svg, tooltip));
     el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
   });
+}
 
-  function moveTip(e) {
-    const r = svg.parentElement.getBoundingClientRect();
-    let l = e.clientX - r.left + 12;
-    let t = e.clientY - r.top  - 10;
-    if (l + 240 > r.width) l = e.clientX - r.left - 250;
-    tooltip.style.left = l + 'px';
-    tooltip.style.top  = t + 'px';
-  }
+function moveTip(e, svgEl, tipEl) {
+  const r = svgEl.parentElement.getBoundingClientRect();
+  let l = e.clientX - r.left + 12;
+  let t = e.clientY - r.top  - 10;
+  if (l + 260 > r.width) l = e.clientX - r.left - 270;
+  tipEl.style.left = l + 'px';
+  tipEl.style.top  = t + 'px';
 }
 
 function highlightScatterSelected() {
-  document.querySelectorAll('#scatter-svg .sp').forEach(el => {
-    const sel = el.getAttribute('data-id') === state.selectedComboId;
-    el.setAttribute('r', sel ? '12' : '9');
-    el.setAttribute('stroke-width', sel ? '3' : '1.5');
-    el.setAttribute('stroke', sel ? '#fff' : el.getAttribute('fill'));
-    el.style.filter = sel ? 'drop-shadow(0 0 4px rgba(37,99,235,.7))' : '';
+  ['scatter-svg-1','scatter-svg-2'].forEach(svgId => {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.querySelectorAll('.sp').forEach(el => {
+      const sel = el.getAttribute('data-id') === state.selectedComboId;
+      el.setAttribute('r', sel ? '11' : '8');
+      el.setAttribute('stroke-width', sel ? '3' : '1.5');
+      el.setAttribute('stroke', sel ? '#fff' : el.getAttribute('fill'));
+      el.style.filter = sel ? 'drop-shadow(0 0 4px rgba(37,99,235,.7))' : '';
+    });
   });
 }
 
-// ─── 候補タブ ────────────────────────────────────────────────────
+// ── Combo tabs ────────────────────────────────────────────────────
 function renderComboTabs(combos, paretoIds) {
-  if (!combos || combos.length === 0) return;
-
-  // パレート最適を先頭にソート、次いでp95昇順
-  const sorted = [...combos].sort((a, b) => {
+  if (!combos.length) return;
+  const sorted = [...combos].sort((a,b) => {
     const ap = paretoIds.includes(a.combination_id);
     const bp = paretoIds.includes(b.combination_id);
     if (ap !== bp) return ap ? -1 : 1;
     return a.p95_trip_minutes - b.p95_trip_minutes;
   });
-
   state.sortedCombos = sorted;
   state.paretoIds    = paretoIds;
-  state.showAllCombos = false;
-
+  state.showAllCombos= false;
   renderTabStrip();
 }
 
 function renderTabStrip() {
-  const { sortedCombos: sorted, paretoIds, showAllCombos } = state;
-  const paretoOnly  = sorted.filter(c => paretoIds.includes(c.combination_id));
-  const visible     = showAllCombos ? sorted : (paretoOnly.length ? paretoOnly : sorted);
-  const allCount    = sorted.length;
-  const paretoCount = paretoOnly.length;
+  const { sortedCombos:sorted, paretoIds, showAllCombos } = state;
+  const paretoOnly = sorted.filter(c => paretoIds.includes(c.combination_id));
+  const visible    = showAllCombos ? sorted : (paretoOnly.length ? paretoOnly : sorted);
+  const allCount   = sorted.length;
+  const paretoCount= paretoOnly.length;
 
-  // フィルタバーを更新
   const label = document.getElementById('combo-filter-label');
   const btn   = document.getElementById('toggle-all-combos');
   if (showAllCombos) {
     label.textContent = `全${allCount}案を表示中`;
-    btn.textContent   = `★ パレートのみ表示`;
+    btn.textContent = '★ パレートのみ表示';
     btn.style.borderColor = 'var(--blue)';
     btn.style.color       = 'var(--blue)';
   } else {
     label.textContent = `★ パレート最適 ${paretoCount}案 / 全${allCount}案`;
-    btn.textContent   = `全${allCount}案を表示`;
+    btn.textContent = `全${allCount}案を表示`;
     btn.style.borderColor = 'var(--gray-bd)';
     btn.style.color       = '#374151';
   }
-  // パレートしかない場合はボタン不要
   btn.style.display = (allCount === paretoCount) ? 'none' : '';
 
   const strip = document.getElementById('combo-tab-strip');
   strip.innerHTML = visible.map(c => {
-    const isPareto  = paretoIds.includes(c.combination_id);
-    const names     = (c.per_office || []).map(o => o.name).join('+')
-                      || (c.selected_offices || []).join('+');
-    const shortName = names.length > 16 ? names.substring(0, 15) + '…' : names;
-    const totalM    = c.total_cost_jpy_month
-      ? Math.round(c.total_cost_jpy_month / 10000) : Math.round(c.total_rent_jpy_month / 10000);
+    const isPareto = paretoIds.includes(c.combination_id);
+    const names    = (c.per_office||[]).map(o => o.name).join('+')
+                     || (c.selected_offices||[]).join('+');
+    const short    = names.length > 16 ? names.substring(0,15) + '…' : names;
+    const totalM   = c.total_cost_jpy_month
+      ? Math.round(c.total_cost_jpy_month/10000) : Math.round(c.total_rent_jpy_month/10000);
     return `
-      <button class="combo-tab-btn ${isPareto ? 'pareto-tab' : ''}"
+      <button class="combo-tab-btn ${isPareto?'pareto-tab':''}"
         data-id="${escHtml(c.combination_id)}"
         onclick="selectCombo('${escHtml(c.combination_id)}')">
-        <span class="combo-tab-name">${escHtml(shortName)}</span>
+        <span class="combo-tab-name">${escHtml(short)}</span>
         <div class="combo-tab-meta">
-          <span class="badge-mini ${isPareto ? 'pareto' : 'subopt'}">
-            ${isPareto ? '★ パレート' : '劣位'}
-          </span>
+          <span class="badge-mini ${isPareto?'pareto':'subopt'}">${isPareto?'★ パレート':'劣位'}</span>
           <span class="combo-tab-p95">p95 ${c.p95_trip_minutes}分</span>
         </div>
         <div style="font-size:10px;color:var(--gray);margin-top:1px">計 ${totalM}万円/月</div>
@@ -1059,7 +1350,6 @@ function renderTabStrip() {
     `;
   }).join('');
 
-  // アクティブ状態を再適用
   document.querySelectorAll('.combo-tab-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.id === state.selectedComboId));
 }
@@ -1067,8 +1357,6 @@ function renderTabStrip() {
 function toggleAllCombos() {
   state.showAllCombos = !state.showAllCombos;
   renderTabStrip();
-
-  // パレートのみ表示に戻したとき、選択中が非表示になる場合は先頭へ
   if (!state.showAllCombos) {
     const paretoOnly = state.sortedCombos.filter(c => state.paretoIds.includes(c.combination_id));
     const stillVisible = paretoOnly.find(c => c.combination_id === state.selectedComboId);
@@ -1076,29 +1364,22 @@ function toggleAllCombos() {
   }
 }
 
-// ─── 候補選択 ────────────────────────────────────────────────────
+// ── Select combo ──────────────────────────────────────────────────
 function selectCombo(id) {
   state.selectedComboId = id;
-
-  const combo = (state.data.all_combinations || []).find(c => c.combination_id === id);
+  const combo = (state.data.all_combinations||[]).find(c => c.combination_id === id);
   if (!combo) return;
-
-  // タブボタンのアクティブ状態
   document.querySelectorAll('.combo-tab-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.id === id));
-
-  // 散布図ハイライト
   highlightScatterSelected();
-
-  // 詳細 + 地図を描画
   renderComboContent(combo);
 }
 
 function renderComboContent(combo) {
   const paretoIds = state.data.pareto_frontier_ids || [];
   const isPareto  = paretoIds.includes(combo.combination_id);
-  const names     = (combo.per_office || []).map(o => o.name).join(' + ')
-                    || (combo.selected_offices || []).join(' + ');
+  const names     = (combo.per_office||[]).map(o => o.name).join(' + ')
+                    || (combo.selected_offices||[]).join(' + ');
 
   const grid = document.getElementById('combo-content-grid');
   grid.innerHTML = `
@@ -1115,13 +1396,8 @@ function renderComboContent(combo) {
       </div>
     </div>
   `;
-
   document.getElementById('combo-map-header').textContent = `通勤マップ：${names}`;
-
-  // 詳細ペイン
   renderDetailInner(combo, isPareto, names);
-
-  // 地図
   renderMap(combo);
 }
 
@@ -1129,10 +1405,10 @@ function renderDetailInner(c, isPareto, names) {
   const dist  = c.distribution || {};
   const total = c.total_population || 1;
   const pcts  = {
-    s0: ((dist.under_30    || 0) / total * 100).toFixed(1),
-    s1: ((dist['30_to_60'] || 0) / total * 100).toFixed(1),
-    s2: ((dist['60_to_90'] || 0) / total * 100).toFixed(1),
-    s3: ((dist.over_90     || 0) / total * 100).toFixed(1),
+    s0: ((dist.under_30    ||0)/total*100).toFixed(1),
+    s1: ((dist['30_to_60'] ||0)/total*100).toFixed(1),
+    s2: ((dist['60_to_90'] ||0)/total*100).toFixed(1),
+    s3: ((dist.over_90     ||0)/total*100).toFixed(1),
   };
 
   const p95Cls   = c.p95_trip_minutes >= 90 ? 'danger' : c.p95_trip_minutes >= 60 ? 'warn' : '';
@@ -1145,15 +1421,15 @@ function renderDetailInner(c, isPareto, names) {
   const inCompare = state.compareIds.includes(c.combination_id);
   const canAdd    = !inCompare && state.compareIds.length >= 2;
 
-  // 収容バー
-  const capRows = (c.per_office || []).map(o => {
+  // Capacity bars
+  const capRows = (c.per_office||[]).map(o => {
     const pct = o.capacity > 0 ? Math.round(o.assigned_population / o.capacity * 100) : 0;
     const cls = pct >= 95 ? 'full' : pct >= 80 ? 'tight' : '';
     return `
       <div class="cap-office">
         <div class="cap-office-header">
           <span class="cap-office-name">${escHtml(o.name)}</span>
-          <span class="cap-office-nums">${o.assigned_population}人/${o.capacity}人${o.capacity_estimated ? '（推定）' : ''} — 余裕${o.capacity_headroom}人</span>
+          <span class="cap-office-nums">${o.assigned_population}人/${o.capacity!=null?o.capacity+'人':'?人'}${o.capacity_estimated?'（推定）':''} — 余裕${o.capacity_headroom!=null?o.capacity_headroom+'人':'—'}</span>
         </div>
         <div class="cap-bar-bg">
           <div class="cap-bar-fill ${cls}" style="width:${pct}%"></div>
@@ -1163,37 +1439,134 @@ function renderDetailInner(c, isPareto, names) {
     `;
   }).join('');
 
-  // 配置チップ
-  const chips = (c.per_office || []).map(o => {
-    const groups = (c.assignment || [])
+  // Office chips
+  const chips = (c.per_office||[]).map(o => {
+    const groups = (c.assignment||[])
       .filter(a => a.assigned_office_id === o.office_id)
       .map(a => `${a.group}(${a.population}人)`).join('、');
     return `
       <div class="office-chip">
         <div class="office-chip-name">${escHtml(o.name)}</div>
-        <div class="office-chip-sub">${escHtml(groups) || '—'}</div>
+        <div class="office-chip-sub">${escHtml(groups)||'—'}</div>
       </div>
     `;
   }).join('');
 
-  const explain = (c.explain || {}).commute;
+  // Conflict alerts
+  const alerts = c.conflict_alerts || [];
+  const alertsHtml = alerts.length > 0 ? `
+    <div class="conflict-alerts">
+      <div style="font-size:12px;font-weight:600;color:#92400e;margin-bottom:5px">部署間の格差</div>
+      ${alerts.slice(0,5).map(a => `
+        <div class="conflict-alert ${a.severity||'warning'}">
+          <span>⚠</span><span>${escHtml(a.message)}</span>
+        </div>
+      `).join('')}
+      ${alerts.length > 5 ? `<div style="font-size:11px;color:var(--gray);margin-top:3px">他 ${alerts.length-5}件の格差あり</div>` : ''}
+    </div>
+  ` : '';
+
+  // Department breakdown
+  const breakdown = c.department_breakdown || [];
+  const breakdownHtml = breakdown.length > 0 ? `
+    <div class="dept-section">
+      <div class="dept-section-title">部署別の通勤状況</div>
+      <table class="dept-table">
+        <thead>
+          <tr>
+            <th>部署</th>
+            <th>人数</th>
+            <th>平均通勤</th>
+            <th>p95通勤</th>
+            <th>配置先</th>
+            <th>通勤費/月</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${breakdown.map(d => {
+            const avgCls = d.avg_trip_minutes >= 60 ? 'color:var(--red)' : d.avg_trip_minutes >= 45 ? 'color:var(--yellow)' : '';
+            const p95Cls = d.p95_trip_minutes >= 90 ? 'color:var(--red)' : d.p95_trip_minutes >= 60 ? 'color:var(--yellow)' : '';
+            const costM  = d.commute_cost_jpy_month != null
+              ? Math.round(d.commute_cost_jpy_month/10000) + '万円' : '—';
+            return `
+              <tr>
+                <td style="font-weight:600">${escHtml(d.group)}</td>
+                <td>${d.count}人</td>
+                <td style="${avgCls}">${d.avg_trip_minutes}分</td>
+                <td style="${p95Cls}">${d.p95_trip_minutes}分</td>
+                <td style="font-size:11px">${escHtml(d.assigned_office||'—')}</td>
+                <td>${costM}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
+  // Robustness (pareto only)
+  let robustnessHtml = '';
+  if (isPareto) {
+    const robEntry = (state.data.robustness||[]).find(r => r.combination_id === c.combination_id);
+    if (robEntry) {
+      const items = [];
+
+      // Rent tolerance
+      (robEntry.rent_tolerance||[]).forEach(rt => {
+        if (rt.tolerance_pct == null) {
+          items.push({ icon:'✅', cls:'robustness-ok', text:`${escHtml(rt.office_name)}は上限なし（他に競合する案がありません）` });
+        } else if (rt.tolerance_pct >= 20) {
+          items.push({ icon:'✅', cls:'robustness-ok', text:`${escHtml(rt.office_name)}は${rt.tolerance_pct.toFixed(0)}%値上がりしても他の案より有利です` });
+        } else {
+          items.push({ icon:'⚠', cls:'robustness-warn', text:`${escHtml(rt.office_name)}は${rt.tolerance_pct.toFixed(0)}%の値上がりで他の案が有利になります` });
+        }
+      });
+
+      // Capacity headroom
+      const ch = robEntry.capacity_headroom;
+      if (ch) {
+        if (ch.total_remaining > 0) {
+          items.push({ icon:'✅', cls:'robustness-ok', text:`全体であと${ch.total_remaining}人まで入れます` });
+        }
+        if (ch.bottleneck_office && ch.bottleneck_remaining != null && ch.bottleneck_remaining <= 10) {
+          items.push({ icon:'⚠', cls:'robustness-warn', text:`${escHtml(ch.bottleneck_office)}はあと${ch.bottleneck_remaining}人で満員です` });
+        }
+        if (ch.total_remaining === 0 && !ch.bottleneck_office) {
+          items.push({ icon:'ℹ', cls:'', text:'収容人数が未設定のため余裕は不明です' });
+        }
+      }
+
+      if (items.length > 0) {
+        robustnessHtml = `
+          <div class="robustness-section">
+            <div class="robustness-title">この案の注意点</div>
+            ${items.map(it => `
+              <div class="robustness-item">
+                <span class="${it.cls}">${it.icon}</span>
+                <span>${it.text}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+  }
+
+  const explain = (c.explain||{}).commute;
 
   document.getElementById('combo-detail-inner').innerHTML = `
     <div class="combo-detail-title">
       ${escHtml(names)}
-      <span class="badge ${isPareto ? 'badge-pareto' : 'badge-suboptimal'}">
-        ${isPareto ? '★ パレート最適' : 'パレート劣位'}
-      </span>
+      <span class="badge ${isPareto?'badge-pareto':'badge-suboptimal'}">${isPareto?'★ パレート最適':'パレート劣位'}</span>
       <span class="badge badge-k">${c.num_offices}拠点</span>
-      <button class="compare-toggle-btn ${inCompare ? 'active' : ''}"
+      <button class="compare-toggle-btn ${inCompare?'active':''}"
         id="compare-toggle-btn-inner"
         onclick="toggleCompareInner('${escHtml(c.combination_id)}')"
-        ${canAdd ? 'disabled' : ''}>
-        ${inCompare ? '比較中 ✓' : '比較に追加'}
+        ${canAdd?'disabled':''}>
+        ${inCompare?'比較中 ✓':'比較に追加'}
       </button>
     </div>
 
-    <!-- KPIs -->
     <div class="kpi-row">
       <div class="kpi-item">
         <span class="kpi-label">通勤 p95</span>
@@ -1209,7 +1582,7 @@ function renderDetailInner(c, isPareto, names) {
       <div class="kpi-divider"></div>
       <div class="kpi-item">
         <span class="kpi-label">60分超</span>
-        <span class="kpi-value ${c.exceed_60_count > 0 ? 'warn' : ''}">${c.exceed_60_count}</span>
+        <span class="kpi-value ${c.exceed_60_count>0?'warn':''}">${c.exceed_60_count}</span>
         <span class="kpi-unit">人</span>
       </div>
       <div class="kpi-divider"></div>
@@ -1220,7 +1593,6 @@ function renderDetailInner(c, isPareto, names) {
       </div>
     </div>
 
-    <!-- 通勤分布 -->
     <div class="dist-wrap">
       <div class="dist-label">通勤時間分布</div>
       <div class="dist-bar" style="height:12px;border-radius:6px">
@@ -1237,7 +1609,8 @@ function renderDetailInner(c, isPareto, names) {
       </div>
     </div>
 
-    <!-- コスト内訳 -->
+    ${alertsHtml}
+
     <div class="cost-summary">
       <div class="cost-row">
         <span class="cost-label">月額賃料</span>
@@ -1245,10 +1618,7 @@ function renderDetailInner(c, isPareto, names) {
       </div>
       ${commuteM != null ? `
         <div class="cost-row">
-          <span class="cost-label">
-            通勤費
-            ${c.total_commute_cost_estimated ? '<span class="badge-mini est" style="margin-left:4px">推定</span>' : ''}
-          </span>
+          <span class="cost-label">通勤費${c.total_commute_cost_estimated?'<span class="badge-mini est" style="margin-left:4px">推定</span>':''}</span>
           <span style="font-weight:600">${commuteM}万円</span>
         </div>
       ` : ''}
@@ -1258,23 +1628,24 @@ function renderDetailInner(c, isPareto, names) {
       </div>
     </div>
 
-    <!-- 部署配置 -->
-    <div class="office-chips-row">${chips}</div>
+    ${breakdownHtml}
 
-    <!-- 収容余裕 -->
+    <div class="office-chips-row">${chips}</div>
     <div class="capacity-section" style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">収容余裕</div>
     <div class="capacity-section">${capRows}</div>
+
+    ${robustnessHtml}
 
     ${explain ? `
       <div class="explain-block">
         <div class="hl">${escHtml(explain.headline)}</div>
-        <div class="det">${escHtml(explain.detail || '')}</div>
+        <div class="det">${escHtml(explain.detail||'')}</div>
       </div>
     ` : ''}
   `;
 }
 
-// ─── 比較（候補詳細ペインから） ───────────────────────────────────
+// ── Compare ───────────────────────────────────────────────────────
 function toggleCompareInner(id) {
   const idx = state.compareIds.indexOf(id);
   if (idx >= 0) {
@@ -1284,7 +1655,6 @@ function toggleCompareInner(id) {
     state.compareIds.push(id);
   }
   updateCompareBar();
-  // 詳細ペインのボタンを更新
   const btn = document.getElementById('compare-toggle-btn-inner');
   if (btn) {
     const inCompare = state.compareIds.includes(id);
@@ -1296,18 +1666,16 @@ function toggleCompareInner(id) {
 }
 
 function updateCompareBar() {
-  const bar  = document.getElementById('compare-bar');
+  const bar   = document.getElementById('compare-bar');
   const items = document.getElementById('compare-bar-items');
   const btn   = document.getElementById('compare-show-btn');
-
   if (state.compareIds.length === 0) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   btn.disabled = state.compareIds.length < 2;
-
   const combos = state.data.all_combinations || [];
   items.innerHTML = state.compareIds.map(id => {
-    const c = combos.find(x => x.combination_id === id);
-    const name = c ? (c.per_office||[]).map(o => o.name).join('+') : id;
+    const combo = combos.find(x => x.combination_id === id);
+    const name = combo ? (combo.per_office||[]).map(o => o.name).join('+') : id;
     return `
       <span class="compare-bar-chip">
         ${escHtml(name)}
@@ -1320,7 +1688,6 @@ function updateCompareBar() {
 function removeFromCompare(id) {
   state.compareIds = state.compareIds.filter(x => x !== id);
   updateCompareBar();
-  // 現在表示中の候補のボタンも更新
   if (state.selectedComboId) {
     const btn = document.getElementById('compare-toggle-btn-inner');
     if (btn) {
@@ -1337,7 +1704,6 @@ function clearCompare() {
   state.compareIds = [];
   updateCompareBar();
   document.getElementById('section-compare').style.display = 'none';
-  // 現在表示中の詳細ボタンをリセット
   const btn = document.getElementById('compare-toggle-btn-inner');
   if (btn) { btn.classList.remove('active'); btn.textContent = '比較に追加'; btn.disabled = false; }
 }
@@ -1350,7 +1716,7 @@ function showCompare() {
   renderComparePanel(c1, c2);
   document.getElementById('section-compare').style.display = '';
   setTimeout(() => {
-    document.getElementById('section-compare').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('section-compare').scrollIntoView({ behavior:'smooth', block:'start' });
   }, 50);
 }
 
@@ -1364,19 +1730,19 @@ function renderComparePanel(c1, c2) {
   const paretoIds = state.data.pareto_frontier_ids || [];
 
   const kpiDefs = [
-    { lbl: '通勤 p95',       get: c => c.p95_trip_minutes,                              fmt: v => `${v}分`,              lb: true  },
-    { lbl: '平均通勤',       get: c => c.avg_trip_minutes,                              fmt: v => `${v.toFixed(1)}分`,   lb: true  },
-    { lbl: '60分超',         get: c => c.exceed_60_count,                               fmt: v => `${v}人`,              lb: true  },
-    { lbl: '月額賃料',       get: c => c.total_rent_jpy_month / 10000,                  fmt: v => `${Math.round(v)}万円`, lb: true  },
-    { lbl: '通勤費（推計）', get: c => (c.total_commute_cost_jpy_month||0) / 10000,     fmt: v => `${Math.round(v)}万円`, lb: true,
-      skip: c => c.total_commute_cost_jpy_month == null },
-    { lbl: '合計コスト',     get: c => (c.total_cost_jpy_month||c.total_rent_jpy_month) / 10000, fmt: v => `${Math.round(v)}万円`, lb: true },
-    { lbl: '社員数',         get: c => c.total_population,                              fmt: v => `${v}人`,              lb: false },
+    { lbl:'通勤 p95',       get:c=>c.p95_trip_minutes,                              fmt:v=>`${v}分`,             lb:true },
+    { lbl:'平均通勤',       get:c=>c.avg_trip_minutes,                              fmt:v=>`${v.toFixed(1)}分`,  lb:true },
+    { lbl:'60分超',         get:c=>c.exceed_60_count,                               fmt:v=>`${v}人`,             lb:true },
+    { lbl:'月額賃料',       get:c=>c.total_rent_jpy_month/10000,                    fmt:v=>`${Math.round(v)}万円`,lb:true },
+    { lbl:'通勤費（推計）', get:c=>(c.total_commute_cost_jpy_month||0)/10000,       fmt:v=>`${Math.round(v)}万円`,lb:true,
+      skip:c=>c.total_commute_cost_jpy_month==null },
+    { lbl:'合計コスト',     get:c=>(c.total_cost_jpy_month||c.total_rent_jpy_month)/10000, fmt:v=>`${Math.round(v)}万円`,lb:true },
+    { lbl:'社員数',         get:c=>c.total_population,                              fmt:v=>`${v}人`,             lb:false },
   ];
 
   function colHtml(c, other, name) {
     const isPareto = paretoIds.includes(c.combination_id);
-    const rows = kpiDefs.filter(d => !d.skip || !d.skip(c)).map(d => {
+    const rows = kpiDefs.filter(d => !d.skip||!d.skip(c)).map(d => {
       const v1 = d.get(c), v2 = d.get(other);
       const diff = v1 - v2;
       let cls = 'same', dlbl = '同じ';
@@ -1390,7 +1756,7 @@ function renderComparePanel(c1, c2) {
           <span class="compare-kpi-label">${d.lbl}</span>
           <span style="display:flex;align-items:center;gap:7px">
             <span class="compare-kpi-value ${cls}">${d.fmt(v1)}</span>
-            ${diff !== 0 ? `<span class="diff-badge ${cls}">${dlbl}</span>` : ''}
+            ${diff!==0?`<span class="diff-badge ${cls}">${dlbl}</span>`:''}
           </span>
         </div>
       `;
@@ -1404,30 +1770,25 @@ function renderComparePanel(c1, c2) {
       s2: ((dist['60_to_90'] ||0)/total*100).toFixed(1),
       s3: ((dist.over_90     ||0)/total*100).toFixed(1),
     };
-    const distHtml = `
-      <div style="padding:10px 14px;border-bottom:1px solid var(--gray-bd)">
-        <div style="font-size:11px;color:var(--gray);margin-bottom:5px">通勤分布</div>
-        <div class="dist-bar" style="height:10px;border-radius:5px">
-          <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
-          <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
-          <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
-          <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
-        </div>
-        <div class="dist-legend" style="margin-top:4px">
-          <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
-          <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
-          <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
-          <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
-        </div>
-      </div>
-    `;
     return `
       <div class="compare-col">
-        <div class="compare-col-header ${isPareto ? 'winner' : ''}">
-          ${isPareto ? '★ ' : ''}${escHtml(name)} （${c.num_offices}拠点）
-        </div>
+        <div class="compare-col-header ${isPareto?'winner':''}">${isPareto?'★ ':''}${escHtml(name)}（${c.num_offices}拠点）</div>
         ${rows}
-        ${distHtml}
+        <div style="padding:10px 14px">
+          <div style="font-size:11px;color:var(--gray);margin-bottom:5px">通勤分布</div>
+          <div class="dist-bar" style="height:10px;border-radius:5px">
+            <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
+            <div class="dist-seg s1" style="width:${pcts.s1}%"></div>
+            <div class="dist-seg s2" style="width:${pcts.s2}%"></div>
+            <div class="dist-seg s3" style="width:${pcts.s3}%"></div>
+          </div>
+          <div class="dist-legend" style="margin-top:4px">
+            <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
+            <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
+            <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
+            <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -1437,26 +1798,23 @@ function renderComparePanel(c1, c2) {
       ${colHtml(c1, c2, name1)}
       ${colHtml(c2, c1, name2)}
     </div>
-    <p style="margin-top:8px;font-size:11px;color:var(--gray)">
-      ※ 緑は相手案より優れた値、赤は劣った値。差分は 左 − 右
-    </p>
+    <p style="margin-top:8px;font-size:11px;color:var(--gray)">※ 緑は相手案より優れた値、赤は劣った値。差分は 左 − 右</p>
   `;
 }
 
-// ─── 地図 ────────────────────────────────────────────────────────
+// ── Map ───────────────────────────────────────────────────────────
 function renderMap(combo) {
   if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-
   leafletMap = L.map('combo-map-container').setView([35.68, 139.75], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 16,
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom:16,
   }).addTo(leafletMap);
 
-  const inputCandidates = ((state.data.inputs || {}).office_candidates || []);
+  const inputCandidates = ((state.data.inputs||{}).office_candidates||[]);
   const bounds = [];
 
-  (combo.per_office || []).forEach((office, i) => {
+  (combo.per_office||[]).forEach((office, i) => {
     const candidate = inputCandidates.find(o => o.office_id === office.office_id);
     const stId = (candidate && candidate.nearest_station_id) || office.office_id;
     const st   = stationMaster[stId];
@@ -1464,17 +1822,17 @@ function renderMap(combo) {
     const color = OFFICE_COLORS[i % OFFICE_COLORS.length];
     const icon  = L.divIcon({
       className: '',
-      html: `<div style="background:${color};width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">★</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14],
+      html:`<div style="background:${color};width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">★</div>`,
+      iconSize:[28,28], iconAnchor:[14,14],
     });
-    L.marker([st.lat, st.lon], { icon, zIndexOffset: 1000 })
+    L.marker([st.lat, st.lon], { icon, zIndexOffset:1000 })
       .addTo(leafletMap)
-      .bindPopup(`<strong>${escHtml(office.name)}</strong><br>配置：${office.assigned_population}人<br>余裕：${office.capacity_headroom}人`);
+      .bindPopup(`<strong>${escHtml(office.name)}</strong><br>配置：${office.assigned_population}人<br>余裕：${office.capacity_headroom!=null?office.capacity_headroom+'人':'—'}`);
     bounds.push([st.lat, st.lon]);
   });
 
-  (combo.per_office || []).forEach(office => {
-    (office.station_breakdown || []).forEach(sb => {
+  (combo.per_office||[]).forEach(office => {
+    (office.station_breakdown||[]).forEach(sb => {
       if (!sb.reachable) return;
       const st = stationMaster[sb.station_id];
       if (!st) return;
@@ -1482,133 +1840,17 @@ function renderMap(combo) {
                    : sb.trip_minutes < 60 ? '#3b82f6'
                    : sb.trip_minutes < 90 ? '#f59e0b' : '#ef4444';
       const radius = Math.max(7, Math.sqrt(sb.count) * 2.8);
-      L.circleMarker([st.lat, st.lon], { radius, color: '#fff', weight: 1.5, fillColor: color, fillOpacity: 0.8 })
+      L.circleMarker([st.lat, st.lon], { radius, color:'#fff', weight:1.5, fillColor:color, fillOpacity:0.8 })
         .addTo(leafletMap)
         .bindPopup(`<strong>${escHtml(st.name)}駅</strong><br>通勤：${sb.trip_minutes}分<br>社員：${sb.count}人`);
       bounds.push([st.lat, st.lon]);
     });
   });
 
-  if (bounds.length > 0) leafletMap.fitBounds(bounds, { padding: [40, 40] });
+  if (bounds.length > 0) leafletMap.fitBounds(bounds, { padding:[40,40] });
 }
 
-// ─── 感度分析 ────────────────────────────────────────────────────
-function renderSensitivity(sensitivity) {
-  if (!sensitivity) return;
-  const body    = document.getElementById('sensitivity-body');
-  const details = sensitivity.details || [];
-  const isNew   = details.length > 0 && Array.isArray(details[0].impacts);
-
-  let detHtml = '';
-  if (isNew) {
-    detHtml = details.map((d, i) => {
-      const anyChange = (d.impacts || []).some(x => x.diff !== 0);
-      const icon = anyChange ? '⚠' : '✓';
-      const col  = anyChange ? 'var(--yellow)' : 'var(--green)';
-      const rows = (d.impacts || []).map(imp => {
-        const cls = imp.diff > 0 ? 'diff-up' : imp.diff < 0 ? 'diff-down' : 'diff-zero';
-        const str = imp.diff > 0 ? `+${imp.diff}分` : imp.diff < 0 ? `${imp.diff}分` : '変化なし';
-        return `<tr><td>${escHtml(imp.combo_name)}</td><td>${imp.original_p95}分</td><td>${imp.changed_p95}分</td><td class="${cls}">${str}</td></tr>`;
-      }).join('');
-      return `
-        <div class="sens-detail ${i === 0 ? 'open' : ''}" id="sd-${i}">
-          <div class="sens-detail-header" onclick="toggleSens(${i})">
-            <div>
-              <span class="sens-detail-title" style="color:${col}">${icon} ${escHtml(d.parameter)}</span>
-              <span class="sens-detail-desc"> — ${escHtml(d.description || '')}</span>
-            </div>
-            <span class="sens-chevron">▼</span>
-          </div>
-          <div class="sens-detail-body">
-            <table class="impacts-table">
-              <thead><tr><th>候補案</th><th>変更前 p95</th><th>変更後 p95</th><th>差分</th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } else {
-    const stable = sensitivity.ranking_stable;
-    const oldRows = details.map(d => `
-      <tr>
-        <td>${escHtml(d.parameter)}</td>
-        <td class="${d.ranking_changed ? 'diff-up' : 'diff-down'}">${d.ranking_changed ? '⚠ 変化あり' : '✓ 安定'}</td>
-        <td>${escHtml(d.description)}</td>
-      </tr>
-    `).join('');
-    detHtml = `
-      <div style="margin-bottom:12px">
-        <span style="padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;${stable ? 'background:#dcfce7;color:#15803d' : 'background:#fee2e2;color:#b91c1c'}">
-          ${stable ? '✓ 安定' : '⚠ 不安定'}
-        </span>
-      </div>
-      ${details.length ? `<table class="impacts-table"><thead><tr><th>パラメータ</th><th>順位変化</th><th>説明</th></tr></thead><tbody>${oldRows}</tbody></table>` : ''}
-    `;
-  }
-
-  body.innerHTML = `
-    <div class="sensitivity-summary">${escHtml(sensitivity.summary || '')}</div>
-    ${detHtml}
-  `;
-  document.getElementById('section-sensitivity').style.display = '';
-}
-
-function toggleSens(i) {
-  const el = document.getElementById(`sd-${i}`);
-  if (el) el.classList.toggle('open');
-}
-
-// ─── CSV アップロード ────────────────────────────────────────────
-function handleDragOver(e)  { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
-function handleDragLeave(e) { document.getElementById('upload-zone').classList.remove('dragover'); }
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file) processUploadFile(file);
-}
-function handleFileSelect(e) { const f = e.target.files[0]; if (f) processUploadFile(f); }
-
-function processUploadFile(file) {
-  const result  = document.getElementById('upload-result');
-  const preview = document.getElementById('upload-preview');
-  result.style.display = '';
-  preview.innerHTML = '';
-  const name = file.name.toLowerCase();
-  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
-    result.className = 'upload-result info';
-    result.textContent = `Excel「${file.name}」を受け付けました。API接続時にサーバー側で解析します。`;
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const rows = parseCsvTsv(ev.target.result);
-      if (rows.length === 0) throw new Error('データが見つかりません');
-      const headers = rows[0];
-      const si = headers.findIndex(h => h.toLowerCase() === 'station_id');
-      const ci = headers.findIndex(h => h.toLowerCase() === 'count');
-      if (si < 0 || ci < 0) throw new Error('必須列 station_id / count が見つかりません');
-      const data = rows.slice(1).filter(r => r.length > 1);
-      result.className = 'upload-result success';
-      result.textContent = `✓ 「${file.name}」を読み込みました。${data.length}行を確認。`;
-      const prev = data.slice(0, 10);
-      preview.innerHTML = `
-        <div style="font-size:12px;color:var(--gray);margin-top:10px;margin-bottom:5px">先頭${prev.length}行のプレビュー${data.length>10?'（'+data.length+'行中）':''}:</div>
-        <table class="upload-preview-table">
-          <thead><tr>${headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>
-          <tbody>${prev.map(r => `<tr>${r.map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>
-        </table>
-      `;
-    } catch(err) {
-      result.className = 'upload-result error';
-      result.textContent = `エラー: ${err.message}`;
-    }
-  };
-  reader.readAsText(file, 'UTF-8');
-}
-
+// ── CSV parse ─────────────────────────────────────────────────────
 function parseCsvTsv(text) {
   const lines = text.trim().split(/\r?\n/);
   const delim = (lines[0].split('\t').length > lines[0].split(',').length) ? '\t' : ',';
@@ -1624,15 +1866,13 @@ function parseCsvTsv(text) {
   });
 }
 
-// ─── ユーティリティ ──────────────────────────────────────────────
+// ── Utils ─────────────────────────────────────────────────────────
 function escHtml(str) {
   if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── 起動 ────────────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────────
 init().catch(err => setStatus('error', `エラー: ${err.message}`));
 </script>
 </body>
