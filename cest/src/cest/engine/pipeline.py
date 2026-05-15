@@ -10,6 +10,16 @@ from cest.engine.notices import NoticeCollector
 from cest.engine.combination import run_v3_pipeline
 
 
+def _detect_department_mode(home_stations: list) -> str:
+    rows_with = sum(1 for hs in home_stations if hs.get("group"))
+    total = len(home_stations)
+    if rows_with == total:
+        return "all_present"
+    if rows_with == 0:
+        return "all_absent"
+    return "mixed"
+
+
 def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     """
     v0.3 評価パイプライン。
@@ -26,6 +36,13 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     graph_id = routing_cfg.get("graph_id", "tokyo_core_v1")
     transfer_penalty = routing_cfg.get("transfer_penalty_minutes", 0)
 
+    department_mode = _detect_department_mode(home_stations)
+    if department_mode == "mixed":
+        missing_people = sum(
+            hs.get("count", 1) for hs in home_stations if not hs.get("group")
+        )
+        collector.department_partially_missing(missing_people)
+
     if transfer_penalty != 0:
         collector.transfer_penalty_unsupported(transfer_penalty)
 
@@ -37,7 +54,7 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     if G is None:
         collector.routing_graph_missing()
-        return _build_empty_report(collector)
+        return _build_empty_report(collector, department_mode)
 
     # 駅の存在チェック
     graph_nodes = set(G.nodes())
@@ -82,10 +99,23 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
         collector=collector,
     )
 
+    all_combos = result["all_combinations"]
+
+    if department_mode == "all_absent":
+        for combo in all_combos:
+            combo.pop("department_breakdown", None)
+            combo.pop("conflict_alerts", None)
+            if "explain" in combo and isinstance(combo["explain"], dict):
+                combo["explain"].pop("assignment", None)
+        bd = result.get("baseline_diagnosis")
+        if isinstance(bd, dict):
+            bd.pop("alerts", None)
+
     return {
         "version": "v0.3",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "all_combinations": result["all_combinations"],
+        "department_mode": department_mode,
+        "all_combinations": all_combos,
         "pareto_frontier_ids": result["pareto_frontier_ids"],
         "constraints_impact": result["constraints_impact"],
         "robustness": result["robustness"],
@@ -94,10 +124,11 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _build_empty_report(collector: NoticeCollector) -> Dict[str, Any]:
+def _build_empty_report(collector: NoticeCollector, department_mode: str = "all_absent") -> Dict[str, Any]:
     return {
         "version": "v0.3",
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "department_mode": department_mode,
         "all_combinations": [],
         "pareto_frontier_ids": [],
         "constraints_impact": {
