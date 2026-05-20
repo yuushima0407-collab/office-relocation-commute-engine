@@ -28,10 +28,19 @@ cest/web/
 # Artifacts / snapshots
 artifacts/
 *.tgz
+*.zip
+
+# Deploy bundles (Lambda zip / web zip)
+lambda_code.zip
+web_code.zip
+deploy.zip
 
 # Legacy code
 legacy/
 
 # Internal tools
 tools/
+
+# Local development scripts (smoke tests, ad-hoc tooling)
+cest/scripts/
 
