@@ -77,6 +77,8 @@ class Settings(BaseModel):
     sqm_per_person: float = Field(3.3, ge=0.1)
     # 予算上限
     budget_total_rent_jpy_month: Optional[int] = Field(default=None, ge=0)
+    # 希望定員（採用余地込み）: total_capacity がこれ未満の案は除外
+    min_total_capacity: Optional[int] = Field(default=None, ge=1)
     # 通勤閾値（KPI集計用）
     thresholds_trip_minutes: List[float] = Field(default=[60, 90])
     percentiles: List[int] = Field(default=[50, 95])

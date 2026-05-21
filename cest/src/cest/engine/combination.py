@@ -396,20 +396,20 @@ def _compute_department_breakdown(
 def _compute_conflict_alerts(
     dept_breakdown: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """部署間の通勤格差が大きいペアを検出する。"""
+    """部署間の平均通勤格差が大きいペアを検出する。"""
     alerts: List[Dict[str, Any]] = []
     if len(dept_breakdown) < 2:
         return alerts
 
     for i, a in enumerate(dept_breakdown):
         for b in dept_breakdown[i + 1:]:
-            gap = abs(a["p95_trip_minutes"] - b["p95_trip_minutes"])
+            gap = abs(a["avg_trip_minutes"] - b["avg_trip_minutes"])
             if gap >= _CONFLICT_GAP_THRESHOLD_MINUTES:
-                worse = a if a["p95_trip_minutes"] > b["p95_trip_minutes"] else b
+                worse = a if a["avg_trip_minutes"] > b["avg_trip_minutes"] else b
                 better = b if worse is a else a
                 alerts.append({
                     "type": "department_gap",
-                    "message": f"{worse['group']}(p95: {worse['p95_trip_minutes']}分)と{better['group']}(p95: {better['p95_trip_minutes']}分)で{gap:.0f}分の格差があります",
+                    "message": f"{worse['group']}(平均{worse['avg_trip_minutes']:.0f}分)と{better['group']}(平均{better['avg_trip_minutes']:.0f}分)で{gap:.0f}分の格差があります",
                     "severity": "warning",
                 })
 
@@ -456,24 +456,23 @@ def _build_assignment_summary(
 def _is_pareto_dominated(combo: Dict[str, Any], all_combos: List[Dict[str, Any]]) -> bool:
     """Return True when combo is Pareto-dominated by another combo.
 
-    パレート軸: (total_rent, p95_trip, total_capacity) の3軸。
+    パレート軸: (total_rent, avg_trip, total_capacity) の3軸。
     - total_rent: 低いほど良い
-    - p95_trip: 低いほど良い
+    - avg_trip: 低いほど良い（平均通勤。p95は外れ値に振られやすいので採用しない）
     - total_capacity: 高いほど良い
-    散布図のX軸（デフォルト total_rent、切替で rent_per_capacity）とは独立。
     """
-    p95_a  = combo.get("p95_trip_minutes") or math.inf
+    avg_a  = combo.get("avg_trip_minutes") or math.inf
     rent_a = combo.get("total_rent_jpy_month") or math.inf
     cap_a  = combo.get("total_capacity") or 0
     for other in all_combos:
         if other is combo:
             continue
-        p95_b  = other.get("p95_trip_minutes") or math.inf
+        avg_b  = other.get("avg_trip_minutes") or math.inf
         rent_b = other.get("total_rent_jpy_month") or math.inf
         cap_b  = other.get("total_capacity") or 0
-        # B が A を支配: rent ≤, p95 ≤, capacity ≥ かつ少なくとも1つ厳密に優位
-        if rent_b <= rent_a and p95_b <= p95_a and cap_b >= cap_a:
-            if rent_b < rent_a or p95_b < p95_a or cap_b > cap_a:
+        # B が A を支配: rent ≤, avg ≤, capacity ≥ かつ少なくとも1つ厳密に優位
+        if rent_b <= rent_a and avg_b <= avg_a and cap_b >= cap_a:
+            if rent_b < rent_a or avg_b < avg_a or cap_b > cap_a:
                 return True
     return False
 
@@ -544,29 +543,29 @@ def _compute_rent_tolerance(
 ) -> List[Dict[str, Any]]:
     """各オフィスの賃料がいくら上がるとパレートから脱落するか逆算する。
 
-    3軸パレート (total_rent, p95_trip, total_capacity) での脱落条件:
-    他の案 B が combo A を支配する = rent_B ≤ rent_A かつ p95_B ≤ p95_A かつ cap_B ≥ cap_A。
-    賃料が上���っても p95 と capacity は変わらないので、
-    p95 と capacity で combo を支配しうる案（p95 ≤ combo かつ cap ≥ combo）を探し、
+    3軸パレート (total_rent, avg_trip, total_capacity) での脱落条件:
+    他の案 B が combo A を支配する = rent_B ≤ rent_A かつ avg_B ≤ avg_A かつ cap_B ≥ cap_A。
+    賃料が上がっても avg と capacity は変わらないので、
+    avg と capacity で combo を支配しうる案（avg ≤ combo かつ cap ≥ combo）を探し、
     その案の total_rent まで上がったら脱落。
     """
-    combo_p95  = combo.get("p95_trip_minutes") or math.inf
+    combo_avg  = combo.get("avg_trip_minutes") or math.inf
     combo_rent = combo.get("total_rent_jpy_month") or 0
     combo_cap  = combo.get("total_capacity") or 0
 
-    # combo を支配しうる案: p95 と capacity の両方で combo に勝てる案
+    # combo を支配しうる案: avg と capacity の両方で combo に勝てる案
     potential_dominators = []
     for other in pareto + non_pareto:
         if other is combo:
             continue
-        other_p95  = other.get("p95_trip_minutes") or math.inf
+        other_avg  = other.get("avg_trip_minutes") or math.inf
         other_rent = other.get("total_rent_jpy_month") or math.inf
         other_cap  = other.get("total_capacity") or 0
-        if other_p95 <= combo_p95 and other_cap >= combo_cap:
+        if other_avg <= combo_avg and other_cap >= combo_cap:
             potential_dominators.append(other)
 
     if not potential_dominators:
-        # p95 と capacity で勝てる案がない → 賃料がいくら上がっても脱���しない
+        # avg と capacity で勝てる案がない → 賃料がいくら上がっても脱落しない
         tolerances = []
         for po in combo.get("per_office", []):
             tolerances.append({
@@ -963,6 +962,7 @@ def run_v3_pipeline(
     budget = settings.get("budget_total_rent_jpy_month")
     max_p95 = settings.get("max_p95_trip_minutes")
     max_avg = settings.get("max_avg_trip_minutes")
+    min_total_capacity = settings.get("min_total_capacity")
     num_offices_list = settings.get("num_offices", [1])
     fixed_offices = settings.get("fixed_offices", [])
     fixed_assignment = settings.get("fixed_assignment", [])
@@ -1019,6 +1019,16 @@ def run_v3_pipeline(
             continue
         valid_after_budget += 1
 
+        # 希望定員フィルタ（採用余地込み）
+        # 全オフィスに capacity が設定されているときのみ適用
+        # （CSVで容量未入力のオフィスが混ざる場合のフィルタ全滅を防ぐ）
+        if min_total_capacity is not None:
+            caps = [_get_capacity(o, sqm_per_person) for o in combo_offices]
+            if all(c is not None for c in caps):
+                total_cap = sum(caps)
+                if total_cap < min_total_capacity:
+                    continue
+
         # KPI 計算
         result = evaluate_combo(
             G, home_stations, combo_offices, assignment,
@@ -1038,8 +1048,36 @@ def run_v3_pipeline(
 
         evaluated.append(result)
 
-    # パレートフロンティア抽出
-    pareto_frontier_ids = mark_pareto_frontier(evaluated)
+    # 使われないオフィス（assigned_population=0）を含む案は、選択肢として残すが
+    # パレート判定からは除外する（無駄金フィルタ）。
+    # ただし、ユーザーが「固定」で指定したオフィスは未使用でも除外対象外にする
+    # （固定はユーザーの意思決定なので、たとえ無駄に見えてもパレート対象に残す）。
+    fixed_oids_set = set(fixed_offices)
+    for combo in evaluated:
+        unused_non_fixed = [
+            po["office_id"] for po in combo.get("per_office", [])
+            if (po.get("assigned_population") or 0) == 0
+            and po["office_id"] not in fixed_oids_set
+        ]
+        unused_fixed = [
+            po["office_id"] for po in combo.get("per_office", [])
+            if (po.get("assigned_population") or 0) == 0
+            and po["office_id"] in fixed_oids_set
+        ]
+        combo["_has_unused_office"] = bool(unused_non_fixed)
+        if unused_fixed:
+            combo["unused_fixed_offices"] = unused_fixed
+    valid_for_pareto = [c for c in evaluated if not c["_has_unused_office"]]
+    valid_after_unused = len(valid_for_pareto)
+
+    # パレートフロンティア抽出（無駄な拠点を含む案は対象外）
+    pareto_frontier_ids = mark_pareto_frontier(valid_for_pareto)
+
+    # 無駄な拠点を含む案は is_pareto_optimal=False に固定
+    for combo in evaluated:
+        if combo["_has_unused_office"]:
+            combo["is_pareto_optimal"] = False
+        combo.pop("_has_unused_office", None)
 
     if not pareto_frontier_ids:
         collector.no_pareto_candidates()
@@ -1076,6 +1114,7 @@ def run_v3_pipeline(
         "after_capacity_filter": valid_after_capacity,
         "after_budget_filter": valid_after_budget,
         "after_commute_filter": valid_after_commute,
+        "after_unused_filter": valid_after_unused,
         "pareto_optimal": len(pareto_frontier_ids),
         "vs_previous_round": None,
     }

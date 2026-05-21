@@ -24,3 +24,13 @@ def health():
 
 app.include_router(evaluate_router)
 app.include_router(parse_csv_router)
+
+
+# Lambda (AWS) で実行されるときは Mangum 経由で ASGI を ALB/API Gateway に橋渡しする。
+# ローカル開発時は mangum 未インストールでも uvicorn から動かせるよう、importは任意。
+try:
+    from mangum import Mangum
+
+    handler = Mangum(app)
+except ImportError:
+    handler = None
