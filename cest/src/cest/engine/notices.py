@@ -176,3 +176,11 @@ class NoticeCollector:
             "blocking",
             "制約条件を緩和してください。",
         )
+
+    def department_partially_missing(self, missing_people: int) -> None:
+        self.add(
+            "warning",
+            "DEPARTMENT_PARTIALLY_MISSING",
+            f"部署未入力が {missing_people} 名います。該当者は個人単位で配置されました。",
+            "informational",
+        )

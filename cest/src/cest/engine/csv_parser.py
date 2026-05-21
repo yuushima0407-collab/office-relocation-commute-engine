@@ -74,9 +74,10 @@ def _read_rows_from_excel(data: bytes) -> List[Dict[str, str]]:
 def _rows_to_distribution(
     rows: List[Dict[str, str]],
     station_index: Dict[str, str],
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Returns (distribution, unresolved_stations)."""
     if not rows:
-        return []
+        return [], []
 
     headers = list(rows[0].keys())
     col_station = _find_col(headers, _STATION_ALIASES)
@@ -89,18 +90,26 @@ def _rows_to_distribution(
         missing.append(f"駅列（{'/'.join(sorted(_STATION_ALIASES))}のいずれか）")
     if missing:
         raise ValueError(f"必須列が見つかりません: {', '.join(missing)}")
-    # 人数列は任意。なければ1行=1人として扱う（HRシステムの社員マスタ形式に対応）
 
     result: List[Dict[str, Any]] = []
-    for raw in rows:
+    unresolved: List[Dict[str, Any]] = []
+    for i, raw in enumerate(rows):
         raw_station = (raw.get(col_station) or "").strip()
         if not raw_station:
             continue
 
-        station_id = station_index.get(raw_station, raw_station)
+        if raw_station in station_index:
+            station_id = station_index[raw_station]
+        else:
+            station_id = raw_station
+            unresolved.append({
+                "raw": raw_station,
+                "row_number": i + 2,  # header is row 1, data starts at 2
+                "candidates": [],
+            })
 
         if col_count is None:
-            count = 1  # 人数列なし = 1行1人（社員マスタ形式）
+            count = 1
         else:
             try:
                 count = int(float(raw.get(col_count, "0") or "0"))
@@ -125,7 +134,7 @@ def _rows_to_distribution(
             row["commute_allowance_jpy_month"] = fare
         result.append(row)
 
-    return result
+    return result, unresolved
 
 
 # ── 公開 API ──────────────────────────────────────────────────────────────────
@@ -133,16 +142,16 @@ def _rows_to_distribution(
 def parse_employee_csv(content: str) -> List[Dict[str, Any]]:
     """
     社員データ CSV/TSV を home_station_distribution 形式に変換する。
-
-    対応列名（いずれかがあれば認識）:
-      駅:   最寄り駅 / station_id / station / 駅名 / 最寄駅
-      人数: 人数 / count / 社員数 / 名
-      部署: 部署 / group / 部門 / 所属  （任意）
-      通勤費: 通勤費 / 通勤手当 / commute_allowance  （任意・円/月）
-
-    駅名が日本語の場合は station_master.json で station_id に変換する。
-    未知の駅名はそのまま station_id として扱い、後続で UNREACHABLE になる。
+    未解決駅は後続で UNREACHABLE になる。後方互換のため distribution のみを返す。
     """
+    station_index = _build_station_index()
+    rows = _read_rows(content)
+    distribution, _ = _rows_to_distribution(rows, station_index)
+    return distribution
+
+
+def parse_employee_csv_extended(content: str) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """parse_employee_csv + unresolved_stations を返す拡張版。"""
     station_index = _build_station_index()
     rows = _read_rows(content)
     return _rows_to_distribution(rows, station_index)
@@ -151,8 +160,15 @@ def parse_employee_csv(content: str) -> List[Dict[str, Any]]:
 def parse_employee_excel(data: bytes) -> List[Dict[str, Any]]:
     """
     社員データ Excel (.xlsx) を home_station_distribution 形式に変換する。
-    列名の認識ルールは parse_employee_csv と同じ。
     """
+    station_index = _build_station_index()
+    rows = _read_rows_from_excel(data)
+    distribution, _ = _rows_to_distribution(rows, station_index)
+    return distribution
+
+
+def parse_employee_excel_extended(data: bytes) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """parse_employee_excel + unresolved_stations を返す拡張版。"""
     station_index = _build_station_index()
     rows = _read_rows_from_excel(data)
     return _rows_to_distribution(rows, station_index)

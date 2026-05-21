@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
-from cest.engine.csv_parser import parse_employee_csv, parse_employee_excel
+from cest.engine.csv_parser import (
+    parse_employee_csv_extended,
+    parse_employee_excel_extended,
+)
 
 
 class ParseCsvRequest(BaseModel):
@@ -18,8 +21,15 @@ class HomeStationRow(BaseModel):
     commute_allowance_jpy_month: Optional[int] = None
 
 
+class UnresolvedStation(BaseModel):
+    raw: str
+    row_number: int
+    candidates: List[str] = []
+
+
 class ParseCsvResponse(BaseModel):
-    home_station_distribution: list[HomeStationRow]
+    home_station_distribution: List[HomeStationRow]
+    unresolved_stations: List[UnresolvedStation] = []
 
 
 router = APIRouter(tags=["parse-csv"])
@@ -29,9 +39,10 @@ router = APIRouter(tags=["parse-csv"])
 def post_parse_csv(body: ParseCsvRequest) -> ParseCsvResponse:
     """CSV/TSVテキストを home_station_distribution 形式に変換する。"""
     try:
-        rows_raw = parse_employee_csv(body.csv_text)
-        rows = [HomeStationRow(**r) for r in rows_raw]
-        return ParseCsvResponse(home_station_distribution=rows)
+        dist_raw, unresolved_raw = parse_employee_csv_extended(body.csv_text)
+        rows = [HomeStationRow(**r) for r in dist_raw]
+        unresolved = [UnresolvedStation(**u) for u in unresolved_raw]
+        return ParseCsvResponse(home_station_distribution=rows, unresolved_stations=unresolved)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -44,11 +55,14 @@ async def post_parse_csv_upload(file: UploadFile = File(...)) -> ParseCsvRespons
         data = await file.read()
 
         if filename.endswith(".xlsx"):
-            rows_raw = parse_employee_excel(data)
+            dist_raw, unresolved_raw = parse_employee_excel_extended(data)
         else:
-            rows_raw = parse_employee_csv(data.decode("utf-8-sig"))  # BOM付きUTF-8対応
+            dist_raw, unresolved_raw = parse_employee_csv_extended(
+                data.decode("utf-8-sig")
+            )
 
-        rows = [HomeStationRow(**r) for r in rows_raw]
-        return ParseCsvResponse(home_station_distribution=rows)
+        rows = [HomeStationRow(**r) for r in dist_raw]
+        unresolved = [UnresolvedStation(**u) for u in unresolved_raw]
+        return ParseCsvResponse(home_station_distribution=rows, unresolved_stations=unresolved)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
