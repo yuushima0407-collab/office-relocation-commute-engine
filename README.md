@@ -1,8 +1,8 @@
 # CEST — Commute-burden Evaluation for Site Transfer
 
-オフィス移転候補地ごとの**通勤負荷を定量比較**するバックエンドエンジン。
+オフィス移転・多拠点配置の意思決定を、**通勤負荷・賃料・収容力のパレート最適**で支援するエンジン。
 
-社員の居住駅分布と候補オフィス情報を入力すると、通勤時間KPI・ランキング・感度分析・説明テキストを含む評価レポートを返す。
+社員の居住駅分布と候補オフィス情報を入力すると、全組み合わせを列挙して制約フィルタを通し、トレードオフ上の最適案・ロバストネス分析・ベースライン比較を含む評価レポートを返す。
 
 ## Quick Start
 
@@ -20,12 +20,16 @@ uvicorn cest.main:app --reload --port 8000
 
 Swagger UI: http://localhost:8000/docs
 
+本番デプロイ済（AWS Lambda + API Gateway + S3 + CloudFront、詳細は [`cest/docs/aws-architecture.md`](cest/docs/aws-architecture.md)）。
+
 ## API
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET`  | `/health` | ヘルスチェック |
 | `POST` | `/evaluate` | 評価実行 → EvaluationReport |
+| `POST` | `/parse-csv` | CSV/TSV テキストをパースして候補リスト化 |
+| `POST` | `/parse-csv/upload` | CSV/Excel ファイルアップロードをパース |
 
 ### リクエスト例
 
@@ -35,21 +39,17 @@ curl -X POST http://localhost:8000/evaluate \
   -d @cest/tests/fixtures/demo_3candidates.json
 ```
 
-### レスポンス概要
+### レスポンス概要（v0.3.3）
 
 ```
 EvaluationReport
-├── results[]              シナリオ別KPI
-│   ├── kpis               片道/往復/週間 (avg, p50, p95)
-│   ├── station_breakdown  駅ごとの所要時間・人数
-│   └── unreachable        到達不能駅の一覧
-├── ranking                重み付きスコア・総合ランキング
-├── explain_pack           トレードオフ文・優先軸別の推奨
-├── sensitivity            感度分析 (robust / flip_rate)
-└── notices[]              警告・エラー通知
+├── all_combinations[]      全候補組み合わせ（賃料・通勤KPI・収容率・部署内訳・部署間アラート）
+├── pareto_frontier_ids[]   パレート最適案のID（3軸: 賃料・平均通勤・総定員）
+├── constraints_impact      フィルタ段階ごとの絞り込み数（無駄拠点・収容・予算・通勤）
+├── robustness[]            最適案ごとの「賃料許容上昇額・収容余裕」
+├── baseline_diagnosis      現オフィス指定時の収容率・通勤統計・改善余地
+└── notices[]               入力不備・到達不能駅・カバレッジ警告
 ```
-
-完全なJSON Schemaは [`cest/schemas/evaluation_report_v0.1.2.json`](cest/schemas/evaluation_report_v0.1.2.json) を参照。
 
 ## Architecture
 
@@ -57,20 +57,20 @@ EvaluationReport
 POST /evaluate
   │
   ▼
-EvaluateRequest (Pydantic validation)
+EvaluateRequest (Pydantic v2 validation)
   │
   ▼
-pipeline.evaluate()
-  ├── graph_loader    ── 駅ネットワークグラフ (NetworkX)
-  ├── routing         ── Dijkstra最短経路
-  ├── kpi             ── 片道/往復/週間/閾値超過
-  ├── ranking         ── access + financial + environmental 軸スコア
-  ├── sensitivity     ── ラストマイル±5分で1位が変わるか
-  ├── explain_pack    ── トレードオフ文・推奨テキスト生成
-  └── notices         ── 入力不備・カバレッジ警告の収集
+combination.run_v3_pipeline()
+  ├── 組み合わせ列挙        ── N候補からK拠点を列挙
+  ├── 部署配置             ── 各組み合わせに対し部署を割り当て
+  ├── 制約フィルタ          ── 収容/予算/通勤上限/希望定員/無駄拠点除外
+  ├── パレート抽出          ── 賃料 × 平均通勤 × 総定員の3軸
+  ├── robustness 計算       ── 案ごとの賃料許容額・収容余裕
+  ├── baseline 比較         ── 現オフィス指定時の改善余地
+  └── explain 生成          ── 自然言語の説明・アラート
   │
   ▼
-EvaluationReport (JSON Schema v0.1.2)
+EvaluationReport (JSON)
 ```
 
 ## Project Structure
@@ -78,44 +78,47 @@ EvaluationReport (JSON Schema v0.1.2)
 ```
 cest/
 ├── src/cest/
-│   ├── main.py                  FastAPI app
-│   ├── routes/evaluate.py       POST /evaluate
+│   ├── main.py                  FastAPI app + Mangum (Lambda adapter)
+│   ├── routes/
+│   │   ├── evaluate.py          POST /evaluate
+│   │   └── parse_csv.py         POST /parse-csv, /parse-csv/upload
 │   ├── models/request.py        Pydantic request models
 │   ├── engine/
-│   │   ├── pipeline.py          メインパイプライン
+│   │   ├── pipeline.py          評価エントリポイント
+│   │   ├── combination.py       コア: パレート・robustness・baseline
 │   │   ├── routing.py           Dijkstra経路探索
-│   │   ├── kpi.py               KPI算出
-│   │   ├── ranking.py           スコアリング・ランキング
-│   │   ├── sensitivity.py       感度分析
+│   │   ├── kpi.py               通勤時間KPI算出
+│   │   ├── csv_parser.py        CSV/TSV/Excel解析
+│   │   ├── fare_estimator.py    JR IC運賃推定
 │   │   ├── explain_pack.py      説明テキスト生成
+│   │   ├── ranking.py           スコアリング補助
 │   │   ├── graph_loader.py      グラフ/駅マスタ読込
 │   │   └── notices.py           Notice収集
 │   ├── utils/
 │   │   └── schema_validate.py   JSON Schema検証
 │   └── data/
 │       ├── tokyo_core_v1.json   駅ネットワークグラフ
-│       └── station_master.json  56駅の座標データ
-├── schemas/
-│   └── evaluation_report_v0.1.2.json
-├── tests/
-│   ├── test_determinism.py      決定論テスト + Schema適合
-│   ├── test_monotonicity.py     単調性テスト
-│   ├── test_unreachable.py      到達不能駅の処理テスト
-│   └── fixtures/
-│       ├── demo_3candidates.json           デモ入力
-│       └── demo_3candidates_response.json  デモ出力
-└── pyproject.toml
+│       └── station_master.json  駅マスタ
+├── schemas/                     レスポンス JSON Schema
+├── tests/                       28 tests (pytest)
+└── docs/
+    ├── aws-architecture.md      インフラ設計書
+    ├── v0.3.3-frontend.md       v0.3.3 フロント仕様
+    ├── v0.3.3-sample-data.md    サンプルデータ仕様
+    └── v0.4-spec.md             v0.4 ロードマップ
 ```
 
 ## Design Decisions
 
-**決定論の保証** — 同じ入力に対して常に同じ出力を返す。ランダム性・非決定的処理はない。テストで検証済み。
+**パレート最適 + 制約フィルタ** — 重み付きスコアではなく、賃料・平均通勤・総定員の 3 軸でパレートフロンティアを抽出。意思決定者がトレードオフを見て選ぶ設計。
 
-**Contract-first** — JSON Schema v0.1.2がレスポンス構造のSSoT（Single Source of Truth）。バックエンドの出力はテストでSchemaに対して検証される。
+**決定論の保証** — 同じ入力に対して常に同じ出力を返す。テストで検証。
 
-**Notice system** — 入力の不備や制約違反を `notices[]` で構造化して返す。エラーで落とすのではなく、可能な範囲で計算を続行し、問題点をクライアントに伝える。
+**Notice system** — 入力の不備や制約違反は `notices[]` で構造化して返す。エラーで止めず、計算可能な範囲を返してクライアントに判断材料を渡す。
 
-**Sensitivity analysis** — ラストマイル（徒歩分数）を±5分変動させて1位が変わるかを検証する。不安定な場合は `best_scenario_id = null` を返し、結論の信頼度をクライアントに示す。
+**Robustness（感度ではなく注意点として）** — 「賃料がいくら上がるとパレートから脱落するか」「収容にどれだけ余裕があるか」を案ごとに算出。専門用語の感度分析ではなく自然言語の注意点として提示。
+
+**AWS サーバーレス構成** — 常時稼働コストゼロ。API Gateway HTTP API + Lambda + S3 + CloudFront で月170円程度。Mangum で FastAPI をそのまま動かす。詳細は [aws-architecture.md](cest/docs/aws-architecture.md)。
 
 ## Tests
 
@@ -123,23 +126,20 @@ cest/
 cd cest && pytest -v
 ```
 
-| テスト | 検証内容 |
-|--------|---------|
-| `test_determinism` | 同一入力 → 同一出力 |
-| `test_determinism::schema` | 出力がJSON Schema v0.1.2に適合 |
-| `test_monotonicity` | 通勤時間が長い → accessスコアが低い |
-| `test_unreachable` | 到達不能駅がKPIから除外される |
-
-## Frontend
-
-フロントエンドは未実装。実装タスクは [FRONTEND_TASK.md](FRONTEND_TASK.md) を参照。
+| カテゴリ | 検証内容 |
+|---|---|
+| `test_determinism` | 同一入力 → 同一出力、レスポンス構造の整合 |
+| `test_logic` | パレート判定・robustness・部署間アラート |
+| `test_monotonicity` | 通勤時間と評価の単調性 |
+| `test_unreachable` | 到達不能駅の処理 |
+| `test_csv_parser` | CSV/TSV/Excel 解析 |
+| `test_backward_compat_v1_request` | 旧バージョンリクエストの後方互換 |
 
 ## Tech Stack
 
-- Python 3.11+
-- FastAPI + Pydantic v2
-- NetworkX（駅間Dijkstra経路探索）
-- jsonschema（レスポンス検証）
+- **Backend**: Python 3.11 / FastAPI / Pydantic v2 / NetworkX / pytest
+- **Infra**: AWS (S3 + CloudFront + API Gateway HTTP API + Lambda + Mangum)
+- **Tools**: Git / GitHub / JSON Schema (Draft 2020-12)
 
 ## License
 

@@ -16,7 +16,7 @@ def _get_response_validator() -> Draft202012Validator:
     if _RESPONSE_VALIDATOR is not None:
         return _RESPONSE_VALIDATOR
 
-    schema_path = _SCHEMA_DIR / "evaluation_report_v0.1.2.json"
+    schema_path = _SCHEMA_DIR / "evaluation_report_v0.3.3.json"
     if not schema_path.exists():
         raise FileNotFoundError(f"Schema file not found: {schema_path}")
 
@@ -26,7 +26,7 @@ def _get_response_validator() -> Draft202012Validator:
 
 
 def validate_response(payload: Dict[str, Any]) -> List[Dict[str, str]]:
-    """Validate response against v0.1.2 schema. Returns list of errors."""
+    """Validate response against v0.3.3 schema. Returns list of errors."""
     v = _get_response_validator()
     errors = sorted(v.iter_errors(payload), key=lambda e: list(e.path))
 
