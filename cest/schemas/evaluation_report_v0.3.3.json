@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cest://schemas/evaluation_report/v0.3.3",
+  "title": "CEST Evaluation Report v0.3.3",
+  "description": "v0.3.3 レスポンス契約。バックエンド出力とフロント実装の唯一の整合源（SSoT）。",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "department_mode",
+    "all_combinations",
+    "pareto_frontier_ids",
+    "constraints_impact",
+    "robustness",
+    "baseline_diagnosis",
+    "notices"
+  ],
+  "properties": {
+    "version": { "type": "string", "const": "v0.3" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "department_mode": {
+      "type": "string",
+      "enum": ["all_present", "all_absent", "mixed"]
+    },
+    "all_combinations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Combination" }
+    },
+    "pareto_frontier_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints_impact": { "$ref": "#/$defs/ConstraintsImpact" },
+    "robustness": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Robustness" }
+    },
+    "baseline_diagnosis": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/BaselineDiagnosis" }
+      ]
+    },
+    "notices": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Notice" }
+    }
+  },
+
+  "$defs": {
+    "Combination": {
+      "type": "object",
+      "required": [
+        "combination_id",
+        "selected_offices",
+        "num_offices",
+        "total_rent_jpy_month",
+        "total_capacity",
+        "avg_trip_minutes",
+        "total_population",
+        "exceed_60_count",
+        "exceed_90_count",
+        "distribution",
+        "assignment",
+        "per_office",
+        "is_pareto_optimal",
+        "explain"
+      ],
+      "properties": {
+        "combination_id": { "type": "string" },
+        "selected_offices": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "num_offices": { "type": "integer", "minimum": 1 },
+        "total_rent_jpy_month": { "type": "integer", "minimum": 0 },
+        "total_commute_cost_jpy_month": { "type": ["number", "null"] },
+        "total_commute_cost_estimated": { "type": "boolean" },
+        "total_cost_jpy_month": { "type": ["number", "null"] },
+        "total_capacity": { "type": ["integer", "null"], "minimum": 0 },
+        "rent_per_capacity": { "type": ["number", "null"], "minimum": 0 },
+        "p95_trip_minutes": { "type": ["number", "null"], "minimum": 0 },
+        "avg_trip_minutes": { "type": "number", "minimum": 0 },
+        "total_population": { "type": "integer", "minimum": 0 },
+        "exceed_60_count": { "type": "integer", "minimum": 0 },
+        "exceed_90_count": { "type": "integer", "minimum": 0 },
+        "distribution": { "$ref": "#/$defs/Distribution" },
+        "assignment": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GroupAssignment" }
+        },
+        "per_office": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PerOffice" }
+        },
+        "is_pareto_optimal": { "type": "boolean" },
+        "explain": { "$ref": "#/$defs/Explain" },
+        "department_breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/DepartmentBreakdown" }
+        },
+        "conflict_alerts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConflictAlert" }
+        },
+        "unused_fixed_offices": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "vs_baseline": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object" }
+          ]
+        }
+      }
+    },
+
+    "Distribution": {
+      "type": "object",
+      "required": ["under_30", "30_to_60", "60_to_90", "over_90"],
+      "properties": {
+        "under_30":  { "type": "integer", "minimum": 0 },
+        "30_to_60":  { "type": "integer", "minimum": 0 },
+        "60_to_90":  { "type": "integer", "minimum": 0 },
+        "over_90":   { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "GroupAssignment": {
+      "type": "object",
+      "required": ["group", "assigned_office_id", "population"],
+      "properties": {
+        "group": { "type": "string" },
+        "assigned_office_id": { "type": "string" },
+        "population": { "type": "integer", "minimum": 0 },
+        "capacity_headroom": { "type": ["number", "null"] },
+        "capacity_estimated": { "type": "boolean" }
+      }
+    },
+
+    "PerOffice": {
+      "type": "object",
+      "required": [
+        "office_id",
+        "name",
+        "assigned_population",
+        "kpis",
+        "station_breakdown"
+      ],
+      "properties": {
+        "office_id": { "type": "string" },
+        "name": { "type": "string" },
+        "assigned_population": { "type": "integer", "minimum": 0 },
+        "capacity": { "type": ["integer", "null"], "minimum": 0 },
+        "capacity_headroom": { "type": ["number", "null"] },
+        "capacity_estimated": { "type": "boolean" },
+        "rent_jpy_month": { "type": ["integer", "null"], "minimum": 0 },
+        "floor_area_sqm": { "type": ["number", "null"], "minimum": 0 },
+        "kpis": { "$ref": "#/$defs/PerOfficeKpis" },
+        "station_breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/StationBreakdown" }
+        }
+      }
+    },
+
+    "PerOfficeKpis": {
+      "type": "object",
+      "required": [
+        "population",
+        "population_reachable",
+        "trip_minutes",
+        "round_trip_minutes",
+        "weekly_minutes",
+        "thresholds"
+      ],
+      "properties": {
+        "population": { "type": "integer", "minimum": 0 },
+        "population_reachable": { "type": "integer", "minimum": 0 },
+        "trip_minutes": { "$ref": "#/$defs/AvgP50P95" },
+        "round_trip_minutes": { "$ref": "#/$defs/AvgP50P95" },
+        "weekly_minutes": { "$ref": "#/$defs/AvgP50P95" },
+        "thresholds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ThresholdSummary" }
+        }
+      }
+    },
+
+    "AvgP50P95": {
+      "type": "object",
+      "required": ["avg", "p50", "p95"],
+      "properties": {
+        "avg": { "type": ["number", "null"], "minimum": 0 },
+        "p50": { "type": ["number", "null"], "minimum": 0 },
+        "p95": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+
+    "ThresholdSummary": {
+      "type": "object",
+      "required": ["trip_minutes", "exceed_count", "exceed_share"],
+      "properties": {
+        "trip_minutes": { "type": "number", "minimum": 0 },
+        "exceed_count": { "type": "integer", "minimum": 0 },
+        "exceed_share": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "StationBreakdown": {
+      "type": "object",
+      "required": ["station_id", "count", "reachable"],
+      "properties": {
+        "station_id": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 },
+        "reachable": { "type": "boolean" },
+        "trip_minutes": { "type": ["number", "null"], "minimum": 0 },
+        "threshold_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["trip_minutes", "exceeds"],
+            "properties": {
+              "trip_minutes": { "type": "number", "minimum": 0 },
+              "exceeds": { "type": "boolean" }
+            }
+          }
+        },
+        "delta_vs_baseline_trip_minutes": { "type": ["number", "null"] }
+      }
+    },
+
+    "Explain": {
+      "type": "object",
+      "properties": {
+        "commute": { "type": "object" },
+        "cost": { "type": "object" },
+        "capacity": { "type": "object" },
+        "vs_alternatives": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "assignment": { "type": "object" }
+      }
+    },
+
+    "DepartmentBreakdown": {
+      "type": "object",
+      "required": ["group"],
+      "properties": {
+        "group": { "type": "string" },
+        "population": { "type": "integer", "minimum": 0 },
+        "avg_trip_minutes": { "type": ["number", "null"], "minimum": 0 },
+        "p95_trip_minutes": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+
+    "ConflictAlert": {
+      "type": "object",
+      "required": ["type", "message", "severity"],
+      "properties": {
+        "type": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "error"]
+        }
+      }
+    },
+
+    "ConstraintsImpact": {
+      "type": "object",
+      "required": [
+        "total_combinations",
+        "after_capacity_filter",
+        "after_budget_filter",
+        "after_commute_filter",
+        "pareto_optimal"
+      ],
+      "properties": {
+        "total_combinations": { "type": "integer", "minimum": 0 },
+        "after_capacity_filter": { "type": "integer", "minimum": 0 },
+        "after_budget_filter": { "type": "integer", "minimum": 0 },
+        "after_commute_filter": { "type": "integer", "minimum": 0 },
+        "after_unused_filter": { "type": "integer", "minimum": 0 },
+        "pareto_optimal": { "type": "integer", "minimum": 0 },
+        "vs_previous_round": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "object" }
+          ]
+        }
+      }
+    },
+
+    "Robustness": {
+      "type": "object",
+      "required": ["combination_id", "rent_tolerance", "capacity_headroom"],
+      "properties": {
+        "combination_id": { "type": "string" },
+        "rent_tolerance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RentTolerance" }
+        },
+        "capacity_headroom": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "number" },
+            { "type": "object" },
+            { "type": "array" }
+          ]
+        }
+      }
+    },
+
+    "RentTolerance": {
+      "type": "object",
+      "required": ["office_id", "office_name", "current_rent"],
+      "properties": {
+        "office_id": { "type": "string" },
+        "office_name": { "type": "string" },
+        "current_rent": { "type": "number", "minimum": 0 },
+        "max_rent_before_drop": { "type": ["number", "null"] },
+        "tolerance_pct": { "type": ["number", "null"] }
+      }
+    },
+
+    "BaselineDiagnosis": {
+      "type": "object",
+      "description": "baseline 指定時のみ。構造はフロント実装と並行で固める。"
+    },
+
+    "Notice": {
+      "type": "object",
+      "required": ["level", "code", "message"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["info", "warning", "error"]
+        },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "action": { "type": ["string", "object", "null"] },
+        "actionability": { "type": "string" }
+      }
+    }
+  }
+}
