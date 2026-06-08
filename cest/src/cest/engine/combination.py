@@ -577,7 +577,7 @@ def _compute_rent_tolerance(
             })
         return tolerances
 
-    # 最も厳しい dominator: total_rent が最も��い案
+    # 最も厳しい dominator: total_rent が最も低い案
     # combo の total_rent がこの値を超えると、その案に3軸すべてで負ける
     min_dominator_rent = min(
         d.get("total_rent_jpy_month") or math.inf for d in potential_dominators
