@@ -282,7 +282,6 @@ API Gateway スロットリングに加え、Lambda 側にも Reserved Concurren
 ```
 web/
 ├── index.html
-├── demo_response.json
 └── station_master.json
 ```
 
