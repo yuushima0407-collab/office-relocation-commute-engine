@@ -231,6 +231,42 @@ class TestCapacityHeadroom:
         assert result["per_office"][0]["remaining"] is None
         assert result["bottleneck_remaining"] is None
 
+    def test_tight_estimated_capacity_warns(self):
+        """推定定員にほぼ達していたら tight_estimate と warnings が立つ。"""
+        combo = {
+            "per_office": [
+                {"office_id": "A", "name": "A社", "capacity": 100,
+                 "assigned_population": 95, "capacity_estimated": True},
+            ]
+        }
+        result = _compute_capacity_headroom(combo)
+        assert result["per_office"][0]["tight_estimate"] is True
+        assert len(result["warnings"]) == 1
+
+    def test_given_capacity_not_warned(self):
+        """定員が実数値（推定でない）なら、ギリギリでも警告しない。"""
+        combo = {
+            "per_office": [
+                {"office_id": "A", "name": "A社", "capacity": 100,
+                 "assigned_population": 95, "capacity_estimated": False},
+            ]
+        }
+        result = _compute_capacity_headroom(combo)
+        assert result["per_office"][0]["tight_estimate"] is False
+        assert result["warnings"] == []
+
+    def test_estimated_with_room_not_warned(self):
+        """推定定員でも余裕があれば警告しない。"""
+        combo = {
+            "per_office": [
+                {"office_id": "A", "name": "A社", "capacity": 100,
+                 "assigned_population": 50, "capacity_estimated": True},
+            ]
+        }
+        result = _compute_capacity_headroom(combo)
+        assert result["per_office"][0]["tight_estimate"] is False
+        assert result["warnings"] == []
+
 
 # ── 対立ポイント警告（conflict alerts）──────────────────────────────────────────
 

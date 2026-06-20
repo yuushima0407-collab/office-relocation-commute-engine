@@ -34,6 +34,9 @@ def _get_capacity(office: Dict[str, Any], sqm_per_person: float) -> Optional[int
 def _capacity_is_estimated(office: Dict[str, Any]) -> bool:
     return office.get("capacity_people") is None and office.get("floor_area_sqm") is not None
 
+def _index_offices(offices: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """オフィスのリストを office_id をキーにした辞書に変換する。"""
+    return {o["office_id"]: o for o in offices}
 
 # ── 組み合わせ列挙 ──────────────────────────────────────────────────────────
 
@@ -42,7 +45,7 @@ def enumerate_combinations(
     num_offices_list: List[int],
     fixed_offices: List[str],
 ) -> List[List[Dict[str, Any]]]:
-    office_by_id = {o["office_id"]: o for o in offices}
+    office_by_id = _index_offices(offices)
     fixed = [office_by_id[oid] for oid in fixed_offices if oid in office_by_id]
     remaining = [o for o in offices if o["office_id"] not in {o["office_id"] for o in fixed}]
 
@@ -62,7 +65,6 @@ def enumerate_combinations(
 # ── 部署配置最適化（group_together 対応）────────────────────────────────────
 
 def _resolve_super_groups(
-    home_stations: List[Dict[str, Any]],
     group_together: List[List[str]],
 ) -> Dict[str, str]:
     mapping: Dict[str, str] = {}
@@ -82,7 +84,7 @@ def build_group_assignment(
     fixed_assignment: List[Dict[str, str]],
     group_together: List[List[str]],
 ) -> Dict[str, str]:
-    office_by_id = {o["office_id"]: o for o in offices}
+    office_by_id = _index_offices(offices)
 
     fixed_map: Dict[str, str] = {}
     for item in fixed_assignment:
@@ -90,7 +92,7 @@ def build_group_assignment(
         if g and oid in office_by_id:
             fixed_map[g] = oid
 
-    super_group_map = _resolve_super_groups(home_stations, group_together)
+    super_group_map = _resolve_super_groups(group_together)
     all_groups = {_get_group(hs) for hs in home_stations}
 
     assignment: Dict[str, str] = {}
@@ -606,17 +608,36 @@ def _compute_rent_tolerance(
     return tolerances
 
 
+# 推定定員がこの割合以上埋まっていたら「推定定員ギリギリ」として警告する。
+# 定員が floor_area_sqm からの推定値の場合、実際の定員が下振れすると
+# 収容不能になりうるため、余裕があるうちに気づけるようにする。
+_CAPACITY_TIGHT_ESTIMATE_RATIO = 0.9
+
+
 def _compute_capacity_headroom(combo: Dict[str, Any]) -> Dict[str, Any]:
-    """オフィスごとの収容余裕とボトルネック検出。"""
+    """オフィスごとの収容余裕とボトルネック検出。
+
+    定員が推定値（capacity_estimated）かつ充足率が高いオフィスは、
+    推定が下振れすると収容不能になりうるため warnings で警告する。
+    """
     per_office_info = []
     total_remaining = 0
     bottleneck_office = None
     bottleneck_remaining = math.inf
+    capacity_warnings: List[str] = []
 
     for po in combo.get("per_office", []):
         cap = po.get("capacity")
         assigned = po.get("assigned_population", 0)
         remaining = (cap - assigned) if cap is not None else None
+
+        # 推定定員にほぼ達しているオフィスを検出（推定は下振れリスクがあるため）
+        tight_estimate = bool(
+            po.get("capacity_estimated")
+            and cap is not None and cap > 0
+            and remaining is not None and remaining >= 0
+            and assigned >= cap * _CAPACITY_TIGHT_ESTIMATE_RATIO
+        )
 
         per_office_info.append({
             "office_id": po["office_id"],
@@ -624,7 +645,14 @@ def _compute_capacity_headroom(combo: Dict[str, Any]) -> Dict[str, Any]:
             "capacity": cap,
             "assigned": assigned,
             "remaining": remaining,
+            "tight_estimate": tight_estimate,
         })
+
+        if tight_estimate:
+            capacity_warnings.append(
+                f"{po.get('name', po['office_id'])}: 推定定員{cap}人に対し{assigned}人配置"
+                f"（残り{remaining}人）。定員は推定値のため、余裕を見て再確認を推奨します。"
+            )
 
         if remaining is not None:
             total_remaining += remaining
@@ -637,6 +665,7 @@ def _compute_capacity_headroom(combo: Dict[str, Any]) -> Dict[str, Any]:
         "bottleneck_office": bottleneck_office,
         "bottleneck_remaining": bottleneck_remaining if bottleneck_remaining < math.inf else None,
         "per_office": per_office_info,
+        "warnings": capacity_warnings,
     }
 
 
