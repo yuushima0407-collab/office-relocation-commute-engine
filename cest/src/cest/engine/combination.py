@@ -1011,6 +1011,7 @@ def run_v3_pipeline(
 
     valid_after_capacity = 0
     valid_after_budget = 0
+    valid_after_min_capacity = 0
     valid_after_commute = 0
     evaluated: List[Dict[str, Any]] = []
 
@@ -1057,6 +1058,7 @@ def run_v3_pipeline(
                 total_cap = sum(caps)
                 if total_cap < min_total_capacity:
                     continue
+        valid_after_min_capacity += 1
 
         # KPI 計算
         result = evaluate_combo(
@@ -1142,6 +1144,7 @@ def run_v3_pipeline(
         "total_combinations": total_combinations,
         "after_capacity_filter": valid_after_capacity,
         "after_budget_filter": valid_after_budget,
+        "after_min_capacity_filter": valid_after_min_capacity,
         "after_commute_filter": valid_after_commute,
         "after_unused_filter": valid_after_unused,
         "pareto_optimal": len(pareto_frontier_ids),
