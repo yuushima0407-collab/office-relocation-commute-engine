@@ -135,6 +135,7 @@ def _build_empty_report(collector: NoticeCollector, department_mode: str = "all_
             "total_combinations": 0,
             "after_capacity_filter": 0,
             "after_budget_filter": 0,
+            "after_min_capacity_filter": 0,
             "after_commute_filter": 0,
             "pareto_optimal": 0,
             "vs_previous_round": None,
