@@ -4,6 +4,11 @@
 
 社員の居住駅分布と候補オフィス情報を入力すると、全組み合わせを列挙して制約フィルタを通し、トレードオフ上の最適案・ロバストネス分析・ベースライン比較を含む評価レポートを返す。
 
+<img width="1280" height="658" alt="image" src="https://github.com/user-attachments/assets/94e42435-9a4c-48f9-8633-4260bcbd1b08" />
+<img width="1273" height="657" alt="image" src="https://github.com/user-attachments/assets/dab003a2-a194-4e2c-800d-4b89cbd3ecba" />
+<img width="1278" height="664" alt="image" src="https://github.com/user-attachments/assets/502a8923-1a62-41c0-856c-00621015f208" />
+
+
 ## Quick Start
 
 ```bash
