@@ -90,8 +90,7 @@ Phase ごとに「何を選んだか・なぜ選んだか・どう実装した�
                   │  - 静的ファイルキャッシュ      │
                   └────────┬──────────┬─────────┘
                            │          │ /evaluate
-                           │ 静的      │ /parse-csv
-                           ▼          │ /ask     ← v0.4 追加
+                           │ 静的      │ /ask     ← v0.4 追加
                   ┌──────────────┐    │
                   │  S3 Bucket   │    ▼
                   │  (非公開・OAC)│    ┌──────────────────┐
@@ -295,7 +294,6 @@ cest/src/cest/      ← パッケージ全体
 - networkx
 - jsonschema
 - referencing
-- openpyxl  ← Excel対応
 - mangum    ← Lambda アダプタ
 （uvicorn は不要、boto3 は Lambda 標準搭載）
 ```

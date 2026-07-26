@@ -44,3 +44,7 @@ tools/
 # Local development scripts (smoke tests, ad-hoc tooling)
 cest/scripts/
 
+# Personal study notes (not project deliverables)
+cest/docs/study-notes.md
+cest/docs/architecture-overview.md
+
