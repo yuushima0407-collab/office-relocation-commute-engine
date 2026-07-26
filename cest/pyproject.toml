@@ -14,7 +14,6 @@ dependencies = [
   "referencing>=0.35.0",
   "networkx>=3.2",
   "mangum>=0.17.0",
-  "python-multipart>=0.0.20",
 ]
 
 [project.optional-dependencies]

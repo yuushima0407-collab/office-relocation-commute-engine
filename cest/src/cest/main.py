@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from cest.routes.evaluate import router as evaluate_router
-from cest.routes.parse_csv import router as parse_csv_router
 
 app = FastAPI(title="CEST API", version="v0.3.3")
 
@@ -23,7 +22,6 @@ def health():
 
 
 app.include_router(evaluate_router)
-app.include_router(parse_csv_router)
 
 
 # Lambda (AWS) で実行されるときは Mangum 経由で ASGI を ALB/API Gateway に橋渡しする。
