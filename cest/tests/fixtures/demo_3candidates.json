@@ -39,16 +39,9 @@
       "office_days_per_week": 3
     },
     "settings": {
-      "baseline_office_id": "shinagawa",
       "thresholds_trip_minutes": [60, 90],
-      "percentiles": [50, 95],
-      "ranking_weights": {"access": 0.6, "financial": 0.3, "environmental": 0.1},
-      "bench_trip_p95_minutes": 90,
-      "bench_rent_jpy_month": 10000000,
-      "robust_flip_rate_threshold": 0.10,
       "routing": {
-        "graph_id": "tokyo_core_v1",
-        "transfer_penalty_minutes": 0
+        "graph_id": "tokyo_core_v1"
       }
     }
   }

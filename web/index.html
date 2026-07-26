@@ -250,12 +250,12 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .conflict-alert.warning{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
 
 /* Robustness */
-.robustness-section{margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:12px}
-.robustness-title{font-size:12px;font-weight:700;color:#15803d;margin-bottom:8px}
-.robustness-item{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;font-size:12px;color:#374151}
-.robustness-item:last-child{margin-bottom:0}
-.robustness-ok{color:#16a34a;font-size:13px}
-.robustness-warn{color:var(--yellow);font-size:13px}
+.capacity-note-section{margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:12px}
+.capacity-note-title{font-size:12px;font-weight:700;color:#15803d;margin-bottom:8px}
+.capacity-note-item{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px;font-size:12px;color:#374151}
+.capacity-note-item:last-child{margin-bottom:0}
+.capacity-note-ok{color:#16a34a;font-size:13px}
+.capacity-note-warn{color:var(--yellow);font-size:13px}
 
 /* Baseline diagnosis */
 .baseline-section{padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;margin-bottom:12px}
@@ -349,7 +349,7 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
           ondragover="handleDragOver(event,'emp-zone')"
           ondragleave="handleDragLeave(event,'emp-zone')"
           ondrop="handleEmpDrop(event)">
-          <input type="file" id="emp-file" accept=".csv,.tsv,.xlsx" onchange="handleEmpSelect(event)">
+          <input type="file" id="emp-file" accept=".csv,.tsv" onchange="handleEmpSelect(event)">
           <div style="font-size:20px;margin-bottom:4px">📂</div>
           <div style="font-weight:600">CSVをドロップ / 選択</div>
           <div style="font-size:11px;margin-top:2px">CSV・TSV・Excel (.xlsx) 対応</div>
@@ -810,21 +810,7 @@ function handleEmpDrop(e) {
 }
 function handleEmpSelect(e) { const f = e.target.files[0]; if (f) processEmpFile(f); }
 
-async function processEmpFile(file) {
-  const isXlsx = file.name.endsWith('.xlsx');
-  if (isXlsx && state.isApiConnected) {
-    // Use API for Excel
-    const fd = new FormData(); fd.append('file', file);
-    try {
-      const res = await fetch(`${API_BASE}/parse-csv/upload`, {method:'POST', body:fd});
-      if (!res.ok) throw new Error(await res.text());
-      const json = await res.json();
-      finishEmpLoad(json.home_station_distribution, json.unresolved_stations || [], file.name);
-    } catch(err) {
-      updateEmpStatus('エラー: ' + err.message, 'err');
-    }
-    return;
-  }
+function processEmpFile(file) {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
@@ -987,6 +973,7 @@ function processOfficeCsv(file) {
       const ri = findCol('rent_jpy_month','rent','賃料','家賃','月額賃料','月額家賃');
       const ci = findCol('capacity','capacity_people','収容','収容人数','定員','人数');
       if (ni < 0) throw new Error('オフィス名列が見つかりません');
+      if (si < 0) throw new Error('最寄駅列が見つかりません (nearest_station_id, 最寄駅 など)');
 
       // C-2: value normalizers
       const parseRent = v => {
@@ -1699,26 +1686,21 @@ function renderDetailInner(c,isPareto,names,deptMode){
     </div>
   `:'';
 
-  let robustnessHtml='';
+  let capacityNoteHtml='';
   if(isPareto){
-    const robEntry=(state.data.robustness||[]).find(r=>r.combination_id===c.combination_id);
-    if(robEntry){
+    const capEntry=(state.data.capacity_headroom||[]).find(r=>r.combination_id===c.combination_id);
+    if(capEntry){
       const items=[];
-      (robEntry.rent_tolerance||[]).forEach(rt=>{
-        if(rt.tolerance_pct==null) items.push({icon:'✅',cls:'robustness-ok',text:`${escHtml(rt.office_name)}は上限なし`});
-        else if(rt.tolerance_pct>=20) items.push({icon:'✅',cls:'robustness-ok',text:`${escHtml(rt.office_name)}は${rt.tolerance_pct.toFixed(0)}%値上がりしても有利`});
-        else items.push({icon:'⚠',cls:'robustness-warn',text:`${escHtml(rt.office_name)}は${rt.tolerance_pct.toFixed(0)}%の値上がりで逆転`});
-      });
-      const ch=robEntry.capacity_headroom;
+      const ch=capEntry.capacity_headroom;
       if(ch){
-        if(ch.total_remaining>0) items.push({icon:'✅',cls:'robustness-ok',text:`全体であと${ch.total_remaining}人収容可`});
-        if(ch.bottleneck_office&&ch.bottleneck_remaining!=null&&ch.bottleneck_remaining<=10) items.push({icon:'⚠',cls:'robustness-warn',text:`${escHtml(ch.bottleneck_office)}はあと${ch.bottleneck_remaining}人で満員`});
+        if(ch.total_remaining>0) items.push({icon:'✅',cls:'capacity-note-ok',text:`全体であと${ch.total_remaining}人収容可`});
+        if(ch.bottleneck_office&&ch.bottleneck_remaining!=null&&ch.bottleneck_remaining<=10) items.push({icon:'⚠',cls:'capacity-note-warn',text:`${escHtml(ch.bottleneck_office)}はあと${ch.bottleneck_remaining}人で満員`});
       }
       if(items.length>0){
-        robustnessHtml=`
-          <div class="robustness-section">
-            <div class="robustness-title">この案の注意点</div>
-            ${items.map(it=>`<div class="robustness-item"><span class="${it.cls}">${it.icon}</span><span>${it.text}</span></div>`).join('')}
+        capacityNoteHtml=`
+          <div class="capacity-note-section">
+            <div class="capacity-note-title">この案の注意点</div>
+            ${items.map(it=>`<div class="capacity-note-item"><span class="${it.cls}">${it.icon}</span><span>${it.text}</span></div>`).join('')}
           </div>
         `;
       }
@@ -1772,7 +1754,7 @@ function renderDetailInner(c,isPareto,names,deptMode){
     <div class="office-chips-row">${chips}</div>
     <div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">収容余裕</div>
     <div>${capRows}</div>
-    ${robustnessHtml}
+    ${capacityNoteHtml}
     ${explain?`<div class="explain-block"><div class="hl">${escHtml(explain.headline)}</div><div class="det">${escHtml(explain.detail||'')}</div></div>`:''}
   `;
 }
@@ -1891,16 +1873,42 @@ function renderMap(combo){
   const bounds=[];
 
   // 通勤圏の人員円（背面に描画）
+  // 同じ駅から複数オフィスに人が分かれることがあるので、駅ごとに集約してから描く。
+  // 円の大きさ＝その駅の合計人数、内側の色の割合＝通勤時間帯（緑/青/黄/赤）の内訳。
+  const BAND_COLORS={green:'#22c55e',blue:'#3b82f6',amber:'#f59e0b',red:'#ef4444'};
+  const bandOf=min=>min<30?'green':min<60?'blue':min<90?'amber':'red';
+  const stationAgg={};
   (combo.per_office||[]).forEach(office=>{
     (office.station_breakdown||[]).forEach(sb=>{
       if(!sb.reachable) return;
       const st=stationMaster[sb.station_id]; if(!st) return;
-      const color=sb.trip_minutes<30?'#22c55e':sb.trip_minutes<60?'#3b82f6':sb.trip_minutes<90?'#f59e0b':'#ef4444';
-      const radius=Math.max(6,Math.sqrt(sb.count)*2.5);
-      L.circleMarker([st.lat,st.lon],{radius,color:'#fff',weight:1,fillColor:color,fillOpacity:.65}).addTo(leafletMap)
-        .bindPopup(`<strong>${escHtml(st.name)}駅</strong><br>通勤：<b>${sb.trip_minutes}分</b><br>社員：${sb.count}人`);
-      bounds.push([st.lat,st.lon]);
+      const agg=stationAgg[sb.station_id]||(stationAgg[sb.station_id]={lat:st.lat,lon:st.lon,name:st.name,total:0,bands:{green:0,blue:0,amber:0,red:0},detail:[]});
+      agg.bands[bandOf(sb.trip_minutes)]+=sb.count;
+      agg.total+=sb.count;
+      agg.detail.push(`${escHtml(office.name)}：${sb.trip_minutes}分（${sb.count}人）`);
     });
+  });
+  Object.values(stationAgg).forEach(agg=>{
+    const radius=Math.max(6,Math.sqrt(agg.total)*2.5);
+    const diameter=radius*2;
+    let acc=0;
+    const stops=['green','blue','amber','red']
+      .filter(band=>agg.bands[band]>0)
+      .map(band=>{
+        const from=acc/agg.total*100;
+        acc+=agg.bands[band];
+        return `${BAND_COLORS[band]} ${from}% ${acc/agg.total*100}%`;
+      });
+    const bg=stops.length>0?`conic-gradient(${stops.join(',')})`:'#9ca3af';
+    const icon=L.divIcon({
+      className:'',
+      html:`<div style="width:${diameter}px;height:${diameter}px;border-radius:50%;border:1px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);background:${bg}"></div>`,
+      iconSize:[diameter,diameter],
+      iconAnchor:[radius,radius],
+    });
+    L.marker([agg.lat,agg.lon],{icon}).addTo(leafletMap)
+      .bindPopup(`<strong>${escHtml(agg.name)}駅</strong><br>合計：${agg.total}人<br>${agg.detail.join('<br>')}`);
+    bounds.push([agg.lat,agg.lon]);
   });
 
   // I: 未採用の候補オフィス（破線グレー円）

@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import networkx as nx
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
 _GRAPH_CACHE: Dict[str, nx.Graph] = {}
 _STATION_MASTER_CACHE: Dict[str, Dict[str, Any]] | None = None

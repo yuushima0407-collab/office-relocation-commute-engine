@@ -1,18 +1,14 @@
 """
 Test: ロジック検証
 
-パレート判定、注意点分析（robustness）、対立ポイント警告の
+パレート判定、収容余裕分析、対立ポイント警告の
 計算ロジックが正しいことを、手作りデータで検証する。
 """
 import math
 
-from cest.engine.combination import (
-    _is_pareto_dominated,
-    mark_pareto_frontier,
-    _compute_rent_tolerance,
-    _compute_capacity_headroom,
-    _compute_conflict_alerts,
-)
+from cest.engine.combo.pareto import _is_pareto_dominated, mark_pareto_frontier
+from cest.engine.combo.capacity import _compute_capacity_headroom
+from cest.engine.combo.department import _compute_conflict_alerts
 
 
 # ── ヘルパ: テスト用のコンボを簡単に作る ──────────────────────────────────────
@@ -112,79 +108,6 @@ class TestParetoDominance:
             c["num_offices"] = 1
         pareto_ids = mark_pareto_frontier(combos)
         assert len(pareto_ids) == 3
-
-
-# ── 賃料耐性（rent tolerance）──────────────────────────────────────────────────
-
-class TestRentTolerance:
-    """賃料がいくら上がるとパレートから脱落するかの計算。"""
-
-    def test_no_dominator_means_unlimited(self):
-        """avg と capacity で勝てる案がなければ tolerance_pct は None（上限なし）。"""
-        combo = _make_combo(rent=300, avg=30, capacity=100, combo_id="test")
-        combo["per_office"] = [
-            {"office_id": "A", "name": "A社", "rent_jpy_month": 300},
-        ]
-        # 他の案は avg で combo に勝てない
-        other = _make_combo(rent=200, avg=50, capacity=120)
-        result = _compute_rent_tolerance(combo, [combo], [other])
-
-        assert len(result) == 1
-        assert result[0]["tolerance_pct"] is None
-        assert result[0]["max_rent_before_drop"] is None
-
-    def test_dominator_exists(self):
-        """支配しうる案がある場合、正しい tolerance_pct を計算する。"""
-        # combo: rent=300, avg=50, cap=100
-        # dominator: rent=400, avg=40, cap=120 (avg ≤ 50 かつ cap ≥ 100 → 支配しうる)
-        # combo の rent が 400 を超えたら脱落
-        # headroom = 400 - 300 = 100
-        combo = _make_combo(rent=300, avg=50, capacity=100, combo_id="test")
-        combo["per_office"] = [
-            {"office_id": "X", "name": "Xオフィス", "rent_jpy_month": 300},
-        ]
-        dominator = _make_combo(rent=400, avg=40, capacity=120)
-        result = _compute_rent_tolerance(combo, [combo], [dominator])
-
-        assert len(result) == 1
-        assert result[0]["max_rent_before_drop"] == 400  # 300 + 100
-        # tolerance_pct = (100 / 300) * 100 = 33.3%
-        assert result[0]["tolerance_pct"] == 33.3
-
-    def test_multiple_dominators_picks_strictest(self):
-        """複数の支配候補がある場合、最も厳しい（rent が最も低い）ものを使う。"""
-        combo = _make_combo(rent=300, avg=50, capacity=100, combo_id="test")
-        combo["per_office"] = [
-            {"office_id": "X", "name": "Xオフィス", "rent_jpy_month": 300},
-        ]
-        # dominator1: rent=400 → headroom 100
-        # dominator2: rent=350 → headroom 50（こっちが厳しい）
-        d1 = _make_combo(rent=400, avg=40, capacity=120)
-        d2 = _make_combo(rent=350, avg=45, capacity=110)
-        result = _compute_rent_tolerance(combo, [combo], [d1, d2])
-
-        assert result[0]["max_rent_before_drop"] == 350
-        # tolerance_pct = (50 / 300) * 100 = 16.7%
-        assert result[0]["tolerance_pct"] == 16.7
-
-    def test_multi_office_combo(self):
-        """複数オフィスの案で、各オフィスに同じ headroom が配分される。"""
-        combo = _make_combo(rent=500, avg=50, capacity=100, combo_id="test")
-        combo["per_office"] = [
-            {"office_id": "A", "name": "A社", "rent_jpy_month": 300},
-            {"office_id": "B", "name": "B社", "rent_jpy_month": 200},
-        ]
-        # dominator: rent=600 → headroom = 600 - 500 = 100
-        dominator = _make_combo(rent=600, avg=40, capacity=120)
-        result = _compute_rent_tolerance(combo, [combo], [dominator])
-
-        assert len(result) == 2
-        # A: max = 300 + 100 = 400, pct = (100/300)*100 = 33.3
-        assert result[0]["max_rent_before_drop"] == 400
-        assert result[0]["tolerance_pct"] == 33.3
-        # B: max = 200 + 100 = 300, pct = (100/200)*100 = 50.0
-        assert result[1]["max_rent_before_drop"] == 300
-        assert result[1]["tolerance_pct"] == 50.0
 
 
 # ── 収容余裕（capacity headroom）──────────────────────────────────────────────

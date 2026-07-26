@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional
 
 import networkx as nx
 
-from cest.engine.graph_loader import load_graph, load_station_master, load_station_hazard
-from cest.engine.notices import NoticeCollector
+from cest.engine.support.graph_loader import load_graph, load_station_master, load_station_hazard
+from cest.engine.support.notices import NoticeCollector
 from cest.engine.combination import run_v3_pipeline
 
 
@@ -34,7 +34,6 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     policy_days = policy["office_days_per_week"]
     routing_cfg = settings.get("routing", {})
     graph_id = routing_cfg.get("graph_id", "tokyo_core_v1")
-    transfer_penalty = routing_cfg.get("transfer_penalty_minutes", 0)
 
     department_mode = _detect_department_mode(home_stations)
     if department_mode == "mixed":
@@ -42,9 +41,6 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
             hs.get("count", 1) for hs in home_stations if not hs.get("group")
         )
         collector.department_partially_missing(missing_people)
-
-    if transfer_penalty != 0:
-        collector.transfer_penalty_unsupported(transfer_penalty)
 
     # グラフ読み込み
     try:
@@ -118,7 +114,7 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
         "all_combinations": all_combos,
         "pareto_frontier_ids": result["pareto_frontier_ids"],
         "constraints_impact": result["constraints_impact"],
-        "robustness": result["robustness"],
+        "capacity_headroom": result["capacity_headroom"],
         "baseline_diagnosis": result.get("baseline_diagnosis"),
         "notices": collector.notices,
     }
@@ -140,7 +136,7 @@ def _build_empty_report(collector: NoticeCollector, department_mode: str = "all_
             "pareto_optimal": 0,
             "vs_previous_round": None,
         },
-        "robustness": [],
+        "capacity_headroom": [],
         "baseline_diagnosis": None,
         "notices": collector.notices,
     }
