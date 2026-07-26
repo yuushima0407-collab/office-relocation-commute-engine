@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 
-from cest.engine.routing import calc_trip_minutes
+from cest.engine.combo.common import _get_group
+from cest.engine.support.routing import calc_trip_minutes
 
 
 def _weighted_stats(
@@ -63,6 +64,7 @@ def compute_kpis_for_scenario(
     station_breakdown: List[Dict[str, Any]] = []
     unreachable_stations: List[Dict[str, Any]] = []
     trip_values: List[Tuple[float, int]] = []
+    weekly_values: List[Tuple[float, int]] = []
 
     population_total = 0
     population_reachable = 0
@@ -81,10 +83,12 @@ def compute_kpis_for_scenario(
 
         trip = calc_trip_minutes(G, sid, office_station, last_mile)
         reachable = trip is not None
+        days = override if override is not None else policy_days
 
         if reachable:
             population_reachable += count
             trip_values.append((trip, count))
+            weekly_values.append((trip * 2 * days, count))
 
         # threshold_results
         threshold_results = []
@@ -101,11 +105,13 @@ def compute_kpis_for_scenario(
 
         sb_entry: Dict[str, Any] = {
             "station_id": sid,
+            "group": _get_group(hs),
             "count": count,
             "reachable": reachable,
             "trip_minutes": round(trip, 3) if reachable else None,
             "threshold_results": threshold_results,
             "delta_vs_baseline_trip_minutes": delta,
+            "commute_allowance_jpy_month": hs.get("commute_allowance_jpy_month"),
         }
         station_breakdown.append(sb_entry)
 
@@ -113,7 +119,6 @@ def compute_kpis_for_scenario(
             unreachable_stations.append({"station_id": sid, "count": count})
 
         # policy applied days for this station
-        days = override if override is not None else policy_days
         applied_days_sum += days * count
 
     # policy_applied
@@ -128,16 +133,6 @@ def compute_kpis_for_scenario(
     rt_stats = _weighted_stats(rt_values)
 
     # weekly (round_trip * applied_days per station)
-    weekly_values: List[Tuple[float, int]] = []
-    for hs in home_stations:
-        sid = hs["station_id"]
-        count = hs["count"]
-        override = hs.get("office_days_per_week_override")
-        days = override if override is not None else policy_days
-        trip = calc_trip_minutes(G, sid, office_station, last_mile)
-        if trip is not None:
-            weekly = trip * 2 * days
-            weekly_values.append((weekly, count))
     weekly_stats = _weighted_stats(weekly_values)
 
     # thresholds aggregate
