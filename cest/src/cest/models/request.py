@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -38,7 +38,6 @@ class PolicyAsIs(BaseModel):
 class RoutingSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     graph_id: Optional[str] = "tokyo_core_v1"
-    transfer_penalty_minutes: float = Field(0, ge=0, le=60)
 
 
 class FixedAssignmentItem(BaseModel):
@@ -81,7 +80,6 @@ class Settings(BaseModel):
     min_total_capacity: Optional[int] = Field(default=None, ge=1)
     # 通勤閾値（KPI集計用）
     thresholds_trip_minutes: List[float] = Field(default=[60, 90])
-    percentiles: List[int] = Field(default=[50, 95])
     routing: RoutingSettings = Field(default_factory=RoutingSettings)
     # 通勤費負担ポリシー
     # "full": 全額会社負担（デフォルト）
@@ -91,12 +89,6 @@ class Settings(BaseModel):
     commute_cost_cap_jpy_month: Optional[int] = Field(None, ge=0)
     # v0.3.2: Before/After比較用の現オフィス
     baseline: Optional[BaselineOffice] = None
-    # 後方互換フィールド（v0.1.x/v0.2）
-    baseline_office_id: Optional[str] = None
-    ranking_weights: Optional[Dict[str, float]] = None
-    bench_trip_p95_minutes: float = Field(90, ge=1)
-    bench_rent_jpy_month: float = Field(10_000_000, ge=1)
-    robust_flip_rate_threshold: float = Field(0.10, ge=0, le=1)
 
 
 class EvaluateInput(BaseModel):

@@ -11,7 +11,7 @@
     "all_combinations",
     "pareto_frontier_ids",
     "constraints_impact",
-    "robustness",
+    "capacity_headroom",
     "baseline_diagnosis",
     "notices"
   ],
@@ -31,9 +31,9 @@
       "items": { "type": "string" }
     },
     "constraints_impact": { "$ref": "#/$defs/ConstraintsImpact" },
-    "robustness": {
+    "capacity_headroom": {
       "type": "array",
-      "items": { "$ref": "#/$defs/Robustness" }
+      "items": { "$ref": "#/$defs/CapacityHeadroomEntry" }
     },
     "baseline_diagnosis": {
       "oneOf": [
@@ -133,6 +133,7 @@
       "properties": {
         "group": { "type": "string" },
         "assigned_office_id": { "type": "string" },
+        "assigned_office_name": { "type": "string" },
         "population": { "type": "integer", "minimum": 0 },
         "capacity_headroom": { "type": ["number", "null"] },
         "capacity_estimated": { "type": "boolean" }
@@ -213,6 +214,7 @@
       "required": ["station_id", "count", "reachable"],
       "properties": {
         "station_id": { "type": "string" },
+        "group": { "type": "string" },
         "count": { "type": "integer", "minimum": 0 },
         "reachable": { "type": "boolean" },
         "trip_minutes": { "type": ["number", "null"], "minimum": 0 },
@@ -227,7 +229,8 @@
             }
           }
         },
-        "delta_vs_baseline_trip_minutes": { "type": ["number", "null"] }
+        "delta_vs_baseline_trip_minutes": { "type": ["number", "null"] },
+        "commute_allowance_jpy_month": { "type": ["integer", "null"], "minimum": 0 }
       }
     },
 
@@ -294,15 +297,11 @@
       }
     },
 
-    "Robustness": {
+    "CapacityHeadroomEntry": {
       "type": "object",
-      "required": ["combination_id", "rent_tolerance", "capacity_headroom"],
+      "required": ["combination_id", "capacity_headroom"],
       "properties": {
         "combination_id": { "type": "string" },
-        "rent_tolerance": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/RentTolerance" }
-        },
         "capacity_headroom": {
           "oneOf": [
             { "type": "null" },
@@ -311,18 +310,6 @@
             { "type": "array" }
           ]
         }
-      }
-    },
-
-    "RentTolerance": {
-      "type": "object",
-      "required": ["office_id", "office_name", "current_rent"],
-      "properties": {
-        "office_id": { "type": "string" },
-        "office_name": { "type": "string" },
-        "current_rent": { "type": "number", "minimum": 0 },
-        "max_rent_before_drop": { "type": ["number", "null"] },
-        "tolerance_pct": { "type": ["number", "null"] }
       }
     },
 

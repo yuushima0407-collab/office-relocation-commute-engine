@@ -32,7 +32,7 @@ def test_same_input_same_output():
 
     assert result_1["all_combinations"] == result_2["all_combinations"]
     assert result_1["pareto_frontier_ids"] == result_2["pareto_frontier_ids"]
-    assert result_1["robustness"] == result_2["robustness"]
+    assert result_1["capacity_headroom"] == result_2["capacity_headroom"]
     assert result_1["constraints_impact"] == result_2["constraints_impact"]
 
 
