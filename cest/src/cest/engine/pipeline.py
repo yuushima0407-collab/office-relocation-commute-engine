@@ -113,7 +113,6 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if department_mode == "all_absent":
         for combo in all_combos:
             combo.pop("department_breakdown", None)
-            combo.pop("conflict_alerts", None)
             if "explain" in combo and isinstance(combo["explain"], dict):
                 combo["explain"].pop("assignment", None)
         bd = result.get("baseline_diagnosis")

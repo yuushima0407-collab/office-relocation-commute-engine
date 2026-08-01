@@ -17,7 +17,6 @@ from cest.engine.combo.common import (
 )
 from cest.engine.combo.department import (
     _build_assignment_summary,
-    _compute_conflict_alerts,
     _compute_department_breakdown,
 )
 from cest.engine.support.kpi import compute_kpis_for_scenario
@@ -125,7 +124,6 @@ def evaluate_combo(
     dept_breakdown = _compute_department_breakdown(
         per_office, policy_days, commute_cost_policy, commute_cost_cap_jpy_month,
     )
-    conflict_alerts = _compute_conflict_alerts(dept_breakdown)
 
     return {
         "selected_offices": [o["office_id"] for o in offices],
@@ -151,5 +149,4 @@ def evaluate_combo(
         "assignment": _build_assignment_summary(per_office),
         "per_office": per_office,
         "department_breakdown": dept_breakdown,
-        "conflict_alerts": conflict_alerts,
     }

@@ -1,14 +1,13 @@
 """
 Test: ロジック検証
 
-パレート判定、収容余裕分析、対立ポイント警告の
+パレート判定、収容余裕分析の
 計算ロジックが正しいことを、手作りデータで検証する。
 """
 import math
 
 from cest.engine.combo.pareto import _is_pareto_dominated, mark_pareto_frontier
 from cest.engine.combo.capacity import _compute_capacity_headroom
-from cest.engine.combo.department import _compute_conflict_alerts
 
 
 # ── ヘルパ: テスト用のコンボを簡単に作る ──────────────────────────────────────
@@ -189,59 +188,3 @@ class TestCapacityHeadroom:
         result = _compute_capacity_headroom(combo)
         assert result["per_office"][0]["tight_estimate"] is False
         assert result["warnings"] == []
-
-
-# ── 対立ポイント警告（conflict alerts）──────────────────────────────────────────
-
-class TestConflictAlerts:
-    """部署間の平均通勤格差が閾値を超えたら警告を出す（v0.3.3 で p95 から avg に変更）。"""
-
-    def test_gap_over_threshold(self):
-        """avg の差が 15 分以上なら警告。"""
-        breakdown = [
-            {"group": "営業部", "avg_trip_minutes": 68},
-            {"group": "経理部", "avg_trip_minutes": 45},
-        ]
-        alerts = _compute_conflict_alerts(breakdown)
-        assert len(alerts) == 1
-        assert alerts[0]["severity"] == "warning"
-        assert "23分" in alerts[0]["message"]
-
-    def test_gap_under_threshold(self):
-        """avg の差が 15 分未満なら警告なし。"""
-        breakdown = [
-            {"group": "営業部", "avg_trip_minutes": 50},
-            {"group": "経理部", "avg_trip_minutes": 45},
-        ]
-        alerts = _compute_conflict_alerts(breakdown)
-        assert len(alerts) == 0
-
-    def test_exactly_15_minutes(self):
-        """ちょうど 15 分の差は警告（>= 15）。"""
-        breakdown = [
-            {"group": "営業部", "avg_trip_minutes": 60},
-            {"group": "経理部", "avg_trip_minutes": 45},
-        ]
-        alerts = _compute_conflict_alerts(breakdown)
-        assert len(alerts) == 1
-
-    def test_three_departments_multiple_alerts(self):
-        """3部署で複数ペアが閾値を超えたら複数の警告。"""
-        breakdown = [
-            {"group": "営業部", "avg_trip_minutes": 70},
-            {"group": "経理部", "avg_trip_minutes": 40},
-            {"group": "開発部", "avg_trip_minutes": 50},
-        ]
-        alerts = _compute_conflict_alerts(breakdown)
-        # 営業-経理: 30分差 → 警告
-        # 営業-開発: 20分差 → 警告
-        # 経理-開発: 10分差 → なし
-        assert len(alerts) == 2
-
-    def test_single_department_no_alert(self):
-        """1部署だけなら比較対象がないので警告なし。"""
-        breakdown = [
-            {"group": "営業部", "avg_trip_minutes": 70},
-        ]
-        alerts = _compute_conflict_alerts(breakdown)
-        assert len(alerts) == 0

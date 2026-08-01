@@ -101,10 +101,6 @@
           "type": "array",
           "items": { "$ref": "#/$defs/DepartmentBreakdown" }
         },
-        "conflict_alerts": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/ConflictAlert" }
-        },
         "unused_fixed_offices": {
           "type": "array",
           "items": { "type": "string" }
@@ -258,19 +254,6 @@
         "population": { "type": "integer", "minimum": 0 },
         "avg_trip_minutes": { "type": ["number", "null"], "minimum": 0 },
         "p95_trip_minutes": { "type": ["number", "null"], "minimum": 0 }
-      }
-    },
-
-    "ConflictAlert": {
-      "type": "object",
-      "required": ["type", "message", "severity"],
-      "properties": {
-        "type": { "type": "string" },
-        "message": { "type": "string" },
-        "severity": {
-          "type": "string",
-          "enum": ["info", "warning", "error"]
-        }
       }
     },
 
