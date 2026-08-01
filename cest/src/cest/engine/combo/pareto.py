@@ -53,3 +53,41 @@ def mark_pareto_frontier(
     pareto_ids = [c["combination_id"] for c in pareto_combos]
 
     return pareto_ids
+
+
+def exclude_wasteful_from_pareto(
+    evaluated: List[Dict[str, Any]],
+    fixed_offices: List[str],
+) -> List[Dict[str, Any]]:
+    """使われないオフィス（assigned_population=0）を含む案は、選択肢として残すが
+    パレート判定からは除外する（無駄金フィルタ）。
+    ただし、ユーザーが「固定」で指定したオフィスは未使用でも除外対象外にする
+    （固定はユーザーの意思決定なので、たとえ無駄に見えてもパレート対象に残す）。
+
+    パレート判定対象の案（無駄な拠点を含まないもの）を返す。各comboには
+    `_has_unused_office` フラグが立てられ、`finalize_pareto_flags` で後片付けされる。
+    """
+    fixed_oids_set = set(fixed_offices)
+    for combo in evaluated:
+        unused_non_fixed = [
+            po["office_id"] for po in combo.get("per_office", [])
+            if (po.get("assigned_population") or 0) == 0
+            and po["office_id"] not in fixed_oids_set
+        ]
+        unused_fixed = [
+            po["office_id"] for po in combo.get("per_office", [])
+            if (po.get("assigned_population") or 0) == 0
+            and po["office_id"] in fixed_oids_set
+        ]
+        combo["_has_unused_office"] = bool(unused_non_fixed)
+        if unused_fixed:
+            combo["unused_fixed_offices"] = unused_fixed
+    return [c for c in evaluated if not c["_has_unused_office"]]
+
+
+def finalize_pareto_flags(evaluated: List[Dict[str, Any]]) -> None:
+    """無駄な拠点を含む案は is_pareto_optimal=False に固定し、内部フラグを片付ける。"""
+    for combo in evaluated:
+        if combo["_has_unused_office"]:
+            combo["is_pareto_optimal"] = False
+        combo.pop("_has_unused_office", None)

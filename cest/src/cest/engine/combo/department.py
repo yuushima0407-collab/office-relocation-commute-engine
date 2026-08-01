@@ -1,4 +1,4 @@
-"""部署別影響（部署ごとの通勤統計・部署間の対立ポイント・配置サマリ）。
+"""部署別影響（部署ごとの通勤統計・配置サマリ）。
 
 全体の流れは combination.py の run_v3_pipeline を参照。
 """
@@ -7,8 +7,6 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 from cest.engine.combo.common import _monthly_commute_cost, _weighted_p95
-
-_CONFLICT_GAP_THRESHOLD_MINUTES = 15
 
 
 def _compute_department_breakdown(
@@ -55,29 +53,6 @@ def _compute_department_breakdown(
         })
 
     return breakdown
-
-
-def _compute_conflict_alerts(
-    dept_breakdown: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """部署間の平均通勤格差が大きいペアを検出する。"""
-    alerts: List[Dict[str, Any]] = []
-    if len(dept_breakdown) < 2:
-        return alerts
-
-    for i, a in enumerate(dept_breakdown):
-        for b in dept_breakdown[i + 1:]:
-            gap = abs(a["avg_trip_minutes"] - b["avg_trip_minutes"])
-            if gap >= _CONFLICT_GAP_THRESHOLD_MINUTES:
-                worse = a if a["avg_trip_minutes"] > b["avg_trip_minutes"] else b
-                better = b if worse is a else a
-                alerts.append({
-                    "type": "department_gap",
-                    "message": f"{worse['group']}(平均{worse['avg_trip_minutes']:.0f}分)と{better['group']}(平均{better['avg_trip_minutes']:.0f}分)で{gap:.0f}分の格差があります",
-                    "severity": "warning",
-                })
-
-    return alerts
 
 
 def _build_assignment_summary(per_office: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

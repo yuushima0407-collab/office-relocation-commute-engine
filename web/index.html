@@ -29,13 +29,6 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .api .status-dot{background:#4ade80}.demo .status-dot{background:#fbbf24}
 .error .status-dot{background:#f87171}.loading .status-dot{background:rgba(255,255,255,.4)}
 
-/* Sample bar */
-.sample-bar{background:#fff;border-bottom:1px solid var(--gray-bd);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
-.sample-label{font-size:12px;color:var(--gray);font-weight:600;white-space:nowrap}
-.sample-btn{padding:5px 14px;border:1.5px solid var(--blue);border-radius:16px;background:#fff;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
-.sample-btn:hover{background:var(--blue);color:#fff}
-.sample-btn:disabled{opacity:.5;cursor:default}
-
 /* App layout */
 .app-layout{display:flex;flex:1;overflow:hidden}
 
@@ -140,6 +133,7 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .notice{display:flex;gap:8px;padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:8px}
 .notice.warning{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
 .notice.info{background:var(--blue-lt);border:1px solid #bfdbfe;color:#1e40af}
+.notice.error{background:#fee2e2;border:1px solid #fecaca;color:#991b1b}
 
 /* Scatter */
 .scatter-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -178,8 +172,7 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .badge-mini.est{background:#fef3c7;color:#92400e}
 
 /* Combo content */
-.combo-content-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-@media(max-width:740px){.combo-content-grid{grid-template-columns:1fr}}
+.combo-content-grid{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
 .combo-detail-title{font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
 .badge-pareto{background:var(--blue-lt);color:var(--blue)}
@@ -220,6 +213,8 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .cost-label{color:var(--gray)}
 
 /* Capacity bars */
+.detail-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:12px}
+@media(max-width:520px){.detail-2col{grid-template-columns:1fr}}
 .cap-office{margin-bottom:8px}
 .cap-office-header{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
 .cap-office-name{font-weight:600}
@@ -245,9 +240,6 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .dept-table tr:hover td{background:#f9fafb}
 
 /* Conflict alerts */
-.conflict-alerts{margin-bottom:12px}
-.conflict-alert{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-radius:6px;font-size:12px;margin-bottom:6px}
-.conflict-alert.warning{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
 
 /* Robustness */
 .capacity-note-section{margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:12px}
@@ -314,6 +306,25 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
 .btn-sm:hover{border-color:var(--blue);color:var(--blue)}
 .combo-highlight{animation:flash .8s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 4px rgba(37,99,235,.5)}100%{box-shadow:none}}
+
+/* Empty state */
+.empty-state{max-width:760px;margin:40px auto;padding:32px;text-align:center}
+.empty-state h2{font-size:20px;margin-bottom:8px;color:#1e3a5f}
+.empty-state p.lead{color:var(--gray);font-size:14px;margin-bottom:28px;line-height:1.7}
+.empty-cta{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:12px}
+.empty-sample-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:24px}
+.empty-sample-card{border:2px solid var(--blue);border-radius:10px;padding:16px;text-align:left;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,.08)}
+.empty-sample-btn{width:100%;background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:14px 12px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.empty-sample-btn:hover{background:#16304f}
+.empty-sample-btn:disabled{opacity:.5;cursor:default}
+.empty-preview-body{margin-top:10px;padding-top:10px;border-top:1px dashed var(--gray-bd);font-size:12px;color:#374151;text-align:left}
+.empty-preview-body .ep-row{display:flex;justify-content:space-between;padding:2px 0}
+.empty-preview-body .ep-title{font-weight:700;margin:6px 0 3px;color:#1e3a5f}
+.empty-preview-more{display:none}
+.empty-preview-more.open{display:block}
+.empty-preview-toggle{display:block;width:100%;text-align:center;margin-top:6px;font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;padding:4px}
+.empty-preview-toggle:hover{text-decoration:underline}
+.empty-state .notes{text-align:left;font-size:12px;color:var(--gray);line-height:1.8;margin-top:8px}
 </style>
 </head>
 <body>
@@ -328,13 +339,6 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
     <span class="version">CEST v0.3.3</span>
   </div>
 </header>
-
-<div class="sample-bar">
-  <span class="sample-label">サンプル企業で試す:</span>
-  <button class="sample-btn" onclick="loadSample('it')">🏢 IT企業（都心系）</button>
-  <button class="sample-btn" onclick="loadSample('maker')">🏭 メーカー（南東京湾岸）</button>
-  <button class="sample-btn" onclick="loadSample('gaishi')">🌐 外資系（丸の内系）</button>
-</div>
 
 <div class="app-layout">
 
@@ -352,15 +356,22 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
           <input type="file" id="emp-file" accept=".csv,.tsv" onchange="handleEmpSelect(event)">
           <div style="font-size:20px;margin-bottom:4px">📂</div>
           <div style="font-weight:600">CSVをドロップ / 選択</div>
-          <div style="font-size:11px;margin-top:2px">CSV・TSV・Excel (.xlsx) 対応</div>
+          <div style="font-size:11px;margin-top:2px">CSV・TSV対応</div>
         </div>
         <div id="emp-status" class="emp-status"></div>
         <div id="dept-mode-badge" style="display:none"></div>
       </div>
 
+      <!-- 社員データが入るまで隠す（最初のナビゲーションを単純にする） -->
+      <div id="sidebar-advanced" style="display:none">
+
       <!-- オフィス候補 -->
-      <div class="s-section">
-        <div class="s-title">オフィス候補</div>
+      <div class="s-section collapsible-section" id="office-section">
+        <div class="s-title" onclick="toggleCollapsible('office-section')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <span>オフィス候補</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="collapsible-body">
         <div class="office-list" id="office-list"></div>
         <div class="office-actions">
           <button class="btn-oa primary" onclick="toggleAddOfficeForm()">＋ オフィスを追加</button>
@@ -396,11 +407,12 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
             <button class="aof-cancel" onclick="toggleAddOfficeForm()">キャンセル</button>
           </div>
         </div>
+        </div>
       </div>
 
       <!-- 制約パネル -->
       <div class="s-section">
-        <div class="s-title">制約</div>
+        <div class="s-title">絞り込み</div>
 
         <div class="form-field">
           <label>出社日数（日/週）</label>
@@ -429,6 +441,16 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
           <div class="unit-row">
             <input type="number" id="s-max-avg" placeholder="なし" min="0" onchange="markDirty()">
             <span class="unit-lbl">分</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>長時間通勤の絞り込み（退職リスク帯の目安）</label>
+          <div class="unit-row" style="flex-wrap:wrap;gap:6px">
+            <input type="number" id="s-risk-threshold" placeholder="60" min="1" value="60" onchange="markDirty()" style="flex:0 0 52px;min-width:52px;width:52px">
+            <span class="unit-lbl">分以上の社員を</span>
+            <input type="number" id="s-max-exceed-risk" placeholder="50" min="0" onchange="markDirty()" style="flex:0 0 52px;min-width:52px;width:52px">
+            <span class="unit-lbl">人以下にする</span>
           </div>
         </div>
 
@@ -506,7 +528,7 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
       <div class="s-section">
         <div class="collapsible-section open" id="dept-rules-section">
           <div class="collapsible-header" onclick="toggleCollapsible('dept-rules-section')" style="border-top:none;margin-top:0;padding-top:0">
-            <span class="s-title" style="margin:0;font-size:11px">部署別ルール</span>
+            <span class="s-title" style="margin:0;font-size:11px">部署配置</span>
             <span class="chevron">▼</span>
           </div>
           <div class="collapsible-body" style="padding-top:4px">
@@ -517,10 +539,12 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
         </div>
       </div>
 
+      </div><!-- /sidebar-advanced -->
+
     </div><!-- /sidebar-scroll -->
 
     <!-- Recalculate button -->
-    <div class="recalc-wrap">
+    <div class="recalc-wrap" id="recalc-wrap" style="display:none">
       <button class="recalc-btn" id="recalc-btn" onclick="runEvaluate(false)" disabled>
         ▶ 再計算する
       </button>
@@ -531,12 +555,17 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
   <!-- ══ MAIN ══ -->
   <div class="main-area" id="main-area">
 
-    <!-- 入力データ確認 -->
-    <div class="section" id="section-summary" style="display:none">
-      <div class="section-header">入力データ確認</div>
-      <div class="section-body">
-        <div class="summary-grid" id="summary-grid"></div>
-        <div id="mixed-dept-banner" style="display:none;margin-top:10px"></div>
+    <!-- Empty state（結果が出るまで表示、renderで消える） -->
+    <div class="empty-state" id="empty-state">
+      <h2>オフィス配置シミュレーション</h2>
+      <p class="lead">社員の通勤データとオフィス候補から、賃料・通勤負担・収容人数の<br>バランスが取れた移転案をパレート最適で提案します。</p>
+
+      <div class="empty-cta">▼ サンプルデータを入力して試す（ボタンを押すと計算が始まります）</div>
+      <div class="empty-sample-grid" id="empty-sample-grid"></div>
+
+      <div class="notes">
+        <p>※ 上のサンプルは入力データのみ仮のものです。計算自体はAWS Lambda上で実際に動くエンジンによるリアルタイム分析です。</p>
+        <p>※ CSVでも試せます（左のサイドバーからアップロード）。現在は首都圏の主要65駅に対応（品川・渋谷・新宿・東京・大宮・横浜など）。対応駅の社員データであれば使える状態で、実際の分析結果が表示されます。</p>
       </div>
     </div>
 
@@ -544,9 +573,6 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
     <div class="dirty-banner" id="dirty-banner">
       ⚠ 制約が変更されています。サイドバーの「▶ 再計算する」を押してください。
     </div>
-
-    <!-- Notices -->
-    <div id="notices-container"></div>
 
     <!-- Zero results panel (B) -->
     <div id="section-zero-results" class="section" style="display:none">
@@ -556,15 +582,7 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
       <div class="section-body" id="zero-results-body"></div>
     </div>
 
-    <!-- Baseline diagnosis -->
-    <div id="section-baseline-diag" style="display:none">
-      <div class="section">
-        <div class="section-header">現状診断</div>
-        <div class="section-body" id="baseline-diag-body"></div>
-      </div>
-    </div>
-
-    <!-- Scatter plots -->
+    <!-- Scatter plots（一番見たい「答え」を最初に） -->
     <div id="section-scatter" class="section" style="display:none">
       <div class="section-header">トレードオフ散布図
         <span style="font-size:11px;font-weight:normal;color:var(--gray)">クリックで選択・詳細にスクロール</span>
@@ -621,6 +639,31 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
         <button class="compare-close-btn" onclick="closeCompare()">✕</button>
       </div>
       <div class="section-body" id="compare-body"></div>
+    </div>
+
+    <!-- Baseline diagnosis（詳細情報、答えの後ろに） -->
+    <div id="section-baseline-diag" style="display:none">
+      <div class="section">
+        <div class="section-header">現状診断</div>
+        <div class="section-body" id="baseline-diag-body"></div>
+      </div>
+    </div>
+
+    <!-- Notices（ハザードなど、細かい注意事項は下に） -->
+    <div id="notices-container"></div>
+
+    <!-- 入力データ確認（念のため確認用。デフォルト折りたたみ） -->
+    <div class="section collapsible-section" id="section-summary" style="display:none">
+      <div class="section-header" onclick="toggleCollapsible('section-summary')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <span>入力データ確認</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="section-body">
+          <div class="summary-grid" id="summary-grid"></div>
+          <div id="mixed-dept-banner" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /main-area -->
@@ -689,12 +732,12 @@ const SAMPLE_CONFIGS = {
   maker: {
     label: 'メーカー（南東京湾岸）',
     offices:[
-      {office_id:'mk_shinagawa',    name:'品川オフィス', nearest_station_id:'shinagawa',    last_mile_minutes:8, rent_jpy_month:18000000, capacity_people:200},
-      {office_id:'mk_tokyo',        name:'東京オフィス', nearest_station_id:'tokyo',         last_mile_minutes:5, rent_jpy_month:22000000, capacity_people:200},
-      {office_id:'mk_tamachi',      name:'田町オフィス', nearest_station_id:'tamachi',        last_mile_minutes:5, rent_jpy_month:15000000, capacity_people:180},
-      {office_id:'mk_hamamatsucho', name:'浜松町オフィス',nearest_station_id:'hamamatsucho', last_mile_minutes:5, rent_jpy_month:14000000, capacity_people:170},
-      {office_id:'mk_shimbashi',    name:'新橋オフィス', nearest_station_id:'shimbashi',     last_mile_minutes:5, rent_jpy_month:14000000, capacity_people:170},
-      {office_id:'mk_yurakucho',    name:'有楽町オフィス',nearest_station_id:'yurakucho',    last_mile_minutes:5, rent_jpy_month:15000000, capacity_people:160},
+      {office_id:'mk_shinagawa',    name:'品川オフィス', nearest_station_id:'shinagawa',    last_mile_minutes:8, rent_jpy_month:18000000, capacity_people:230},
+      {office_id:'mk_tokyo',        name:'東京オフィス', nearest_station_id:'tokyo',         last_mile_minutes:5, rent_jpy_month:22000000, capacity_people:230},
+      {office_id:'mk_tamachi',      name:'田町オフィス', nearest_station_id:'tamachi',        last_mile_minutes:5, rent_jpy_month:15000000, capacity_people:210},
+      {office_id:'mk_hamamatsucho', name:'浜松町オフィス',nearest_station_id:'hamamatsucho', last_mile_minutes:5, rent_jpy_month:14000000, capacity_people:200},
+      {office_id:'mk_shimbashi',    name:'新橋オフィス', nearest_station_id:'shimbashi',     last_mile_minutes:5, rent_jpy_month:14000000, capacity_people:200},
+      {office_id:'mk_yurakucho',    name:'有楽町オフィス',nearest_station_id:'yurakucho',    last_mile_minutes:5, rent_jpy_month:15000000, capacity_people:190},
     ],
     departments:[
       {name:'製造',     count:80, pool:['shinagawa','kamata','omori','oimachi','musashikosugi','kawasaki','tamachi','gotanda']},
@@ -715,12 +758,12 @@ const SAMPLE_CONFIGS = {
   gaishi: {
     label: '外資系（丸の内系）',
     offices:[
-      {office_id:'gai_tokyo',     name:'東京オフィス',  nearest_station_id:'tokyo',     last_mile_minutes:5, rent_jpy_month:28500000, capacity_people:220},
-      {office_id:'gai_otemachi',  name:'大手町オフィス',nearest_station_id:'otemachi',  last_mile_minutes:4, rent_jpy_month:25500000, capacity_people:220},
-      {office_id:'gai_roppongi',  name:'六本木ハブ',    nearest_station_id:'roppongi',  last_mile_minutes:7, rent_jpy_month:21000000, capacity_people:200},
-      {office_id:'gai_shibuya',   name:'渋谷コワーク',  nearest_station_id:'shibuya',   last_mile_minutes:5, rent_jpy_month:16500000, capacity_people:190},
-      {office_id:'gai_shimbashi', name:'新橋オフィス',  nearest_station_id:'shimbashi', last_mile_minutes:5, rent_jpy_month:14400000, capacity_people:190},
-      {office_id:'gai_yurakucho', name:'有楽町オフィス',nearest_station_id:'yurakucho', last_mile_minutes:5, rent_jpy_month:15500000, capacity_people:180},
+      {office_id:'gai_tokyo',     name:'東京オフィス',  nearest_station_id:'tokyo',     last_mile_minutes:5, rent_jpy_month:28500000, capacity_people:260},
+      {office_id:'gai_otemachi',  name:'大手町オフィス',nearest_station_id:'otemachi',  last_mile_minutes:4, rent_jpy_month:25500000, capacity_people:260},
+      {office_id:'gai_roppongi',  name:'六本木ハブ',    nearest_station_id:'roppongi',  last_mile_minutes:7, rent_jpy_month:21000000, capacity_people:230},
+      {office_id:'gai_shibuya',   name:'渋谷コワーク',  nearest_station_id:'shibuya',   last_mile_minutes:5, rent_jpy_month:16500000, capacity_people:220},
+      {office_id:'gai_shimbashi', name:'新橋オフィス',  nearest_station_id:'shimbashi', last_mile_minutes:5, rent_jpy_month:14400000, capacity_people:220},
+      {office_id:'gai_yurakucho', name:'有楽町オフィス',nearest_station_id:'yurakucho', last_mile_minutes:5, rent_jpy_month:15500000, capacity_people:210},
     ],
     departments:[
       {name:'Finance',    count:60, pool:['tokyo','otemachi','kanda','akihabara','yurakucho','ochanomizu']},
@@ -762,6 +805,7 @@ async function loadSample(type) {
   if (!cfg) return;
   if (!state.isApiConnected) { setStatus('error','API未接続。サンプルはAPI接続後にお試しください'); return; }
 
+  revealAdvancedUI();
   state.employeeData = generateEmployees(cfg.departments, cfg.pool || []);
   state.officeCandidates = cfg.offices.map(o => ({...o, fixed: false}));
   state.deptRules = {};
@@ -774,6 +818,8 @@ async function loadSample(type) {
   document.getElementById('s-max-avg').value          = c.maxAvg           || '';
   document.getElementById('s-desired-capacity').value = c.desiredCapacity  || '';
   document.getElementById('s-max-p95').value          = c.maxP95           || '';
+  document.getElementById('s-risk-threshold').value   = c.riskThreshold    || 60;
+  document.getElementById('s-max-exceed-risk').value  = c.maxExceedRisk    || '';
 
   if (cfg.baseline) {
     const b = cfg.baseline;
@@ -840,7 +886,13 @@ function processEmpFile(file) {
   reader.readAsText(file, 'UTF-8');
 }
 
+function revealAdvancedUI(){
+  document.getElementById('sidebar-advanced').style.display = '';
+  document.getElementById('recalc-wrap').style.display = '';
+}
+
 function finishEmpLoad(data, unresolved, filename) {
+  revealAdvancedUI();
   state.employeeData = data;
   const total = data.reduce((s,r)=>s+(r.count||0),0);
   let msg = `✓ ${filename || 'ファイル'}: ${data.length}行 / ${total}名`;
@@ -1123,6 +1175,8 @@ function collectSettings() {
   const fixedOffices = state.officeCandidates.filter(c=>c.fixed).map(c=>c.office_id);
   const maxP95  = parseInt(document.getElementById('s-max-p95').value) || null;
   const maxAvg  = parseFloat(document.getElementById('s-max-avg').value) || null;
+  const riskThreshold = parseInt(document.getElementById('s-risk-threshold').value) || 60;
+  const maxExceedRisk = parseInt(document.getElementById('s-max-exceed-risk').value) || null;
   const budgetW = parseFloat(document.getElementById('s-budget').value) || null;
   const sqm     = parseFloat(document.getElementById('s-sqm').value) || 3.3;
   const policy  = document.getElementById('s-commute-policy').value;
@@ -1148,6 +1202,8 @@ function collectSettings() {
     group_together: groupTogether,
     max_p95_trip_minutes: maxP95,
     max_avg_trip_minutes: maxAvg,
+    commute_risk_threshold_minutes: riskThreshold,
+    max_exceed_risk_count: maxExceedRisk,
     budget_total_rent_jpy_month: budgetW ? budgetW*10000 : null,
     sqm_per_person: sqm,
     commute_cost_policy: policy,
@@ -1232,6 +1288,7 @@ async function runEvaluate(auto=false) {
 
 /* ── Render ────────────────────────────────────────────────────── */
 function render(data) {
+  document.getElementById('empty-state').style.display = 'none';
   renderSummaryPanel();
   renderNotices(data.notices || []);
   renderConstraintsImpact(data.constraints_impact);
@@ -1307,8 +1364,10 @@ function renderConstraintsImpact(ci) {
   if (!ci) return;
   const steps = [
     {n:ci.total_combinations,                              lbl:'全組み合わせ'},
-    {n:ci.after_capacity_filter,                           lbl:'収容できる'},
+    {n:ci.after_fixed_assignment_filter,                   lbl:'部署配置OK'},
     {n:ci.after_budget_filter,                             lbl:'予算内'},
+    {n:ci.after_min_capacity_filter,                       lbl:'希望定員あり'},
+    {n:ci.after_capacity_filter,                           lbl:'収容できる'},
     {n:ci.after_commute_filter,                            lbl:'通勤OK'},
     {n:ci.after_unused_filter ?? ci.after_commute_filter,  lbl:'実用案（無駄な拠点なし）'},
     {n:ci.pareto_optimal,                                  lbl:'パレート最適', cls:'pareto'},
@@ -1328,10 +1387,11 @@ function renderBaselineDiagnosis(bd) {
   sec.style.display='';
   const kpis = [
     {lbl:'オフィス', val:escHtml(bd.office_name||'—'), unt:''},
-    {lbl:'収容率',   val:bd.occupancy_rate!=null?Math.round(bd.occupancy_rate*100)+'%':'—', unt:''},
+    {lbl:'収容率',   val:bd.occupancy_pct!=null?Math.round(bd.occupancy_pct)+'%':'—', unt:''},
     {lbl:'平均通勤', val:bd.avg_trip_minutes!=null?bd.avg_trip_minutes.toFixed(1):'—', unt:'分'},
     {lbl:'ワースト5%通勤', val:bd.p95_trip_minutes??'—', unt:'分'},
-    {lbl:'90分超',   val:bd.exceed_90_count??'—', unt:'人'},
+    {lbl:'60分以上', val:bd.over_60min_count??'—', unt:'人'},
+    {lbl:'90分以上', val:bd.over_90min_count??'—', unt:'人'},
   ];
   const alerts = (bd.alerts||[]).map(a=>`
     <div class="notice warning" style="margin-top:6px"><span>⚠</span><span>${escHtml(a)}</span></div>
@@ -1445,7 +1505,7 @@ function renderSingleScatter(svgId,tooltipId,allCombos,paretoIds,xGetter,yGetter
       const rentM=Math.round(combo.total_rent_jpy_month/10000);
       const perCap=combo.rent_per_capacity!=null?Math.round(combo.rent_per_capacity/10000*10)/10+'万円':'—';
       const name=(combo.per_office||[]).map(o=>o.name).join(' + ')||id;
-      tooltip.innerHTML=`<strong>${escHtml(name)}</strong><br>平均通勤：${(combo.avg_trip_minutes||0).toFixed(1)}分 / ワースト5%：${combo.p95_trip_minutes}分<br>月額賃料：${rentM}万円 / 1人あたり：${perCap}<br>60分超：${combo.exceed_60_count}人`;
+      tooltip.innerHTML=`<strong>${escHtml(name)}</strong><br>平均通勤：${(combo.avg_trip_minutes||0).toFixed(1)}分 / ワースト5%：${combo.p95_trip_minutes}分<br>月額賃料：${rentM}万円 / 1人あたり：${perCap}<br>${combo.commute_risk_threshold_minutes||60}分以上：${combo.exceed_risk_count}人`;
       tooltip.style.display='block';
       moveTip(e,svg,tooltip);
     });
@@ -1597,7 +1657,6 @@ function renderComboContent(combo){
   const names=(combo.per_office||[]).map(o=>o.name).join(' + ')||(combo.selected_offices||[]).join(' + ');
   const grid=document.getElementById('combo-content-grid');
   grid.innerHTML=`
-    <div class="combo-detail-pane" id="combo-detail-inner"></div>
     <div class="combo-map-pane">
       <div class="combo-map-header" id="combo-map-header">通勤マップ</div>
       <div id="combo-map-container"></div>
@@ -1609,10 +1668,11 @@ function renderComboContent(combo){
         <span><i class="dot" style="background:#22c55e"></i>30分未満</span>
         <span><i class="dot" style="background:#3b82f6"></i>30〜60分</span>
         <span><i class="dot" style="background:#f59e0b"></i>60〜90分</span>
-        <span><i class="dot" style="background:#ef4444"></i>90分超</span>
+        <span><i class="dot" style="background:#ef4444"></i>90分以上</span>
         <span style="margin-left:auto;font-size:10px">円の大きさ = 社員数</span>
       </div>
     </div>
+    <div class="combo-detail-pane" id="combo-detail-inner"></div>
   `;
   document.getElementById('combo-map-header').textContent=`通勤マップ：${names}`;
   renderDetailInner(combo,isPareto,names,deptMode);
@@ -1657,16 +1717,6 @@ function renderDetailInner(c,isPareto,names,deptMode){
     return `<div class="office-chip"><div class="office-chip-name">${escHtml(o.name)}</div><div class="office-chip-sub">${escHtml(groups)||'—'}</div></div>`;
   }).join('');
 
-  // conflict alerts (hidden when dept mode is all_absent)
-  const alerts=c.conflict_alerts||[];
-  const alertsHtml=deptMode!=='all_absent'&&alerts.length>0?`
-    <div class="conflict-alerts">
-      <div style="font-size:12px;font-weight:600;color:#92400e;margin-bottom:5px">部署間の格差</div>
-      ${alerts.slice(0,5).map(a=>`<div class="conflict-alert warning"><span>⚠</span><span>${escHtml(a.message)}</span></div>`).join('')}
-      ${alerts.length>5?`<div style="font-size:11px;color:var(--gray)">他 ${alerts.length-5}件</div>`:''}
-    </div>
-  `:'';
-
   // department breakdown (hidden when dept mode is all_absent)
   const breakdown=c.department_breakdown||[];
   const breakdownHtml=deptMode!=='all_absent'&&breakdown.length>0?`
@@ -1709,27 +1759,8 @@ function renderDetailInner(c,isPareto,names,deptMode){
 
   const explain=(c.explain||{}).commute;
 
-  document.getElementById('combo-detail-inner').innerHTML=`
-    ${unusedHtml}
-    <div class="combo-detail-title">
-      ${escHtml(names)}
-      <span class="badge ${isPareto?'badge-pareto':'badge-suboptimal'}">${isPareto?'★ パレート最適':'パレート劣位'}</span>
-      <span class="badge badge-k">${c.num_offices}拠点</span>
-      <button class="compare-toggle-btn ${inCompare?'active':''}" id="compare-toggle-btn-inner"
-        onclick="toggleCompareInner('${escHtml(c.combination_id)}')" ${canAdd?'disabled':''}>
-        ${inCompare?'比較中 ✓':'比較に追加'}
-      </button>
-    </div>
-    <div class="kpi-row">
-      <div class="kpi-item"><span class="kpi-label">平均通勤</span><span class="kpi-value">${(c.avg_trip_minutes||0).toFixed(1)}</span><span class="kpi-unit">分</span></div>
-      <div class="kpi-divider"></div>
-      <div class="kpi-item"><span class="kpi-label">通勤ワースト5%</span><span class="kpi-value ${p95Cls}">${c.p95_trip_minutes}</span><span class="kpi-unit">分</span></div>
-      <div class="kpi-divider"></div>
-      <div class="kpi-item"><span class="kpi-label">60分超</span><span class="kpi-value ${c.exceed_60_count>0?'warn':''}">${c.exceed_60_count}</span><span class="kpi-unit">人</span></div>
-      <div class="kpi-divider"></div>
-      <div class="kpi-item"><span class="kpi-label">社員数</span><span class="kpi-value">${c.total_population}</span><span class="kpi-unit">人</span></div>
-    </div>
-    <div class="dist-wrap">
+  const distHtml=`
+    <div class="dist-wrap" style="margin-bottom:0">
       <div class="dist-label">通勤時間分布</div>
       <div class="dist-bar" style="height:12px;border-radius:6px">
         <div class="dist-seg s0" style="width:${pcts.s0}%"></div>
@@ -1741,20 +1772,47 @@ function renderDetailInner(c,isPareto,names,deptMode){
         <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
         <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
         <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
-        <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
+        <span><i class="dot" style="background:#ef4444"></i>90分以上 ${dist.over_90||0}人</span>
       </div>
     </div>
-    ${alertsHtml}
-    <div class="cost-summary">
-      <div class="cost-row"><span class="cost-label">月額賃料</span><span style="font-weight:600">${rentM}万円</span></div>
-      ${commuteM!=null?`<div class="cost-row"><span class="cost-label">通勤費${c.total_commute_cost_estimated?'<span class="badge-mini est" style="margin-left:4px">推定</span>':''}</span><span style="font-weight:600">${commuteM}万円</span></div>`:''}
-      <div class="cost-row total"><span>合計コスト</span><span>${totalM}万円/月</span></div>
+  `;
+  document.getElementById('combo-detail-inner').innerHTML=`
+    ${unusedHtml}
+    <div class="combo-detail-title">
+      ${escHtml(names)}
+      <span class="badge ${isPareto?'badge-pareto':'badge-suboptimal'}">${isPareto?'★ パレート最適':'パレート劣位'}</span>
+      <span class="badge badge-k">${c.num_offices}拠点</span>
+      <button class="compare-toggle-btn ${inCompare?'active':''}" id="compare-toggle-btn-inner"
+        onclick="toggleCompareInner('${escHtml(c.combination_id)}')" ${canAdd?'disabled':''}>
+        ${inCompare?'比較中 ✓':'比較に追加'}
+      </button>
     </div>
+    <div class="detail-2col">
+      <div class="kpi-row" style="margin-bottom:0">
+        <div class="kpi-item"><span class="kpi-label">平均通勤</span><span class="kpi-value">${(c.avg_trip_minutes||0).toFixed(1)}</span><span class="kpi-unit">分</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item"><span class="kpi-label">通勤ワースト5%</span><span class="kpi-value ${p95Cls}">${c.p95_trip_minutes}</span><span class="kpi-unit">分</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item"><span class="kpi-label">${c.commute_risk_threshold_minutes||60}分以上</span><span class="kpi-value ${c.exceed_risk_count>0?'warn':''}">${c.exceed_risk_count}</span><span class="kpi-unit">人</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item"><span class="kpi-label">社員数</span><span class="kpi-value">${c.total_population}</span><span class="kpi-unit">人</span></div>
+      </div>
+      <div class="cost-summary" style="margin-bottom:0">
+        <div class="cost-row"><span class="cost-label">月額賃料</span><span style="font-weight:600">${rentM}万円</span></div>
+        ${commuteM!=null?`<div class="cost-row"><span class="cost-label">通勤費${c.total_commute_cost_estimated?'<span class="badge-mini est" style="margin-left:4px">推定</span>':''}</span><span style="font-weight:600">${commuteM}万円</span></div>`:''}
+        <div class="cost-row total"><span>合計コスト</span><span>${totalM}万円/月</span></div>
+      </div>
+    </div>
+    ${distHtml}
     ${breakdownHtml}
     <div class="office-chips-row">${chips}</div>
-    <div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">収容余裕</div>
-    <div>${capRows}</div>
-    ${capacityNoteHtml}
+    <div class="detail-2col">
+      <div>
+        <div style="font-size:12px;color:#374151;font-weight:600;margin-bottom:4px">収容余裕</div>
+        <div>${capRows}</div>
+      </div>
+      <div>${capacityNoteHtml}</div>
+    </div>
     ${explain?`<div class="explain-block"><div class="hl">${escHtml(explain.headline)}</div><div class="det">${escHtml(explain.detail||'')}</div></div>`:''}
   `;
 }
@@ -1812,10 +1870,11 @@ function renderComparePanel(c1,c2){
   const name1=(c1.per_office||[]).map(o=>o.name).join('+')||c1.combination_id;
   const name2=(c2.per_office||[]).map(o=>o.name).join('+')||c2.combination_id;
   const paretoIds=state.data.pareto_frontier_ids||[];
+  const riskThreshold=c1.commute_risk_threshold_minutes||c2.commute_risk_threshold_minutes||60;
   const kpiDefs=[
     {lbl:'平均通勤',         get:c=>c.avg_trip_minutes,                              fmt:v=>`${v.toFixed(1)}分`,   lb:true},
     {lbl:'通勤ワースト5%',  get:c=>c.p95_trip_minutes,                              fmt:v=>`${v}分`,              lb:true},
-    {lbl:'60分超',        get:c=>c.exceed_60_count,                               fmt:v=>`${v}人`,              lb:true},
+    {lbl:`${riskThreshold}分以上`, get:c=>c.exceed_risk_count,                      fmt:v=>`${v}人`,              lb:true},
     {lbl:'月額賃料',      get:c=>c.total_rent_jpy_month/10000,                    fmt:v=>`${Math.round(v)}万円`,lb:true},
     {lbl:'通勤費（推計）',get:c=>(c.total_commute_cost_jpy_month||0)/10000,       fmt:v=>`${Math.round(v)}万円`,lb:true,
      skip:c=>c.total_commute_cost_jpy_month==null},
@@ -1849,7 +1908,7 @@ function renderComparePanel(c1,c2){
             <span><i class="dot" style="background:#22c55e"></i>30分未満 ${dist.under_30||0}人</span>
             <span><i class="dot" style="background:#3b82f6"></i>30-60分 ${dist['30_to_60']||0}人</span>
             <span><i class="dot" style="background:#f59e0b"></i>60-90分 ${dist['60_to_90']||0}人</span>
-            <span><i class="dot" style="background:#ef4444"></i>90分超 ${dist.over_90||0}人</span>
+            <span><i class="dot" style="background:#ef4444"></i>90分以上 ${dist.over_90||0}人</span>
           </div>
         </div>
       </div>
@@ -1865,7 +1924,7 @@ function renderComparePanel(c1,c2){
 /* ── Map ───────────────────────────────────────────────────────── */
 function renderMap(combo){
   if(leafletMap){ leafletMap.remove(); leafletMap=null; }
-  leafletMap=L.map('combo-map-container').setView([35.68,139.75],10);
+  leafletMap=L.map('combo-map-container',{scrollWheelZoom:false}).setView([35.68,139.75],10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:16}).addTo(leafletMap);
 
   const inputCandidates=((state.data.inputs||{}).office_candidates||[]);
@@ -1963,16 +2022,20 @@ function renderZeroResultsPanel(ci, notices) {
   if(!ci) return;
   const steps=[
     {label:'全'+ci.total_combinations,                               n:ci.total_combinations},
-    {label:'収容'+ci.after_capacity_filter,                          n:ci.after_capacity_filter},
+    {label:'部署配置'+ci.after_fixed_assignment_filter,               n:ci.after_fixed_assignment_filter},
     {label:'予算'+ci.after_budget_filter,                            n:ci.after_budget_filter},
+    {label:'希望定員'+ci.after_min_capacity_filter,                   n:ci.after_min_capacity_filter},
+    {label:'収容'+ci.after_capacity_filter,                          n:ci.after_capacity_filter},
     {label:'通勤'+(ci.after_commute_filter??''),                     n:ci.after_commute_filter??0},
     {label:'無駄なし'+(ci.after_unused_filter??ci.after_commute_filter??''), n:ci.after_unused_filter??ci.after_commute_filter??0},
   ];
   const msgs={
-    1:`収容フィルタで全${steps[0].n}案が落ちました\n→ 全員入るオフィス（または組み合わせ）がない\n→ 容量を増やすか、拠点候補を増やしてください`,
+    1:`部署固定の制約で全${steps[0].n}案が落ちました\n→ 部署ごとに固定したオフィスが、拠点数の上限内に同時に収まらない\n→ 「最大何拠点まで許す？」を増やすか、部署配置の固定を見直してください`,
     2:`予算フィルタで全${steps[1].n}案が落ちました\n→ 予算内に収まるオフィス案がない\n→ 予算上限を増やすか、賃料の低いオフィスを候補に加えてください`,
-    3:`通勤フィルタで全${steps[2].n}案が落ちました\n→ 平均通勤または通勤ワースト5%の制約が厳しすぎる\n→ 通勤上限を緩めてください`,
-    4:`無駄拠点フィルタで全${steps[3].n}案が落ちました\n→ すべての案でいずれかのオフィスが使われていない\n→ オフィス候補を見直すか、拠点数を減らしてください`,
+    3:`希望定員フィルタで全${steps[2].n}案が落ちました\n→ 希望する定員に届く組み合わせがない\n→ 希望定員を減らすか、拠点候補を増やしてください`,
+    4:`収容フィルタで全${steps[3].n}案が落ちました\n→ 全員入るオフィス（または組み合わせ）がない\n→ 容量を増やすか、拠点候補を増やしてください`,
+    5:`通勤フィルタで全${steps[4].n}案が落ちました\n→ 平均通勤または通勤ワースト5%の制約が厳しすぎる\n→ 通勤上限を緩めてください`,
+    6:`無駄拠点フィルタで全${steps[5].n}案が落ちました\n→ すべての案でいずれかのオフィスが使われていない\n→ オフィス候補を見直すか、拠点数を減らしてください`,
   };
   let culprit=null;
   for(let i=1;i<steps.length;i++){
@@ -1980,15 +2043,19 @@ function renderZeroResultsPanel(ci, notices) {
   }
   const unknown=state.officeCandidates.filter(c=>c.nearest_station_id&&!stationMaster[c.nearest_station_id]);
   const funnel=steps.map((s,i)=>i>0?'→ '+s.label:s.label).join(' ');
+  // バックエンドが原因を特定済みのエラー通知は、下の方の通知欄より先にここで見せる
+  // NO_PARETO_CANDIDATESは「結果0件です」というだけの汎用メッセージで具体的な原因ではないので除く
+  const errorNotices=(notices||[]).filter(n=>n.level==='error'&&n.code!=='NO_PARETO_CANDIDATES');
   const body=document.getElementById('zero-results-body');
   if(!body) return;
   body.innerHTML=`
+    ${errorNotices.length>0?errorNotices.map(n=>`<div class="notice error" style="margin-bottom:6px"><span>⚠</span><span>${escHtml(n.message)}${n.action?'<br>→ '+escHtml(n.action):''}</span></div>`).join(''):''}
     <div style="margin-bottom:12px">
       <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">制約フィルタを通った件数:</div>
       <div style="font-family:monospace;font-size:12px;color:#374151;word-break:break-all">${escHtml(funnel)}</div>
     </div>
     <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">考えられる原因:</div>
-    ${culprit?`<div class="notice warning" style="margin-bottom:6px;white-space:pre-line"><span>⚠</span><span>${escHtml(msgs[culprit])}</span></div>`:''}
+    ${errorNotices.length===0&&culprit?`<div class="notice warning" style="margin-bottom:6px;white-space:pre-line"><span>⚠</span><span>${escHtml(msgs[culprit])}</span></div>`:''}
     ${unknown.length>0?`<div class="notice warning" style="margin-bottom:6px"><span>⚠</span><span>駅不明オフィス${unknown.length}件: ${escHtml(unknown.map(o=>o.name).join('、'))}<br>→ これらは通勤計算ができず案から外れます</span></div>`:''}
     <div style="margin-top:10px;font-size:12px;color:var(--gray)">サイドバーの制約値を緩めて再計算してください</div>
   `;
@@ -2031,18 +2098,58 @@ async function loadStationMaster(){
 }
 
 /* ── Init ──────────────────────────────────────────────────────── */
+/* ── Empty state (top sample grid + preview) ─────────────────────── */
+const EMPTY_PREVIEW_DEFAULT_ROWS = 3;
+
+function renderEmptySampleGrid(){
+  const grid = document.getElementById('empty-sample-grid');
+  const icons = {it:'🏢', maker:'🏭', gaishi:'🌐'};
+  grid.innerHTML = Object.entries(SAMPLE_CONFIGS).map(([key,cfg])=>{
+    const totalEmp = cfg.departments.reduce((s,d)=>s+d.count,0);
+    const deptRow = d => `<div class="ep-row"><span>${escHtml(d.name)}</span><span>${d.count}人（例: ${escHtml(d.pool[0]||'')}駅など）</span></div>`;
+    const officeRow = o => `<div class="ep-row"><span>${escHtml(o.name)}</span><span>${Math.round(o.rent_jpy_month/10000)}万円/月・${o.capacity_people}人</span></div>`;
+    const deptDefault = cfg.departments.slice(0, EMPTY_PREVIEW_DEFAULT_ROWS).map(deptRow).join('');
+    const deptRest = cfg.departments.slice(EMPTY_PREVIEW_DEFAULT_ROWS).map(deptRow).join('');
+    const officeAll = cfg.offices.map(officeRow).join('');
+    const hasMore = cfg.departments.length > EMPTY_PREVIEW_DEFAULT_ROWS;
+    return `
+    <div class="empty-sample-card">
+      <button class="empty-sample-btn" onclick="loadSample('${key}')">${icons[key]||'📊'} ${escHtml(cfg.label)}</button>
+      <div class="empty-preview-body">
+        <div class="ep-title">入力データの例（社員 計${totalEmp}人）</div>
+        ${deptDefault}
+        <div class="empty-preview-more" id="empty-preview-more-${key}">
+          ${deptRest}
+          <div class="ep-title">候補オフィス</div>
+          ${officeAll}
+        </div>
+      </div>
+      ${hasMore ? `<button class="empty-preview-toggle" onclick="toggleEmptyPreviewMore('${key}')">▼ もっと見る</button>` : ''}
+    </div>
+  `;
+  }).join('');
+}
+
+function toggleEmptyPreviewMore(key){
+  const more = document.getElementById(`empty-preview-more-${key}`);
+  const toggleBtn = more.parentElement.querySelector('.empty-preview-toggle');
+  more.classList.toggle('open');
+  toggleBtn.textContent = more.classList.contains('open') ? '▲ 閉じる' : '▼ もっと見る';
+}
+
 async function init(){
+  renderEmptySampleGrid();
   await loadStationMaster();
   try{
     const h=await fetch(`${API_BASE}/health`,{signal:AbortSignal.timeout(3000)});
     if(!h.ok) throw new Error();
     state.isApiConnected=true;
     setStatus('api','APIに接続しました — サンプルまたはCSVでお試しください');
-    document.querySelectorAll('.sample-btn').forEach(b=>b.disabled=false);
+    document.querySelectorAll('.empty-sample-btn').forEach(b=>b.disabled=false);
   }catch{
     state.isApiConnected=false;
     setStatus('demo','APIに接続できません。サーバーを起動してください');
-    document.querySelectorAll('.sample-btn').forEach(b=>b.disabled=true);
+    document.querySelectorAll('.empty-sample-btn').forEach(b=>b.disabled=true);
   }
   updateRecalcButton();
 }

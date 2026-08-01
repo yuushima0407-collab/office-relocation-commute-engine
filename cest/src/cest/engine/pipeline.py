@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import networkx as nx
 
+from cest.models.request import Settings
 from cest.engine.support.graph_loader import load_graph, load_station_master, load_station_hazard
 from cest.engine.support.notices import NoticeCollector
 from cest.engine.combination import run_v3_pipeline
@@ -29,11 +30,12 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     home_stations = inputs["home_station_distribution"]
     offices = inputs["office_candidates"]
     policy = inputs["policy_as_is"]
-    settings = inputs["settings"]
+    # settings は読まれるだけで途中で書き換わらないので、辞書のまま持ち回さず
+    # ここで型付きの Settings オブジェクトに変換してパイプラインの奥まで運ぶ
+    settings = Settings(**inputs["settings"])
 
     policy_days = policy["office_days_per_week"]
-    routing_cfg = settings.get("routing", {})
-    graph_id = routing_cfg.get("graph_id", "tokyo_core_v1")
+    graph_id = settings.routing.graph_id
 
     department_mode = _detect_department_mode(home_stations)
     if department_mode == "mixed":
@@ -41,6 +43,10 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
             hs.get("count", 1) for hs in home_stations if not hs.get("group")
         )
         collector.department_partially_missing(missing_people)
+
+    # 固定オフィスの数が拠点数の上限を超えると、組み合わせが1件も作られない
+    if settings.fixed_offices and len(settings.fixed_offices) > max(settings.num_offices):
+        collector.fixed_offices_exceed_max(len(settings.fixed_offices), max(settings.num_offices))
 
     # グラフ読み込み
     try:
@@ -67,10 +73,15 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
             collector.rent_missing(office.get("name", office["office_id"]))
 
     # ハザード警告（フィルタではなく警告のみ）
+    # 「警告が無い」＝「データが無いだけ」と「安全」を混同しないよう区別する
     station_hazard = load_station_hazard()
+    missing_data_offices: List[str] = []
     for office in offices:
         sid = office.get("nearest_station_id", "")
-        h = station_hazard.get(sid, {})
+        if sid not in station_hazard:
+            missing_data_offices.append(office.get("name", sid))
+            continue
+        h = station_hazard[sid]
         flood = h.get("flood_depth_m")
         seismic = h.get("seismic_rank")
         warnings = []
@@ -84,6 +95,8 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
                 office.get("name", sid),
                 detail,
             )
+    if missing_data_offices:
+        collector.hazard_data_missing(missing_data_offices)
 
     # v0.3 パイプライン実行
     result = run_v3_pipeline(
@@ -100,7 +113,6 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if department_mode == "all_absent":
         for combo in all_combos:
             combo.pop("department_breakdown", None)
-            combo.pop("conflict_alerts", None)
             if "explain" in combo and isinstance(combo["explain"], dict):
                 combo["explain"].pop("assignment", None)
         bd = result.get("baseline_diagnosis")
@@ -129,6 +141,7 @@ def _build_empty_report(collector: NoticeCollector, department_mode: str = "all_
         "pareto_frontier_ids": [],
         "constraints_impact": {
             "total_combinations": 0,
+            "after_fixed_assignment_filter": 0,
             "after_capacity_filter": 0,
             "after_budget_filter": 0,
             "after_min_capacity_filter": 0,

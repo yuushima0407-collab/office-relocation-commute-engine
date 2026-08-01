@@ -72,6 +72,10 @@ class Settings(BaseModel):
     max_p95_trip_minutes: Optional[int] = Field(None, ge=1)
     # v0.3: 平均通勤上限（片道分）
     max_avg_trip_minutes: Optional[float] = Field(None, ge=1)
+    # v0.3.3: 何分を超えたら通勤リスク帯とみなすか（退職リスク等の目安）
+    commute_risk_threshold_minutes: int = Field(60, ge=1, le=180)
+    # v0.3.3: 通勤リスク帯（上記の分数超え）を許容する人数の上限
+    max_exceed_risk_count: Optional[int] = Field(None, ge=0)
     # v0.3: 一人あたり面積（㎡）。デフォルト3.3（国交省基準）
     sqm_per_person: float = Field(3.3, ge=0.1)
     # 予算上限
