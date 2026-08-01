@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 
+from cest.models.request import Settings
 from cest.engine.combo.common import _monthly_commute_cost, _weighted_p95
 from cest.engine.support.routing import calc_trip_minutes
 
@@ -59,8 +60,8 @@ def compute_baseline_diagnosis(
     avg_trip = weighted / total_pop
     p95_trip = _weighted_p95(trips)
 
-    over_60 = sum(c for t, c in trips if t > 60)
-    over_90 = sum(c for t, c in trips if t > 90)
+    over_60 = sum(c for t, c in trips if t >= 60)
+    over_90 = sum(c for t, c in trips if t >= 90)
 
     capacity = baseline.get("capacity_people")
     occupancy_pct = round((total_pop / capacity) * 100, 1) if capacity and capacity > 0 else None
@@ -71,9 +72,9 @@ def compute_baseline_diagnosis(
     if occupancy_pct is not None and occupancy_pct > 100:
         alerts.append(f"収容率が100%を超えています（{occupancy_pct}%）")
     if over_90 > 0:
-        alerts.append(f"通勤90分超の社員が{over_90}人（{round(over_90 / total_pop * 100)}%）います")
+        alerts.append(f"通勤90分以上の社員が{over_90}人（{round(over_90 / total_pop * 100)}%）います")
     if over_60 > total_pop * 0.3:
-        alerts.append(f"通勤60分超の社員が{over_60}人（{round(over_60 / total_pop * 100)}%）で、全体の3割を超えています")
+        alerts.append(f"通勤60分以上の社員が{over_60}人（{round(over_60 / total_pop * 100)}%）で、全体の3割を超えています")
 
     return {
         "office_name": baseline.get("name", "現オフィス"),
@@ -149,3 +150,31 @@ def compute_vs_baseline(
         "better_count": better,
         "unchanged_count": unchanged,
     }
+
+
+def apply_baseline_comparison(
+    G: nx.Graph,
+    home_stations: List[Dict[str, Any]],
+    evaluated: List[Dict[str, Any]],
+    settings: Settings,
+    policy_days: float,
+) -> Optional[Dict[str, Any]]:
+    """baseline が指定されていれば現状診断を作り、各comboに vs_baseline を付与する。"""
+    if settings.baseline is None:
+        return None
+    # この先の関数は辞書を期待してるので、ここで変換する
+    baseline_cfg = settings.baseline.model_dump()
+
+    commute_cost_policy = settings.commute_cost_policy
+    commute_cost_cap = settings.commute_cost_cap_jpy_month
+
+    baseline_trips = _compute_baseline_trips(G, home_stations, baseline_cfg)
+    baseline_diagnosis = compute_baseline_diagnosis(
+        baseline_cfg, home_stations, baseline_trips,
+        policy_days, commute_cost_policy, commute_cost_cap,
+    )
+    for combo in evaluated:
+        combo["vs_baseline"] = compute_vs_baseline(
+            combo, baseline_cfg, baseline_trips, baseline_diagnosis, commute_cost_policy,
+        )
+    return baseline_diagnosis

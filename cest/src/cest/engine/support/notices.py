@@ -79,6 +79,15 @@ class NoticeCollector:
             "informational",
         )
 
+    def hazard_data_missing(self, office_names: List[str]) -> None:
+        names = "、".join(office_names)
+        self.add(
+            "info",
+            "HAZARD_DATA_MISSING",
+            f"{names}: ハザードデータが未収集のため、浸水・地震リスクを判定できません（警告が無い＝安全ではありません）。",
+            "informational",
+        )
+
     def no_pareto_candidates(self) -> None:
         self.add(
             "error",
@@ -86,6 +95,16 @@ class NoticeCollector:
             "制約後に有効な候補が 0 件です。",
             "blocking",
             "制約条件を緩和してください。",
+        )
+
+    def fixed_offices_exceed_max(self, fixed_count: int, max_num_offices: int) -> None:
+        self.add(
+            "error",
+            "FIXED_OFFICES_EXCEED_MAX",
+            f"固定オフィスが{fixed_count}件ありますが、拠点数の上限が{max_num_offices}件のため、"
+            f"組み合わせが1件も作れません。",
+            "needs_action",
+            f"「最大何拠点まで許す？」を{fixed_count}件以上に増やすか、固定オフィスを減らしてください。",
         )
 
     def department_partially_missing(self, missing_people: int) -> None:

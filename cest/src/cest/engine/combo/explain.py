@@ -11,11 +11,12 @@ def _explain_commute(combo: Dict[str, Any]) -> Dict[str, Any]:
     p95 = combo.get("p95_trip_minutes") or 0
     avg = combo.get("avg_trip_minutes") or 0
     total_pop = combo.get("total_population") or 0
-    exceed_60 = combo.get("exceed_60_count") or 0
+    exceed_risk = combo.get("exceed_risk_count") or 0
+    risk_threshold = combo.get("commute_risk_threshold_minutes") or 60
     dist = combo.get("distribution", {})
     return {
         "headline": f"平均通勤 {avg:.0f}分 / p95 {p95:.0f}分",
-        "detail": f"対象 {total_pop}人、60分超は {exceed_60}人",
+        "detail": f"対象 {total_pop}人、{risk_threshold:.0f}分以上は {exceed_risk}人",
         "distribution": (
             f"30分未満: {dist.get('under_30', 0)}人 / "
             f"30-60分: {dist.get('30_to_60', 0)}人 / "

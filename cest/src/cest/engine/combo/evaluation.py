@@ -33,6 +33,7 @@ def evaluate_combo(
     sqm_per_person: float,
     commute_cost_policy: str = "full",
     commute_cost_cap_jpy_month: Optional[int] = None,
+    commute_risk_threshold_minutes: float = 60,
 ) -> Optional[Dict[str, Any]]:
     """1組み合わせを評価。返り値 None は計算不能（到達不能など）。"""
     per_office: List[Dict[str, Any]] = []
@@ -85,9 +86,9 @@ def evaluate_combo(
     total_weighted = sum(t * c for t, c in all_trips)
     avg_trip = total_weighted / total_pop_reachable
 
-    # exceed counts
-    exceed_60 = sum(c for t, c in all_trips if t > 60)
-    exceed_90 = sum(c for t, c in all_trips if t > 90)
+    # exceed counts（distributionの区切りと揃えて「以上」で統一）
+    exceed_risk = sum(c for t, c in all_trips if t >= commute_risk_threshold_minutes)
+    exceed_90 = sum(c for t, c in all_trips if t >= 90)
 
     # distribution
     under_30 = sum(c for t, c in all_trips if t < 30)
@@ -138,7 +139,8 @@ def evaluate_combo(
         "p95_trip_minutes": round(p95_trip, 1) if p95_trip is not None else None,
         "avg_trip_minutes": round(avg_trip, 1),
         "total_population": total_population,
-        "exceed_60_count": exceed_60,
+        "exceed_risk_count": exceed_risk,
+        "commute_risk_threshold_minutes": commute_risk_threshold_minutes,
         "exceed_90_count": exceed_90,
         "distribution": {
             "under_30": under_30,
