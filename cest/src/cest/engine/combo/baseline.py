@@ -8,31 +8,31 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 
-from cest.models.request import Settings
+from cest.models.request import Settings, HomeStation
 from cest.engine.combo.common import _monthly_commute_cost, _weighted_p95
 from cest.engine.support.routing import calc_trip_minutes
 
 
 def _compute_baseline_trips(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
     baseline: Dict[str, Any],
 ) -> Dict[str, Optional[float]]:
     """baselineオフィスへの各駅からの通勤時間を計算。"""
     trips: Dict[str, Optional[float]] = {}
     for hs in home_stations:
         t = calc_trip_minutes(
-            G, hs["station_id"],
+            G, hs.station_id,
             baseline["nearest_station_id"],
             baseline["last_mile_minutes"],
         )
-        trips[hs["station_id"]] = t
+        trips[hs.station_id] = t
     return trips
 
 
 def compute_baseline_diagnosis(
     baseline: Dict[str, Any],
-    home_stations: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
     baseline_trips: Dict[str, Optional[float]],
     policy_days: float,
     commute_cost_policy: str,
@@ -45,13 +45,13 @@ def compute_baseline_diagnosis(
     commute_cost = 0
 
     for hs in home_stations:
-        bt = baseline_trips.get(hs["station_id"])
+        bt = baseline_trips.get(hs.station_id)
         if bt is None:
             continue
-        trips.append((bt, hs["count"]))
-        total_pop += hs["count"]
+        trips.append((bt, hs.count))
+        total_pop += hs.count
         if commute_cost_policy != "ignore":
-            commute_cost += _monthly_commute_cost(hs, bt, policy_days, cap) * hs["count"]
+            commute_cost += _monthly_commute_cost(hs.commute_allowance_jpy_month, bt, policy_days, cap) * hs.count
 
     if total_pop == 0:
         return {}
@@ -154,7 +154,7 @@ def compute_vs_baseline(
 
 def apply_baseline_comparison(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
     evaluated: List[Dict[str, Any]],
     settings: Settings,
     policy_days: float,

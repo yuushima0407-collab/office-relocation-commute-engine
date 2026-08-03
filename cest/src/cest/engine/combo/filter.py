@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Tuple
 
 import networkx as nx
 
-from cest.models.request import Settings
+from cest.models.request import Settings, HomeStation, OfficeCandidate
 from cest.engine.combo.common import _get_capacity, _get_group
 from cest.engine.combo.assignment import build_group_assignment
 from cest.engine.combo.evaluation import evaluate_combo
@@ -20,8 +20,8 @@ from cest.engine.combo.evaluation import evaluate_combo
 
 def filter_and_evaluate_combos(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    combos: List[List[Dict[str, Any]]],
+    home_stations: List[HomeStation],
+    combos: List[List[OfficeCandidate]],
     required_offices_from_assignment: set,
     settings: Settings,
     policy_days: float,
@@ -52,7 +52,7 @@ def filter_and_evaluate_combos(
     evaluated: List[Dict[str, Any]] = []
 
     for combo_offices in combos:
-        combo_office_ids = {o["office_id"] for o in combo_offices}
+        combo_office_ids = {o.office_id for o in combo_offices}
 
         # fixed_assignment で必要なオフィスが含まれているかチェック
         if not required_offices_from_assignment.issubset(combo_office_ids):
@@ -60,7 +60,7 @@ def filter_and_evaluate_combos(
         valid_after_fixed_assignment += 1
 
         # 予算フィルタ（部署配置は不要、オフィス側の情報だけで判定できる）
-        total_rent = sum(o.get("rent_jpy_month") or 0 for o in combo_offices)
+        total_rent = sum(o.rent_jpy_month or 0 for o in combo_offices)
         if budget is not None and total_rent > budget:
             continue
         valid_after_budget += 1
@@ -84,9 +84,9 @@ def filter_and_evaluate_combos(
         # 収容人数チェック（部署配置の結果に依存）
         capacity_ok = True
         for office in combo_offices:
-            oid = office["office_id"]
+            oid = office.office_id
             assigned_pop = sum(
-                hs["count"] for hs in home_stations
+                hs.count for hs in home_stations
                 if assignment.get(_get_group(hs)) == oid
             )
             cap = _get_capacity(office, sqm_per_person)

@@ -5,32 +5,33 @@
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
+from cest.models.request import HomeStation, OfficeCandidate
 from cest.engine.support.fare_estimator import estimate_monthly_commute_cost
 
 
-def _get_group(hs: Dict[str, Any]) -> str:
-    return hs.get("group") or hs["station_id"]
+def _get_group(hs: HomeStation) -> str:
+    return hs.group or hs.station_id
 
 
-def _get_capacity(office: Dict[str, Any], sqm_per_person: float) -> Optional[int]:
+def _get_capacity(office: OfficeCandidate, sqm_per_person: float) -> Optional[int]:
     """収容人数を返す。capacity_people 優先、なければ floor_area_sqm から推定。"""
-    if office.get("capacity_people") is not None:
-        return office["capacity_people"]
-    area = office.get("floor_area_sqm")
+    if office.capacity_people is not None:
+        return office.capacity_people
+    area = office.floor_area_sqm
     if area is not None and sqm_per_person > 0:
         return int(area / sqm_per_person)
     return None
 
 
-def _capacity_is_estimated(office: Dict[str, Any]) -> bool:
-    return office.get("capacity_people") is None and office.get("floor_area_sqm") is not None
+def _capacity_is_estimated(office: OfficeCandidate) -> bool:
+    return office.capacity_people is None and office.floor_area_sqm is not None
 
 
-def _index_offices(offices: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def _index_offices(offices: List[OfficeCandidate]) -> Dict[str, OfficeCandidate]:
     """オフィスのリストを office_id をキーにした辞書に変換する。"""
-    return {o["office_id"]: o for o in offices}
+    return {o.office_id: o for o in offices}
 
 
 def _weighted_p95(trips: List[Tuple[float, int]]) -> float:
@@ -49,15 +50,17 @@ def _weighted_p95(trips: List[Tuple[float, int]]) -> float:
 
 
 def _monthly_commute_cost(
-    hs: Dict[str, Any],
+    commute_allowance_jpy_month: Optional[int],
     trip_minutes: float,
     policy_days: float,
     cap: Optional[int],
 ) -> int:
     """1人あたりの月額通勤費。実費指定（commute_allowance_jpy_month）があればそれを優先し、
     なければ運賃テーブルから推定する。どちらも cap が指定されていれば上限を適用する。
+
+    呼び出し元は HomeStation（型付き）と station_breakdown（dict、comboの一部）の
+    両方があり形が揃わないので、レコード全体ではなく必要な1フィールドだけ受け取る。
     """
-    if hs.get("commute_allowance_jpy_month") is not None:
-        per_person = hs["commute_allowance_jpy_month"]
-        return min(per_person, cap) if cap is not None else per_person
+    if commute_allowance_jpy_month is not None:
+        return min(commute_allowance_jpy_month, cap) if cap is not None else commute_allowance_jpy_month
     return estimate_monthly_commute_cost(trip_minutes, policy_days, cap)

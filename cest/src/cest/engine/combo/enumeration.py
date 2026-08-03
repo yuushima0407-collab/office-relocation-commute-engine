@@ -5,22 +5,23 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any, Dict, List
+from typing import List
 
+from cest.models.request import OfficeCandidate
 from cest.engine.combo.common import _index_offices
 
 
 def enumerate_combinations(
-    offices: List[Dict[str, Any]],
+    offices: List[OfficeCandidate],
     num_offices_list: List[int],
     fixed_offices: List[str],
-) -> List[List[Dict[str, Any]]]:
+) -> List[List[OfficeCandidate]]:
     office_by_id = _index_offices(offices)
     fixed = [office_by_id[oid] for oid in fixed_offices if oid in office_by_id]
-    fixed_ids = {o["office_id"] for o in fixed}
-    remaining = [o for o in offices if o["office_id"] not in fixed_ids]
+    fixed_ids = {o.office_id for o in fixed}
+    remaining = [o for o in offices if o.office_id not in fixed_ids]
 
-    combos: List[List[Dict[str, Any]]] = []
+    combos: List[List[OfficeCandidate]] = []
     for k in num_offices_list:
         if len(fixed) > k:
             continue
