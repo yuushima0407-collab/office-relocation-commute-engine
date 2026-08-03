@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 
+from cest.models.request import HomeStation, OfficeCandidate
 from cest.engine.combo.common import _get_group
 from cest.engine.support.routing import calc_trip_minutes
 
@@ -44,8 +45,8 @@ def _weighted_stats(
 
 def compute_kpis_for_scenario(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    office: Dict[str, Any],
+    home_stations: List[HomeStation],
+    office: OfficeCandidate,
     policy_days: float,
     thresholds_trip_minutes: List[float],
     baseline_trips: Optional[Dict[str, Optional[float]]],
@@ -58,8 +59,8 @@ def compute_kpis_for_scenario(
         kpis, station_breakdown, unreachable, coverage, policy_applied
     }
     """
-    office_station = office["nearest_station_id"]
-    last_mile = office["last_mile_minutes"]
+    office_station = office.nearest_station_id
+    last_mile = office.last_mile_minutes
 
     station_breakdown: List[Dict[str, Any]] = []
     unreachable_stations: List[Dict[str, Any]] = []
@@ -73,9 +74,9 @@ def compute_kpis_for_scenario(
     applied_days_sum = 0.0
 
     for hs in home_stations:
-        sid = hs["station_id"]
-        count = hs["count"]
-        override = hs.get("office_days_per_week_override")
+        sid = hs.station_id
+        count = hs.count
+        override = hs.office_days_per_week_override
         population_total += count
 
         if override is not None:
@@ -111,7 +112,7 @@ def compute_kpis_for_scenario(
             "trip_minutes": round(trip, 3) if reachable else None,
             "threshold_results": threshold_results,
             "delta_vs_baseline_trip_minutes": delta,
-            "commute_allowance_jpy_month": hs.get("commute_allowance_jpy_month"),
+            "commute_allowance_jpy_month": hs.commute_allowance_jpy_month,
         }
         station_breakdown.append(sb_entry)
 

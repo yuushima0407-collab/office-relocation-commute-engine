@@ -18,7 +18,7 @@ from typing import Any, Dict, List
 
 import networkx as nx
 
-from cest.models.request import Settings
+from cest.models.request import Settings, HomeStation, OfficeCandidate
 from cest.engine.combo.enumeration import enumerate_combinations
 from cest.engine.combo.filter import filter_and_evaluate_combos
 from cest.engine.combo.pareto import (
@@ -34,8 +34,8 @@ from cest.engine.support.notices import NoticeCollector
 
 def run_v3_pipeline(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    offices: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
+    offices: List[OfficeCandidate],
     policy_days: float,
     settings: Settings,
     collector: NoticeCollector,

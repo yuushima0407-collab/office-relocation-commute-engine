@@ -34,7 +34,9 @@ def _compute_department_breakdown(
             )
             entry["trips"].append((sb["trip_minutes"], sb["count"]))
             if commute_cost_policy != "ignore":
-                entry["commute_cost"] += _monthly_commute_cost(sb, sb["trip_minutes"], policy_days, cap) * sb["count"]
+                entry["commute_cost"] += _monthly_commute_cost(
+                    sb.get("commute_allowance_jpy_month"), sb["trip_minutes"], policy_days, cap,
+                ) * sb["count"]
 
     breakdown: List[Dict[str, Any]] = []
     for g, data in sorted(by_group.items()):

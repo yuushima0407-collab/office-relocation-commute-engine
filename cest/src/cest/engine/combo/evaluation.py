@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import networkx as nx
 
+from cest.models.request import HomeStation, OfficeCandidate
 from cest.engine.combo.common import (
     _capacity_is_estimated,
     _get_capacity,
@@ -19,13 +20,13 @@ from cest.engine.combo.department import (
     _build_assignment_summary,
     _compute_department_breakdown,
 )
-from cest.engine.support.kpi import compute_kpis_for_scenario
+from cest.engine.combo.kpi import compute_kpis_for_scenario
 
 
 def evaluate_combo(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    offices: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
+    offices: List[OfficeCandidate],
     assignment: Dict[str, str],
     policy_days: float,
     thresholds_trip: List[float],
@@ -38,12 +39,12 @@ def evaluate_combo(
     per_office: List[Dict[str, Any]] = []
     total_population = 0
     all_trips: List[Tuple[float, int]] = []  # (trip_minutes, count)
-    total_rent = sum(o.get("rent_jpy_month") or 0 for o in offices)
+    total_rent = sum(o.rent_jpy_month or 0 for o in offices)
 
     for office in offices:
-        office_id = office["office_id"]
+        office_id = office.office_id
         hs_for = [hs for hs in home_stations if assignment.get(_get_group(hs)) == office_id]
-        assigned_pop = sum(hs["count"] for hs in hs_for)
+        assigned_pop = sum(hs.count for hs in hs_for)
 
         cap = _get_capacity(office, sqm_per_person)
         headroom = (cap - assigned_pop) if cap is not None else None
@@ -60,13 +61,13 @@ def evaluate_combo(
 
         per_office.append({
             "office_id": office_id,
-            "name": office.get("name", office_id),
+            "name": office.name,
             "assigned_population": assigned_pop,
             "capacity": cap,
             "capacity_headroom": headroom,
             "capacity_estimated": _capacity_is_estimated(office),
-            "rent_jpy_month": office.get("rent_jpy_month"),
-            "floor_area_sqm": office.get("floor_area_sqm"),
+            "rent_jpy_month": office.rent_jpy_month,
+            "floor_area_sqm": office.floor_area_sqm,
             "kpis": kpis_result["kpis"],
             "station_breakdown": kpis_result.get("station_breakdown", []),
         })
@@ -110,7 +111,9 @@ def evaluate_combo(
                     continue
                 if sb.get("commute_allowance_jpy_month") is not None:
                     all_estimated = False
-                monthly_per_person = _monthly_commute_cost(sb, sb["trip_minutes"], policy_days, cap)
+                monthly_per_person = _monthly_commute_cost(
+                    sb.get("commute_allowance_jpy_month"), sb["trip_minutes"], policy_days, cap,
+                )
                 cost_sum += monthly_per_person * sb["count"]
         total_commute_cost = cost_sum
         commute_cost_estimated = all_estimated
@@ -126,7 +129,7 @@ def evaluate_combo(
     )
 
     return {
-        "selected_offices": [o["office_id"] for o in offices],
+        "selected_offices": [o.office_id for o in offices],
         "num_offices": len(offices),
         "total_rent_jpy_month": total_rent,
         "total_commute_cost_jpy_month": total_commute_cost,

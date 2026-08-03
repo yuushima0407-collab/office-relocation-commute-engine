@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import networkx as nx
 
-from cest.models.request import Settings
+from cest.models.request import Settings, HomeStation, OfficeCandidate
 from cest.engine.support.graph_loader import load_graph, load_station_master, load_station_hazard
 from cest.engine.support.notices import NoticeCollector
 from cest.engine.combination import run_v3_pipeline
 
 
-def _detect_department_mode(home_stations: list) -> str:
-    rows_with = sum(1 for hs in home_stations if hs.get("group"))
+def _detect_department_mode(home_stations: List[HomeStation]) -> str:
+    rows_with = sum(1 for hs in home_stations if hs.group)
     total = len(home_stations)
     if rows_with == total:
         return "all_present"
@@ -27,11 +27,11 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     """
     collector = NoticeCollector()
 
-    home_stations = inputs["home_station_distribution"]
-    offices = inputs["office_candidates"]
+    # home_stations/offices/settings は読まれるだけで途中で書き換わらないので、
+    # 辞書のまま持ち回さずここで型付きオブジェクトに変換してパイプラインの奥まで運ぶ
+    home_stations = [HomeStation(**hs) for hs in inputs["home_station_distribution"]]
+    offices = [OfficeCandidate(**o) for o in inputs["office_candidates"]]
     policy = inputs["policy_as_is"]
-    # settings は読まれるだけで途中で書き換わらないので、辞書のまま持ち回さず
-    # ここで型付きの Settings オブジェクトに変換してパイプラインの奥まで運ぶ
     settings = Settings(**inputs["settings"])
 
     policy_days = policy["office_days_per_week"]
@@ -39,9 +39,7 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     department_mode = _detect_department_mode(home_stations)
     if department_mode == "mixed":
-        missing_people = sum(
-            hs.get("count", 1) for hs in home_stations if not hs.get("group")
-        )
+        missing_people = sum(hs.count for hs in home_stations if not hs.group)
         collector.department_partially_missing(missing_people)
 
     # 固定オフィスの数が拠点数の上限を超えると、組み合わせが1件も作られない
@@ -62,24 +60,24 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
     graph_nodes = set(G.nodes())
     station_master = load_station_master()
     for hs in home_stations:
-        if hs["station_id"] not in graph_nodes:
-            collector.station_id_not_found(hs["station_id"])
-        if hs["station_id"] not in station_master:
-            collector.station_coord_missing(hs["station_id"])
+        if hs.station_id not in graph_nodes:
+            collector.station_id_not_found(hs.station_id)
+        if hs.station_id not in station_master:
+            collector.station_coord_missing(hs.station_id)
 
     # 家賃未入力チェック
     for office in offices:
-        if office.get("rent_jpy_month") is None:
-            collector.rent_missing(office.get("name", office["office_id"]))
+        if office.rent_jpy_month is None:
+            collector.rent_missing(office.name)
 
     # ハザード警告（フィルタではなく警告のみ）
     # 「警告が無い」＝「データが無いだけ」と「安全」を混同しないよう区別する
     station_hazard = load_station_hazard()
     missing_data_offices: List[str] = []
     for office in offices:
-        sid = office.get("nearest_station_id", "")
+        sid = office.nearest_station_id
         if sid not in station_hazard:
-            missing_data_offices.append(office.get("name", sid))
+            missing_data_offices.append(office.name)
             continue
         h = station_hazard[sid]
         flood = h.get("flood_depth_m")
@@ -92,7 +90,7 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
         if warnings:
             detail = "、".join(warnings)
             collector.hazard_warning(
-                office.get("name", sid),
+                office.name,
                 detail,
             )
     if missing_data_offices:

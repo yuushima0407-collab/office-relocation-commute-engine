@@ -4,10 +4,11 @@
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import networkx as nx
 
+from cest.models.request import HomeStation, OfficeCandidate
 from cest.engine.combo.common import _get_group, _index_offices
 from cest.engine.support.routing import calc_trip_minutes
 
@@ -27,8 +28,8 @@ def _resolve_super_groups(
 
 def build_group_assignment(
     G: nx.Graph,
-    home_stations: List[Dict[str, Any]],
-    offices: List[Dict[str, Any]],
+    home_stations: List[HomeStation],
+    offices: List[OfficeCandidate],
     fixed_assignment: List[Dict[str, str]],
     group_together: List[List[str]],
 ) -> Dict[str, str]:
@@ -86,8 +87,8 @@ def _members_of_super_group(
 
 def _best_office_for_group(
     G: nx.Graph,
-    rows: List[Dict[str, Any]],
-    offices: List[Dict[str, Any]],
+    rows: List[HomeStation],
+    offices: List[OfficeCandidate],
 ) -> Optional[str]:
     best_oid: Optional[str] = None
     best_avg: Optional[float] = None
@@ -95,15 +96,15 @@ def _best_office_for_group(
         total = 0.0
         total_count = 0
         for hs in rows:
-            t = calc_trip_minutes(G, hs["station_id"], office["nearest_station_id"], office["last_mile_minutes"])
+            t = calc_trip_minutes(G, hs.station_id, office.nearest_station_id, office.last_mile_minutes)
             if t is None:
                 continue
-            total += t * hs["count"]
-            total_count += hs["count"]
+            total += t * hs.count
+            total_count += hs.count
         if total_count == 0:
             continue
         avg = total / total_count
         if best_avg is None or avg < best_avg:
             best_avg = avg
-            best_oid = office["office_id"]
+            best_oid = office.office_id
     return best_oid
