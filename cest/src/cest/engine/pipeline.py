@@ -113,9 +113,6 @@ def evaluate(inputs: Dict[str, Any]) -> Dict[str, Any]:
             combo.pop("department_breakdown", None)
             if "explain" in combo and isinstance(combo["explain"], dict):
                 combo["explain"].pop("assignment", None)
-        bd = result.get("baseline_diagnosis")
-        if isinstance(bd, dict):
-            bd.pop("alerts", None)
 
     return {
         "version": "v0.3",
