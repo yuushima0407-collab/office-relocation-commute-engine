@@ -85,14 +85,7 @@ def _members_of_super_group(
     return [g for g in all_groups if super_group_map.get(g, g) == sg]
 
 
-# 課題: この関数は各グループを独立に「一番近いオフィス」へ割り当てるだけで、
-# 他グループが既にそのオフィスへ送った人数（残り席）を考慮しない。
-# 定員オーバーになった組み合わせは filter.py 側で丸ごと不採用になるため、
-# 「近いオフィスに人が集中して溢れた」だけで、本来分散すれば成立したはずの
-# 改善案（例: 通勤が大変なエリアへの新規オフィス案）ごと候補から消えてしまう。
-# 改善案: 部署は分割不可のまま「全員の通勤時間合計を最小化する」制約付き割り当てが必要
-# → 一般化割当問題（Generalized Assignment Problem）。PuLP 等の ILP ソルバーで解ける規模。
-# （2026-08-04 時点、対応は見送り。参照: 対応する greedy/min-cost-flow/ILP の比較検討ログ）
+# 既知の課題: 空き状況を見ずに割り当てる。詳細は Issue #22 参照。
 def _best_office_for_group(
     G: nx.Graph,
     rows: List[HomeStation],
