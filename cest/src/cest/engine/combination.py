@@ -4,10 +4,11 @@ CEST v0.3 メインパイプライン。
 処理の流れ（この並び通りに実行される）:
   1. combo/enumeration  — オフィス組み合わせを列挙
   2. combo/filter        — 部署配置・フィルタ・KPI評価
-  3. combo/pareto        — パレートフロンティア抽出
-  4. combo/capacity      — 収容余裕分析
-  5. combo/baseline      — Before/After比較（baseline指定時のみ）
-  6. combo/explain       — 案ごとの自然文説明生成
+  3. combo/pareto        — 無駄拠点（未使用オフィス）を含む案を除外
+  4. combo/pareto        — パレートフロンティア抽出
+  5. combo/capacity      — 収容余裕分析
+  6. combo/baseline      — Before/After比較（baseline指定時のみ）
+  7. combo/explain       — 案ごとの自然文説明生成
 
 各ステップの実装詳細は上記の combo/*.py を参照。このファイルには
 「どの順で・何を呼ぶか」という全体の流れだけを置く。
@@ -23,8 +24,7 @@ from cest.engine.combo.enumeration import enumerate_combinations
 from cest.engine.combo.filter import filter_and_evaluate_combos
 from cest.engine.combo.pareto import (
     mark_pareto_frontier,
-    exclude_wasteful_from_pareto,
-    finalize_pareto_flags,
+    exclude_wasteful_offices,
 )
 from cest.engine.combo.capacity import compute_capacity_headroom
 from cest.engine.combo.baseline import apply_baseline_comparison
@@ -61,23 +61,24 @@ def run_v3_pipeline(
         G, home_stations, combos, required_offices_from_assignment, settings, policy_days,
     )
 
-    # 3. パレートフロンティア抽出（無駄な拠点を含む案は対象外）
-    valid_for_pareto = exclude_wasteful_from_pareto(evaluated, fixed_offices)
-    valid_after_unused = len(valid_for_pareto)
-    pareto_frontier_ids = mark_pareto_frontier(valid_for_pareto)
-    finalize_pareto_flags(evaluated)
+    # 3. 無駄拠点（未使用オフィス）を含む案を除外
+    evaluated = exclude_wasteful_offices(evaluated, fixed_offices)
+    valid_after_unused = len(evaluated)
+
+    # 4. パレートフロンティア抽出
+    pareto_frontier_ids = mark_pareto_frontier(evaluated)
     if not pareto_frontier_ids:
         collector.no_pareto_candidates()
 
-    # 4. 収容余裕分析
+    # 5. 収容余裕分析
     capacity_headroom = compute_capacity_headroom(evaluated)
 
-    # 5. Before/After 比較（baseline指定時のみ）
+    # 6. Before/After 比較（baseline指定時のみ）
     baseline_diagnosis = apply_baseline_comparison(
         G, home_stations, evaluated, settings, policy_days,
     )
 
-    # 6. Explain 生成（全コンボに対して）
+    # 7. Explain 生成（全コンボに対して）
     for combo in evaluated:
         combo["explain"] = generate_explain(combo, evaluated)
 
