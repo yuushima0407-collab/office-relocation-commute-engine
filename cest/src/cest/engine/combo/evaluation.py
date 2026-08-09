@@ -41,9 +41,15 @@ def evaluate_combo(
     all_trips: List[Tuple[float, int]] = []  # (trip_minutes, count)
     total_rent = sum(o.rent_jpy_month or 0 for o in offices)
 
+    # オフィスの数だけ home_stations 全件をスキャンし直すと、大規模データでは
+    # オフィス数 × 社員行数の計算量になる。先に1回だけ配属先ごとに振り分けておく。
+    office_to_hs: Dict[Optional[str], List[HomeStation]] = {}
+    for hs in home_stations:
+        office_to_hs.setdefault(assignment.get(_get_group(hs)), []).append(hs)
+
     for office in offices:
         office_id = office.office_id
-        hs_for = [hs for hs in home_stations if assignment.get(_get_group(hs)) == office_id]
+        hs_for = office_to_hs.get(office_id, [])
         assigned_pop = sum(hs.count for hs in hs_for)
 
         cap = _get_capacity(office, sqm_per_person)
