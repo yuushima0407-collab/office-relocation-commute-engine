@@ -44,6 +44,10 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .emp-upload-zone{border:1.5px dashed var(--gray-bd);border-radius:6px;padding:10px;text-align:center;color:var(--gray);cursor:pointer;transition:border-color .15s;position:relative;font-size:12px}
 .emp-upload-zone:hover,.emp-upload-zone.dragover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
 .emp-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone-filled{display:none}
+.emp-upload-zone.filled{padding:6px 10px}
+.emp-upload-zone.filled .upload-zone-prompt{display:none}
+.emp-upload-zone.filled .upload-zone-filled{display:block;font-size:12px;font-weight:600}
 .emp-status{margin-top:8px;font-size:12px;padding:5px 8px;border-radius:5px;display:none}
 .emp-status.ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
 .emp-status.err{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
@@ -106,6 +110,7 @@ body{font-family:"Hiragino Sans","Meiryo",sans-serif;font-size:14px;color:#11182
 .recalc-btn:hover:not(:disabled){opacity:.9}
 .recalc-btn:disabled{opacity:.45;cursor:not-allowed}
 .recalc-btn.dirty{background:var(--orange)}
+.recalc-btn.ready-pulse{animation:dragPulse 1s ease-in-out infinite}
 .recalc-hint{font-size:11px;color:var(--gray);text-align:center;margin-top:5px;min-height:16px}
 
 /* Main area */
@@ -308,22 +313,41 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
 @keyframes flash{0%{box-shadow:0 0 0 4px rgba(37,99,235,.5)}100%{box-shadow:none}}
 
 /* Empty state */
-.empty-state{max-width:760px;margin:40px auto;padding:32px;text-align:center}
-.empty-state h2{font-size:20px;margin-bottom:8px;color:#1e3a5f}
-.empty-state p.lead{color:var(--gray);font-size:14px;margin-bottom:28px;line-height:1.7}
-.empty-cta{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:12px}
-.empty-sample-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:24px}
-.empty-sample-card{border:2px solid var(--blue);border-radius:10px;padding:16px;text-align:left;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,.08)}
-.empty-sample-btn{width:100%;background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:14px 12px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
-.empty-sample-btn:hover{background:#16304f}
-.empty-sample-btn:disabled{opacity:.5;cursor:default}
-.empty-preview-body{margin-top:10px;padding-top:10px;border-top:1px dashed var(--gray-bd);font-size:12px;color:#374151;text-align:left}
-.empty-preview-body .ep-row{display:flex;justify-content:space-between;padding:2px 0}
-.empty-preview-body .ep-title{font-weight:700;margin:6px 0 3px;color:#1e3a5f}
-.empty-preview-more{display:none}
-.empty-preview-more.open{display:block}
-.empty-preview-toggle{display:block;width:100%;text-align:center;margin-top:6px;font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;padding:4px}
-.empty-preview-toggle:hover{text-decoration:underline}
+.empty-state{max-width:1040px;margin:40px auto;padding:32px;text-align:center}
+.empty-state h2{font-size:20px;margin-bottom:20px;color:#1e3a5f}
+.empty-steps{display:flex;justify-content:center;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+.empty-step{font-size:15px;font-weight:700}
+.empty-sample-grid{margin:0 auto 24px}
+.empty-sample-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px}
+.empty-nav-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--gray-bd);background:#fff;color:var(--gray);font-size:14px;cursor:pointer;transition:background .15s,border-color .15s}
+.empty-nav-btn:hover:not(:disabled){background:var(--gray-lt);border-color:var(--gray)}
+.empty-nav-btn:disabled{opacity:.35;cursor:default}
+.empty-nav-label{font-size:14px;font-weight:700;color:#1e3a5f;min-width:220px;text-align:center}
+.empty-sample-card{border:1px solid var(--gray-bd);border-radius:10px;padding:16px;text-align:left;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.empty-sample-title{font-size:14px;font-weight:700;color:#1e3a5f}
+/* 社員データ・オフィス候補を横に並べる。片方を最後まで見ないともう片方が出てこない、という構造にしない */
+.empty-sample-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.empty-sample-col{display:flex;flex-direction:column;align-items:center}
+.empty-preview-scroll{width:100%;max-height:280px;overflow:auto;border:1px solid var(--gray-bd);border-radius:6px;margin-top:12px}
+/* ファイルのような見た目にして、アップロード欄（📂）との関連性を分かりやすくする */
+.empty-drag-chip{display:flex;flex-direction:column;align-items:center;width:92px;background:#fff;color:#1e3a5f;border:1.5px solid var(--blue);border-radius:4px 8px 8px 8px;padding:10px 6px 8px;cursor:grab;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:transform .15s,box-shadow .15s}
+.empty-drag-chip::before{content:'';position:absolute;top:0;right:0;border-width:0 9px 9px 0;border-style:solid;border-color:transparent #eff6ff transparent transparent}
+.empty-drag-chip:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(37,99,235,.2)}
+.empty-drag-chip:active{cursor:grabbing}
+.empty-drag-chip .edc-icon{font-size:28px;line-height:1}
+.empty-drag-chip .edc-name{font-size:10px;font-weight:700;text-align:center;margin-top:5px;line-height:1.3}
+.empty-drag-chip .edc-arrow{display:block;color:var(--blue);font-size:10px;font-weight:600;text-align:center;margin-top:4px}
+.empty-drag-chip.office-chip{border-color:var(--green)}
+.empty-drag-chip.office-chip::before{border-color:transparent #f0fdf4 transparent transparent}
+.empty-drag-chip.office-chip:hover{box-shadow:0 4px 8px rgba(22,163,74,.2)}
+.empty-drag-chip.office-chip .edc-arrow{color:var(--green)}
+/* まだ触ってない間、ドラッグ元(チップ)を点滅させて誘導する */
+.empty-drag-chip.drag-target-hint{box-shadow:0 0 0 3px var(--blue-lt);animation:dragPulse 1s ease-in-out infinite}
+.empty-drag-chip.office-chip.drag-target-hint{box-shadow:0 0 0 3px #dcfce7}
+@keyframes dragPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.csv-preview-table{width:100%;border-collapse:collapse;font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:11px}
+.csv-preview-table th,.csv-preview-table td{border:1px solid var(--gray-bd);padding:2px 6px;text-align:left;white-space:nowrap}
+.csv-preview-table th{background:var(--gray-lt);font-weight:700;position:sticky;top:0}
 .empty-state .notes{text-align:left;font-size:12px;color:var(--gray);line-height:1.8;margin-top:8px}
 </style>
 </head>
@@ -354,29 +378,38 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
           ondragleave="handleDragLeave(event,'emp-zone')"
           ondrop="handleEmpDrop(event)">
           <input type="file" id="emp-file" accept=".csv,.tsv" onchange="handleEmpSelect(event)">
-          <div style="font-size:20px;margin-bottom:4px">📂</div>
-          <div style="font-weight:600">CSVをドロップ / 選択</div>
-          <div style="font-size:11px;margin-top:2px">CSV・TSV対応</div>
+          <div class="upload-zone-prompt">
+            <div style="font-size:20px;margin-bottom:4px">📂</div>
+            <div style="font-weight:600">CSVをドロップ / 選択</div>
+            <div style="font-size:11px;margin-top:2px">CSV・TSV対応</div>
+          </div>
+          <div class="upload-zone-filled">📂 ＋ 追加で選択</div>
         </div>
         <div id="emp-status" class="emp-status"></div>
         <div id="dept-mode-badge" style="display:none"></div>
       </div>
 
-      <!-- 社員データが入るまで隠す（最初のナビゲーションを単純にする） -->
-      <div id="sidebar-advanced" style="display:none">
-
-      <!-- オフィス候補 -->
-      <div class="s-section collapsible-section" id="office-section">
+      <!-- オフィス候補（社員データより先に入れても構わないので、常に表示する） -->
+      <div class="s-section collapsible-section open" id="office-section">
         <div class="s-title" onclick="toggleCollapsible('office-section')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
           <span>オフィス候補</span>
           <span class="chevron">▼</span>
         </div>
         <div class="collapsible-body">
-        <div class="office-list" id="office-list"></div>
+        <div class="emp-upload-zone" id="office-zone"
+          ondragover="handleDragOver(event,'office-zone')"
+          ondragleave="handleDragLeave(event,'office-zone')"
+          ondrop="handleOfficeDrop(event)">
+          <input type="file" id="office-csv-input" accept=".csv,.tsv" onchange="handleOfficeCsvSelect(event)">
+          <div class="upload-zone-prompt">
+            <div style="font-size:20px;margin-bottom:4px">📂</div>
+            <div style="font-weight:600">オフィス候補CSVをドロップ / 選択</div>
+            <div style="font-size:11px;margin-top:2px">CSV・TSV対応</div>
+          </div>
+          <div class="upload-zone-filled">📂 ＋ 追加で選択</div>
+        </div>
         <div class="office-actions">
-          <button class="btn-oa primary" onclick="toggleAddOfficeForm()">＋ オフィスを追加</button>
-          <button class="btn-oa" onclick="document.getElementById('office-csv-input').click()">📤 CSV読み込み</button>
-          <input type="file" id="office-csv-input" accept=".csv,.tsv" style="display:none" onchange="handleOfficeCsvSelect(event)">
+          <button class="btn-oa primary" onclick="toggleAddOfficeForm()">＋ 手入力で1件追加</button>
         </div>
         <div class="add-office-form" id="add-office-form">
           <div class="aof-grid">
@@ -409,6 +442,9 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
         </div>
         </div>
       </div>
+
+      <!-- 社員データが入るまで隠す（最初のナビゲーションを単純にする） -->
+      <div id="sidebar-advanced" style="display:none">
 
       <!-- 制約パネル -->
       <div class="s-section">
@@ -524,6 +560,12 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
         </div>
       </div>
 
+      <!-- 使うオフィスを固定（部署配置のすぐ上。ここで固定したオフィスを、下の部署配置で割り当てる） -->
+      <div class="s-section">
+        <div class="s-title">使うオフィスを固定</div>
+        <div class="office-list" id="office-list"></div>
+      </div>
+
       <!-- 部署別ルール (D) -->
       <div class="s-section">
         <div class="collapsible-section open" id="dept-rules-section">
@@ -544,9 +586,10 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
     </div><!-- /sidebar-scroll -->
 
     <!-- Recalculate button -->
-    <div class="recalc-wrap" id="recalc-wrap" style="display:none">
-      <button class="recalc-btn" id="recalc-btn" onclick="runEvaluate(false)" disabled>
-        ▶ 再計算する
+    <div class="recalc-wrap" id="recalc-wrap">
+      <button class="recalc-btn" id="recalc-btn" onclick="runEvaluate(false)" disabled
+        title="社員データとオフィス候補、両方をドラッグ or アップロードしてから押してください">
+        ▶ 分析開始
       </button>
       <div class="recalc-hint" id="recalc-hint">社員データとオフィス候補を入力してください</div>
     </div>
@@ -555,17 +598,33 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
   <!-- ══ MAIN ══ -->
   <div class="main-area" id="main-area">
 
+    <!-- 入力データ確認（結果を見る前に、何を入れて計算したか確認できるよう先頭に） -->
+    <div class="section collapsible-section open" id="section-summary" style="display:none">
+      <div class="section-header" onclick="toggleCollapsible('section-summary')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <span>入力データ確認</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="collapsible-body">
+        <div class="section-body">
+          <div class="summary-grid" id="summary-grid"></div>
+          <div id="mixed-dept-banner" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Empty state（結果が出るまで表示、renderで消える） -->
     <div class="empty-state" id="empty-state">
       <h2>オフィス配置シミュレーション</h2>
-      <p class="lead">社員の通勤データとオフィス候補から、賃料・通勤負担・収容人数の<br>バランスが取れた移転案をパレート最適で提案します。</p>
-
-      <div class="empty-cta">▼ サンプルデータを入力して試す（ボタンを押すと計算が始まります）</div>
+      <div class="empty-steps">
+        <div class="empty-step" style="color:var(--blue)">① 社員データをドラッグ</div>
+        <div class="empty-step" style="color:var(--green)">② オフィス候補をドラッグ</div>
+        <div class="empty-step" style="color:var(--orange)">③ 左下の「分析開始」を押す</div>
+      </div>
       <div class="empty-sample-grid" id="empty-sample-grid"></div>
 
       <div class="notes">
-        <p>※ 上のサンプルは入力データのみ仮のものです。計算自体はAWS Lambda上で実際に動くエンジンによるリアルタイム分析です。</p>
-        <p>※ CSVでも試せます（左のサイドバーからアップロード）。現在は首都圏の主要65駅に対応（品川・渋谷・新宿・東京・大宮・横浜など）。対応駅の社員データであれば使える状態で、実際の分析結果が表示されます。</p>
+        <p>※ 上のサンプルは入力データのみ仮のものです。ドラッグ操作は、実際に自社のCSVをアップロードする場合と同じ処理（列の読み取り・駅の実在チェック）を通ります。計算自体はAWS Lambda上で実際に動くエンジンによるリアルタイム分析です。</p>
+        <p>※ 自社のCSV/TSVでも試せます（左のサイドバーからドラッグ&ドロップ、またはクリックして選択）。現在は首都圏の主要65駅に対応（品川・渋谷・新宿・東京・大宮・横浜など）。対応駅の社員データであれば使える状態で、実際の分析結果が表示されます。</p>
       </div>
     </div>
 
@@ -651,20 +710,6 @@ code{font-size:12px;background:var(--gray-lt);padding:1px 4px;border-radius:3px}
 
     <!-- Notices（ハザードなど、細かい注意事項は下に） -->
     <div id="notices-container"></div>
-
-    <!-- 入力データ確認（念のため確認用。デフォルト折りたたみ） -->
-    <div class="section collapsible-section" id="section-summary" style="display:none">
-      <div class="section-header" onclick="toggleCollapsible('section-summary')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-        <span>入力データ確認</span>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="collapsible-body">
-        <div class="section-body">
-          <div class="summary-grid" id="summary-grid"></div>
-          <div id="mixed-dept-banner" style="display:none;margin-top:10px"></div>
-        </div>
-      </div>
-    </div>
 
   </div><!-- /main-area -->
 </div><!-- /app-layout -->
@@ -799,50 +844,103 @@ function generateEmployees(departments, defaultPool) {
   });
 }
 
-async function loadSample(type) {
-  const cfg = SAMPLE_CONFIGS[type];
-  if (!cfg) return;
-  if (!state.isApiConnected) { setStatus('error','API未接続。サンプルはAPI接続後にお試しください'); return; }
-
-  revealAdvancedUI();
-  state.employeeData = generateEmployees(cfg.departments, cfg.pool || []);
-  state.officeCandidates = cfg.offices.map(o => ({...o, fixed: false}));
-  state.deptRules = {};
-
-  document.getElementById('s-office-days').value = cfg.officeDays;
-  document.getElementById('s-max-offices').value = cfg.numOffices;
-
-  const c = cfg.constraints || {};
-  document.getElementById('s-budget').value           = c.budgetMan        || '';
-  document.getElementById('s-max-avg').value          = c.maxAvg           || '';
-  document.getElementById('s-desired-capacity').value = c.desiredCapacity  || '';
-  document.getElementById('s-max-p95').value          = c.maxP95           || '';
-  document.getElementById('s-risk-threshold').value   = c.riskThreshold    || 60;
-  document.getElementById('s-max-exceed-risk').value  = c.maxExceedRisk    || '';
-
-  if (cfg.baseline) {
-    const b = cfg.baseline;
-    document.getElementById('bl-name').value     = b.name    || '';
-    document.getElementById('bl-station').value  = b.station || '';
-    document.getElementById('bl-lastmile').value = b.lastMile|| '';
-    document.getElementById('bl-rent').value     = b.rentMan || '';
-    document.getElementById('bl-capacity').value = b.capacity|| '';
-    const blSec = document.getElementById('baseline-section');
-    if (blSec && !blSec.classList.contains('open')) blSec.classList.add('open');
+// デモカードのドラッグ&ドロップ用に、CSV文字列を作る。
+// 社員データは generateEmployees が乱数を使うため、ページを開くたびに再生成すると
+// プレビュー表示とドラッグの中身がズレる。1回だけ生成してキャッシュしておく。
+const _demoCsvCache = {};
+// 駅×部署で集計済みの形ではなく、社員1人1行の生データとして作る。
+// 列名も駅名も日本語にして、「自社のCSVに近い」と感じられるようにする
+// （station_id のような内部向けの英字コードは、実際の人事データには出てこないはず）。
+function getDemoEmployeeCsv(key) {
+  if (!_demoCsvCache[key]) {
+    const cfg = SAMPLE_CONFIGS[key];
+    const rows = [];
+    for (const dept of cfg.departments) {
+      const pool = (dept.pool && dept.pool.length > 0) ? dept.pool : (cfg.pool || []);
+      for (let i = 0; i < dept.count; i++) {
+        const st = pool[Math.floor(Math.random() * pool.length)];
+        const stName = (stationMaster[st] && stationMaster[st].name) || st;
+        rows.push([stName, dept.name]);
+      }
+    }
+    // 部署ごとに固まって並んだままだと、プレビューの先頭数行が同じ部署ばかりになり
+    // 多様なデータが入っていることが伝わらない。ランダムに並び替えておく（Fisher-Yates）
+    for (let i = rows.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [rows[i], rows[j]] = [rows[j], rows[i]];
+    }
+    const lines = ['社員ID,最寄駅,部署',
+      ...rows.map((r, idx) => `社員${idx+1},${r[0]},${r[1]}`)];
+    _demoCsvCache[key] = lines.join('\n');
   }
-
-  const total = state.employeeData.reduce((s,r) => s + (r.count||0), 0);
-  updateEmpStatus(`✓ ${type}サンプル: ${total}名 / ${cfg.departments.length}部署`, 'ok');
-  renderOfficeCandidateList();
-  renderDeptRulesSection();
-  updateDirtyState();
-  updateRecalcButton();
-
-  renderSummaryPanel();
-  document.getElementById('section-summary').style.display = '';
-
-  await runEvaluate(true);
+  return _demoCsvCache[key];
 }
+function getDemoOfficeCsv(key) {
+  const cfg = SAMPLE_CONFIGS[key];
+  const lines = ['オフィス名,最寄駅,徒歩(分),月額賃料,収容人数',
+    ...cfg.offices.map(o => {
+      const stName = (stationMaster[o.nearest_station_id] && stationMaster[o.nearest_station_id].name) || o.nearest_station_id;
+      return `${o.name},${stName},${o.last_mile_minutes},${Math.round(o.rent_jpy_month/10000)}万,${o.capacity_people}人`;
+    })];
+  return lines.join('\n');
+}
+function dragDemoText(e, text, targetZoneId) {
+  e.dataTransfer.setData('text/plain', text);
+  e.dataTransfer.effectAllowed = 'copy';
+  // 色の点滅は常時表示（updateDemoHints）に任せ、矢印だけドラッグ中に一時的に出す
+  const zone = document.getElementById(targetZoneId);
+  if (!zone) return;
+  const color = targetZoneId === 'office-zone' ? '#16a34a' : '#2563eb';
+  drawDragArrow(e.target, zone, color, 'active');
+  e.target.addEventListener('dragend', () => removeDragArrow('active'), { once: true });
+}
+
+// ドラッグ元のカードから、ドロップ先の欄まで、画面全体を覆うSVGで矢印を1本引く。
+// id を分けることで、社員側・オフィス側の矢印を同時に出せるようにしてある。
+function drawDragArrow(fromEl, toEl, color, id) {
+  removeDragArrow(id);
+  const fromR = fromEl.getBoundingClientRect();
+  const toR = toEl.getBoundingClientRect();
+  const x1 = fromR.left + fromR.width / 2, y1 = fromR.top;
+  const x2 = toR.right + 8, y2 = toR.top + toR.height / 2;
+  // 矢印の先端が必ず「左向き（＝ドロップ欄の方を向く）」になるよう、
+  // 終点の直前の制御点をあえて終点より右側に置いて、左向きに滑り込む曲線にする
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = `drag-arrow-overlay-${id}`;
+  svg.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';
+  svg.innerHTML = `
+    <defs>
+      <marker id="drag-arrow-head-${id}" markerWidth="9" markerHeight="9" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="${color}"/>
+      </marker>
+    </defs>
+    <path d="M${x1},${y1} C${x1},${(y1+y2)/2} ${x2+60},${y2} ${x2},${y2}"
+      fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="7,5" marker-end="url(#drag-arrow-head-${id})"/>
+  `;
+  document.body.appendChild(svg);
+}
+function removeDragArrow(id) {
+  const el = document.getElementById(`drag-arrow-overlay-${id}`);
+  if (el) el.remove();
+}
+
+// デモの社員データ・オフィス候補データそれぞれについて、まだ投入されてない間は
+// ドラッグ元(チップ)だけを点滅させ、「ここを触ればいい」と伝える。
+// ドロップ先の欄は点滅させない（情報過多になるため）。
+// 矢印はここでは出さず、実際にドラッグしてる間だけ dragDemoText 側で表示する。
+function updateDemoHints() {
+  const empChip = document.querySelector('.empty-drag-chip.emp-chip');
+  const officeChip = document.querySelector('.empty-drag-chip.office-chip');
+  const hasEmp = state.employeeData && state.employeeData.length > 0;
+  const hasOfc = state.officeCandidates.length > 0;
+
+  if (empChip) empChip.classList.toggle('drag-target-hint', !hasEmp);
+  if (officeChip) officeChip.classList.toggle('drag-target-hint', !hasOfc);
+}
+
+// ドロップ欄以外の上を通過中も「禁止」カーソルにならないよう、ページ全体でドラッグを許可する
+document.addEventListener('dragover', e => e.preventDefault());
+
 
 /* ── Employee data ──────────────────────────────────────────────── */
 function handleDragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
@@ -851,47 +949,71 @@ function handleDragLeave(e, id) { document.getElementById(id).classList.remove('
 function handleEmpDrop(e) {
   e.preventDefault();
   document.getElementById('emp-zone').classList.remove('dragover');
-  const f = e.dataTransfer.files[0]; if (f) processEmpFile(f);
+  const f = e.dataTransfer.files[0];
+  if (f) { processEmpFile(f); return; }
+  const text = e.dataTransfer.getData('text/plain');
+  if (text) processEmpText(text, 'デモデータ');
 }
 function handleEmpSelect(e) { const f = e.target.files[0]; if (f) processEmpFile(f); }
 
 function processEmpFile(file) {
   const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const rows = parseCsvTsv(ev.target.result);
-      if (rows.length < 2) throw new Error('データが見つかりません');
-      const headers = rows[0];
-      const si = headers.findIndex(h => ['station_id','最寄駅','駅名','最寄り駅','station'].includes(h.trim()));
-      const ci = headers.findIndex(h => ['count','人数','社員数','名'].includes(h.trim()));
-      const gi = headers.findIndex(h => ['group','部署','部門','所属'].includes(h.trim()));
-      if (si < 0) throw new Error('駅列が見つかりません (station_id, 最寄駅 など)');
-
-      const unresolved = [];
-      const data = rows.slice(1).filter(r => r[si]).map((r, idx) => {
-        const stId = r[si].trim();
-        const cnt  = ci >= 0 ? (parseInt(r[ci]) || 1) : 1;
-        const grp  = gi >= 0 ? (r[gi] || null) : null;
-        // check against stationMaster
-        const known = stationMaster[stId] || Object.values(stationMaster).find(s => s.name === stId);
-        if (!known) unresolved.push({raw: stId, row_number: idx+2, candidates:[]});
-        return {station_id: stId, count: cnt, group: grp, segment:null, office_days_per_week_override:null};
-      });
-      finishEmpLoad(data, unresolved, file.name);
-    } catch(err) {
-      updateEmpStatus('エラー: ' + err.message, 'err');
-    }
-  };
+  reader.onload = ev => processEmpText(ev.target.result, file.name);
   reader.readAsText(file, 'UTF-8');
+}
+
+// ドロップされた実ファイルも、デモカードからドラッグされたCSV文字列も、
+// どちらもここで同じ解析処理（列名マッチング・駅の実在チェック）を通す。
+// 駅IDでも日本語の駅名（「駅」有り/無し両方）でも、内部で使う station_id に変換する。
+// 見つからなければ元の文字列をそのまま返す（呼び出し側で未解決として扱われる）。
+function resolveStationId(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  if (stationMaster[s]) return s;
+  const noSfx = s.replace(/駅$/, '');
+  if (stationMaster[noSfx]) return noSfx;
+  const byName = Object.values(stationMaster).find(x => x.name === s || x.name === noSfx || x.name+'駅' === s);
+  return byName ? byName.station_id : s;
+}
+
+function processEmpText(text, sourceName) {
+  try {
+    const rows = parseCsvTsv(text);
+    if (rows.length < 2) throw new Error('データが見つかりません');
+    const headers = rows[0];
+    const si = headers.findIndex(h => ['station_id','最寄駅','駅名','最寄り駅','station'].includes(h.trim()));
+    const ci = headers.findIndex(h => ['count','人数','社員数','名'].includes(h.trim()));
+    const gi = headers.findIndex(h => ['group','部署','部門','所属'].includes(h.trim()));
+    if (si < 0) throw new Error('駅列が見つかりません (station_id, 最寄駅 など)');
+
+    const unresolved = [];
+    const data = rows.slice(1).filter(r => r[si]).map((r, idx) => {
+      const raw  = r[si].trim();
+      const stId = resolveStationId(raw);
+      const cnt  = ci >= 0 ? (parseInt(r[ci]) || 1) : 1;
+      const grp  = gi >= 0 ? (r[gi] || null) : null;
+      if (!stationMaster[stId]) unresolved.push({raw, row_number: idx+2, candidates:[]});
+      return {station_id: stId, count: cnt, group: grp, segment:null, office_days_per_week_override:null};
+    });
+    finishEmpLoad(data, unresolved, sourceName);
+  } catch(err) {
+    updateEmpStatus('エラー: ' + err.message, 'err');
+  }
 }
 
 function revealAdvancedUI(){
   document.getElementById('sidebar-advanced').style.display = '';
-  document.getElementById('recalc-wrap').style.display = '';
+}
+
+// 「分析開始」ボタンは最初から見せておき、両方揃うまでは押せない状態＋ヒントで示す。
+// 制約設定（sidebar-advanced）は、実際に一度分析が走るまでは出さない。
+function checkReadyForAnalysis() {
+  updateRecalcButton();
+  updateDemoHints();
 }
 
 function finishEmpLoad(data, unresolved, filename) {
-  revealAdvancedUI();
+  document.getElementById('emp-zone').classList.add('filled');
   state.employeeData = data;
   const total = data.reduce((s,r)=>s+(r.count||0),0);
   let msg = `✓ ${filename || 'ファイル'}: ${data.length}行 / ${total}名`;
@@ -904,24 +1026,18 @@ function finishEmpLoad(data, unresolved, filename) {
   deptBadge.style.display = '';
   if (withGroup.length === data.length) {
     deptBadge.className = 'dept-mode-badge ok';
-    deptBadge.innerHTML = '✓ 部署データあり';
+    deptBadge.innerHTML = '✓ 社員データ読み込み完了';
   } else if (withoutGroup.length === data.length) {
     deptBadge.className = 'dept-mode-badge info';
-    deptBadge.innerHTML = 'ℹ 部署なし（個人単位モード）';
+    deptBadge.innerHTML = '✓ 社員データ読み込み完了（部署なし・個人単位モード）';
   } else {
     const missingPeople = withoutGroup.reduce((s,r)=>s+(r.count||0),0);
     deptBadge.className = 'dept-mode-badge warn';
-    deptBadge.innerHTML = `⚠ 部署混在: 未入力 ${missingPeople}名`;
+    deptBadge.innerHTML = `⚠ 社員データ読み込み完了（部署混在: 未入力${missingPeople}名）`;
   }
 
-  renderSummaryPanel();
-  document.getElementById('section-summary').style.display = '';
   renderDeptRulesSection();
-  updateRecalcButton();
-
-  if (state.officeCandidates.length > 0 && state.isApiConnected) {
-    runEvaluate(true);
-  }
+  checkReadyForAnalysis();
 }
 
 function updateEmpStatus(msg, cls) {
@@ -956,9 +1072,10 @@ function confirmAddOffice() {
   });
   ['aof-name','aof-station','aof-lastmile','aof-rent','aof-capacity'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('add-office-form').classList.remove('open');
+  document.getElementById('office-zone').classList.add('filled');
   renderOfficeCandidateList();
   markDirty();
-  updateRecalcButton();
+  checkReadyForAnalysis();
 }
 
 function removeOfficeCandidate(id) {
@@ -986,12 +1103,16 @@ function renderOfficeCandidateList() {
     if (!cap)   warns.push('<span style="color:var(--red);font-size:11px">⚠定員未設定</span>');
     if (!stKnown && c.nearest_station_id) warns.push(`<span style="color:var(--red);font-size:11px">⚠駅不明「${escHtml(c.nearest_station_id)}」→候補から外れます</span>`);
     const itemStyle = (!stKnown && c.nearest_station_id) ? 'background:#fee2e2;border-color:#fca5a5;' : '';
-    return `
-      <div class="oc-item" style="${itemStyle}">
+    // 「固定」は個々の案の絞り込み条件なので、まだ一度も分析してない段階で見せると
+    // 「固定したオフィスだけで分析が始まる」という誤解を招きやすい。分析開始後に出す。
+    const fixedLabel = state.data ? `
         <label class="oc-fixed-label" title="このオフィスを必ず採用">
           <input type="checkbox" ${c.fixed?'checked':''} onchange="toggleFixed('${escHtml(c.office_id)}')">
           固定
-        </label>
+        </label>` : '';
+    return `
+      <div class="oc-item" style="${itemStyle}">
+        ${fixedLabel}
         <div class="oc-info">
           <div class="oc-name">${escHtml(c.name)}</div>
           <div class="oc-sub">${escHtml(c.nearest_station_id||'駅未設定')} +${c.last_mile_minutes}分 ${rentW||''} ${cap||''}</div>
@@ -1005,11 +1126,25 @@ function renderOfficeCandidateList() {
 }
 
 function handleOfficeCsvSelect(e) { const f = e.target.files[0]; if (f) processOfficeCsv(f); }
+function handleOfficeDrop(e) {
+  e.preventDefault();
+  document.getElementById('office-zone').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) { processOfficeCsv(f); return; }
+  const text = e.dataTransfer.getData('text/plain');
+  if (text) processOfficeText(text);
+}
 function processOfficeCsv(file) {
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = ev => processOfficeText(ev.target.result);
+  reader.readAsText(file,'UTF-8');
+}
+
+// 実ファイルのドロップも、デモカードからドラッグされたCSV文字列も、
+// どちらもここで同じ解析処理（列名マッチング・駅の実在チェック）を通す。
+function processOfficeText(text) {
     try {
-      const rows = parseCsvTsv(ev.target.result);
+      const rows = parseCsvTsv(text);
       if (rows.length < 2) throw new Error('データなし');
       const hs = rows[0].map(h => h.trim().toLowerCase());
 
@@ -1036,20 +1171,10 @@ function processOfficeCsv(file) {
       };
       const parseMin = v => parseInt(String(v||'5').replace(/[分\s]/g,'')) || 5;
       const parseCap = v => v ? (parseInt(String(v).replace(/[人,\s]/g,'')) || null) : null;
-      const resolveStation = raw => {
-        if (!raw) return '';
-        const s = raw.trim();
-        if (stationMaster[s]) return s;
-        const noSfx = s.replace(/駅$/, '');
-        if (stationMaster[noSfx]) return noSfx;
-        const byName = Object.values(stationMaster).find(x => x.name === s || x.name === noSfx || x.name+'駅' === s);
-        return byName ? byName.station_id : s;
-      };
-
       const unresolved = [];
       rows.slice(1).filter(r => r[ni] && r[ni].trim()).forEach(r => {
         const rawSt = si >= 0 ? r[si] : '';
-        const resolvedSt = resolveStation(rawSt);
+        const resolvedSt = resolveStationId(rawSt);
         if (rawSt && !stationMaster[resolvedSt]) unresolved.push(r[ni].trim() + '（' + rawSt + '）');
         state.officeCandidates.push({
           office_id: 'csv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
@@ -1062,13 +1187,12 @@ function processOfficeCsv(file) {
         });
       });
       renderOfficeCandidateList();
+      document.getElementById('office-zone').classList.add('filled');
       markDirty();
-      updateRecalcButton();
+      checkReadyForAnalysis();
       // C-3: notify on unresolved stations
       if (unresolved.length > 0) alert('読み込みは完了しましたが、駅が見つからない行があります:\n' + unresolved.join('\n'));
     } catch(err) { alert('CSVエラー: '+err.message); }
-  };
-  reader.readAsText(file,'UTF-8');
 }
 
 /* ── Dept rules ────────────────────────────────────────────────── */
@@ -1151,8 +1275,11 @@ function updateCommuteCap() {
 function updateRecalcButton() {
   const btn  = document.getElementById('recalc-btn');
   const hint = document.getElementById('recalc-hint');
+  btn.textContent = state.data ? '▶ 再計算する' : '▶ 分析開始';
   if (!state.isApiConnected) {
-    btn.disabled = true; hint.textContent = 'API接続が必要です'; return;
+    btn.disabled = true; hint.textContent = 'API接続が必要です';
+    btn.classList.remove('ready-pulse');
+    return;
   }
   const hasEmp = state.employeeData && state.employeeData.length > 0;
   const hasOfc = state.officeCandidates.length > 0;
@@ -1164,6 +1291,9 @@ function updateRecalcButton() {
     const total = state.employeeData.reduce((s,r)=>s+(r.count||0),0);
     hint.textContent = `${state.officeCandidates.length}件 × ${total}名で計算`;
   }
+  btn.title = btn.disabled ? hint.textContent : '';
+  // 初回分析（③のステップ）がまだの間だけ、押せるようになった瞬間に点滅で気付かせる
+  btn.classList.toggle('ready-pulse', !btn.disabled && !state.data);
   updateDirtyState();
 }
 
@@ -1272,15 +1402,16 @@ async function runEvaluate(auto=false) {
     }
 
     const data = await res.json();
+    const isFirstRun = !state.data;
     state.data = data;
     markClean();
+    if (isFirstRun) { revealAdvancedUI(); renderOfficeCandidateList(); }
     render(data);
     setStatus('api','計算完了');
   } catch(err) {
     setStatus('error',`エラー: ${err.message}`);
     if (!auto) alert(`計算エラー:\n${err.message}`);
   } finally {
-    btn.textContent = '▶ 再計算する';
     updateRecalcButton();
   }
 }
@@ -2098,57 +2229,93 @@ async function loadStationMaster(){
 
 /* ── Init ──────────────────────────────────────────────────────── */
 /* ── Empty state (top sample grid + preview) ─────────────────────── */
-const EMPTY_PREVIEW_DEFAULT_ROWS = 3;
 
-function renderEmptySampleGrid(){
-  const grid = document.getElementById('empty-sample-grid');
-  const icons = {it:'🏢', maker:'🏭', gaishi:'🌐'};
-  grid.innerHTML = Object.entries(SAMPLE_CONFIGS).map(([key,cfg])=>{
-    const totalEmp = cfg.departments.reduce((s,d)=>s+d.count,0);
-    const deptRow = d => `<div class="ep-row"><span>${escHtml(d.name)}</span><span>${d.count}人（例: ${escHtml(d.pool[0]||'')}駅など）</span></div>`;
-    const officeRow = o => `<div class="ep-row"><span>${escHtml(o.name)}</span><span>${Math.round(o.rent_jpy_month/10000)}万円/月・${o.capacity_people}人</span></div>`;
-    const deptDefault = cfg.departments.slice(0, EMPTY_PREVIEW_DEFAULT_ROWS).map(deptRow).join('');
-    const deptRest = cfg.departments.slice(EMPTY_PREVIEW_DEFAULT_ROWS).map(deptRow).join('');
-    const officeAll = cfg.offices.map(officeRow).join('');
-    const hasMore = cfg.departments.length > EMPTY_PREVIEW_DEFAULT_ROWS;
-    return `
-    <div class="empty-sample-card">
-      <button class="empty-sample-btn" onclick="loadSample('${key}')">${icons[key]||'📊'} ${escHtml(cfg.label)}</button>
-      <div class="empty-preview-body">
-        <div class="ep-title">入力データの例（社員 計${totalEmp}人）</div>
-        ${deptDefault}
-        <div class="empty-preview-more" id="empty-preview-more-${key}">
-          ${deptRest}
-          <div class="ep-title">候補オフィス</div>
-          ${officeAll}
-        </div>
-      </div>
-      ${hasMore ? `<button class="empty-preview-toggle" onclick="toggleEmptyPreviewMore('${key}')">▼ もっと見る</button>` : ''}
-    </div>
-  `;
-  }).join('');
+// CSV文字列の先頭行をヘッダーとして、指定した範囲の行を表として組み立てる
+// （ドラッグする実物のCSVと、プレビューの中身を完全に一致させるため）
+function csvRowsToTable(csvText, startRow, endRow, withHeader = true) {
+  const lines = csvText.split('\n');
+  const header = lines[0].split(',');
+  const body = lines.slice(1 + startRow, 1 + endRow);
+  const bodyHtml = body.map(line =>
+    `<tr>${line.split(',').map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`
+  ).join('');
+  const theadHtml = withHeader
+    ? `<thead><tr>${header.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>`
+    : '';
+  return `<table class="csv-preview-table">${theadHtml}<tbody>${bodyHtml}</tbody></table>`;
 }
 
-function toggleEmptyPreviewMore(key){
-  const more = document.getElementById(`empty-preview-more-${key}`);
-  const toggleBtn = more.parentElement.querySelector('.empty-preview-toggle');
-  more.classList.toggle('open');
-  toggleBtn.textContent = more.classList.contains('open') ? '▲ 閉じる' : '▼ もっと見る';
+const SAMPLE_KEYS = Object.keys(SAMPLE_CONFIGS);
+const SAMPLE_ICONS = {it:'🏢', maker:'🏭', gaishi:'🌐'};
+let currentSampleIdx = 0;
+
+function prevSample() {
+  currentSampleIdx = (currentSampleIdx - 1 + SAMPLE_KEYS.length) % SAMPLE_KEYS.length;
+  renderEmptySampleGrid();
+}
+function nextSample() {
+  currentSampleIdx = (currentSampleIdx + 1) % SAMPLE_KEYS.length;
+  renderEmptySampleGrid();
+}
+
+// 一度に3枚並べると「これをドラッグする」という主役が埋もれるので、1枚だけ見せて
+// ◀▶で他の業種サンプルに切り替えられるようにしている
+function renderEmptySampleGrid(){
+  const grid = document.getElementById('empty-sample-grid');
+  const key = SAMPLE_KEYS[currentSampleIdx];
+  const cfg = SAMPLE_CONFIGS[key];
+  const empCsv = getDemoEmployeeCsv(key);
+  const officeCsv = getDemoOfficeCsv(key);
+  const empRowCount = empCsv.split('\n').length - 1;
+  const officeRowCount = officeCsv.split('\n').length - 1;
+
+  const empTable = csvRowsToTable(empCsv, 0, empRowCount);
+  const officeTable = csvRowsToTable(officeCsv, 0, officeRowCount);
+
+  grid.innerHTML = `
+    <div class="empty-sample-nav">
+      <button class="empty-nav-btn" onclick="prevSample()" ${SAMPLE_KEYS.length<=1?'disabled':''}>◀</button>
+      <span class="empty-nav-label">${SAMPLE_ICONS[key]||'📊'} ${escHtml(cfg.label)}　(${currentSampleIdx+1}/${SAMPLE_KEYS.length})</span>
+      <button class="empty-nav-btn" onclick="nextSample()" ${SAMPLE_KEYS.length<=1?'disabled':''}>▶</button>
+    </div>
+    <div class="empty-sample-card">
+      <div class="empty-sample-cols">
+        <div class="empty-sample-col">
+          <div class="empty-drag-chip emp-chip" draggable="true"
+            ondragstart="dragDemoText(event, getDemoEmployeeCsv('${key}'), 'emp-zone')">
+            <span class="edc-icon">📄</span>
+            <span class="edc-name">社員データ.csv</span>
+            <span class="edc-arrow">↖ 社員データ欄へ</span>
+          </div>
+          <div class="empty-preview-scroll">${empTable}</div>
+        </div>
+        <div class="empty-sample-col">
+          <div class="empty-drag-chip office-chip" draggable="true"
+            ondragstart="dragDemoText(event, getDemoOfficeCsv('${key}'), 'office-zone')">
+            <span class="edc-icon">📄</span>
+            <span class="edc-name">オフィス候補.csv</span>
+            <span class="edc-arrow">↖ オフィス候補欄へ</span>
+          </div>
+          <div class="empty-preview-scroll">${officeTable}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  updateDemoHints();
 }
 
 async function init(){
-  renderEmptySampleGrid();
+  // デモCSVのプレビューで駅の日本語名を使うため、station_master読み込みを先にする
   await loadStationMaster();
+  renderEmptySampleGrid();
   try{
     const h=await fetch(`${API_BASE}/health`,{signal:AbortSignal.timeout(3000)});
     if(!h.ok) throw new Error();
     state.isApiConnected=true;
-    setStatus('api','APIに接続しました — サンプルまたはCSVでお試しください');
-    document.querySelectorAll('.empty-sample-btn').forEach(b=>b.disabled=false);
+    setStatus('api','APIに接続しました — デモカードのドラッグまたはCSVでお試しください');
   }catch{
     state.isApiConnected=false;
     setStatus('demo','APIに接続できません。サーバーを起動してください');
-    document.querySelectorAll('.empty-sample-btn').forEach(b=>b.disabled=true);
   }
   updateRecalcButton();
 }
