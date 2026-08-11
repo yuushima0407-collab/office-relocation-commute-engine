@@ -57,6 +57,7 @@ resource "aws_iam_role_policy" "github_actions" {
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
+          "ecr:DescribeRepositories", # terraform apply -target=aws_lambda_function 実行時、依存先のECRリポジトリを参照するのに必要
         ]
         Resource = aws_ecr_repository.cest_api.arn
       },
@@ -90,6 +91,15 @@ resource "aws_iam_role_policy" "github_actions" {
           "lambda:GetFunctionConfiguration",
         ]
         Resource = aws_lambda_function.cest_api.arn
+      },
+      {
+        # CIは `terraform apply -target=aws_lambda_function.cest_api` のみ実行する運用にしている
+        # （IAM/OIDCプロバイダ自体はCIに触らせない）。その際、Lambdaの実行ロール参照(role属性)を
+        # 解決するために、依存先であるこのロールの読み取り権限だけが必要になる。
+        Sid      = "ReadLambdaExecRole"
+        Effect   = "Allow"
+        Action   = ["iam:GetRole"]
+        Resource = aws_iam_role.lambda_exec.arn
       },
       {
         Sid      = "ManageApiGateway"

@@ -35,6 +35,16 @@ lambda_code.zip
 web_code.zip
 deploy.zip
 
+# フロント用station_master.jsonは cest/src/cest/data/station_master.json が正。
+# デプロイ時にCIがコピーして生成する（ローカル確認時は手動でコピーする）。
+web/station_master.json
+
+# Terraformのローカル作業ファイル（.terraform.lock.hclはバージョン固定のためコミットする）
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/*.tfplan
+
 # Legacy code
 legacy/
 
