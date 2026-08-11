@@ -58,6 +58,7 @@ resource "aws_iam_role_policy" "github_actions" {
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
           "ecr:DescribeRepositories", # terraform apply -target=aws_lambda_function 実行時、依存先のECRリポジトリを参照するのに必要
+          "ecr:ListTagsForResource",  # 同上、ECRリポジトリのstate refreshで呼ばれる
         ]
         Resource = aws_ecr_repository.cest_api.arn
       },
@@ -98,7 +99,12 @@ resource "aws_iam_role_policy" "github_actions" {
         # 解決するために、依存先であるこのロールの読み取り権限だけが必要になる。
         Sid      = "ReadLambdaExecRole"
         Effect   = "Allow"
-        Action   = ["iam:GetRole"]
+        Action = [
+          "iam:GetRole",
+          "iam:ListRolePolicies",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListRoleTags",
+        ]
         Resource = aws_iam_role.lambda_exec.arn
       },
       {
@@ -113,6 +119,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Action = [
           "s3:GetObject",
           "s3:PutObject",
+          "s3:DeleteObject", # S3ネイティブロック(use_lockfile)が .tflock を作成・削除するのに必要
           "s3:ListBucket",
         ]
         Resource = [
