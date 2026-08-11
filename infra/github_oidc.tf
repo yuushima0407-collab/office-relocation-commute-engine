@@ -90,6 +90,8 @@ resource "aws_iam_role_policy" "github_actions" {
           "lambda:UpdateFunctionConfiguration",
           "lambda:GetFunction",
           "lambda:GetFunctionConfiguration",
+          "lambda:ListVersionsByFunction", # state refreshで必要
+          "lambda:ListTags",               # 同上、先回りで追加
         ]
         Resource = aws_lambda_function.cest_api.arn
       },
