@@ -1,6 +1,8 @@
 # 既存OAC。terraform importで取り込む対象（Step3）。
+# name/descriptionはCloudFrontが自動生成した実際の値をそのまま使う（差分ゼロにするため）。
 resource "aws_cloudfront_origin_access_control" "frontend" {
-  name                              = "cest-frontend-oac"
+  name                              = "oac-cest-frontend-yuki-shimada-2026.s3.ap-northeast--mp4x833p74l"
+  description                       = "Created by CloudFront"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -44,5 +46,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   viewer_certificate {
     cloudfront_default_certificate = true
     minimum_protocol_version       = "TLSv1"
+  }
+
+  tags = {
+    Name = "cest-frontend-distribution"
   }
 }

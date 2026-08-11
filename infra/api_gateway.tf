@@ -2,6 +2,17 @@
 resource "aws_apigatewayv2_api" "cest" {
   name          = "cest-api"
   protocol_type = "HTTP"
+
+  # 今のAPI Gatewayに実在する設定。消すとブラウザからのAPI呼び出しが壊れる恐れがあるため、
+  # そのまま維持する（バックエンド側のCORSMiddlewareと二重にはなるが、削除するリスクを取らない）。
+  cors_configuration {
+    allow_credentials = false
+    allow_headers      = ["*"]
+    allow_methods      = ["*"]
+    allow_origins      = ["*"]
+    expose_headers     = []
+    max_age            = 86400
+  }
 }
 
 resource "aws_apigatewayv2_integration" "lambda" {
