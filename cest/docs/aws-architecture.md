@@ -2,7 +2,7 @@
 
 **作成者**: 島田ゆうき
 **対象バージョン**: CEST v0.3.3 / v0.4
-**最終更新**: 2026-05-21
+**最終更新**: 2026-08-11
 **ドメイン**: `yuki-shimada.dev`
 
 ---
@@ -17,10 +17,10 @@ Phase ごとに「何を選んだか・なぜ選んだか・どう実装した�
 | 項目 | 状態 |
 |---|---|
 | Phase 1（S3 + CloudFront） | ✅ 完了 — CloudShell 経由でセットアップ |
-| Phase 1.5（Lambda + API Gateway） | ✅ 完了 — zip デプロイで運用中 |
+| Phase 1.5（Lambda + API Gateway） | ✅ 完了 → その後 Phase 3b で Container Image に移行 |
 | Phase 2（独自ドメイン） | ⏳ 計画中 — Route 53 + ACM |
-| Phase 3a（GitHub Actions CI/CD） | ⏳ 計画中 — OIDC 認証ベース |
-| Phase 3b（Container Image 化） | ⏳ 計画中 — ECR + Lambda Container |
+| Phase 3a（GitHub Actions CI/CD） | ✅ 完了 — OIDC 認証ベース（2026-08-11） |
+| Phase 3b（Container Image 化） | ✅ 完了 — ECR + Lambda Container（Phase 3aと同時実施、2026-08-11） |
 | Phase 4（Bedrock 統合） | ⏳ 計画中 — v0.4 機能 |
 
 ### 既に終わった設計判断（要約）
@@ -34,10 +34,11 @@ Phase ごとに「何を選んだか・なぜ選んだか・どう実装した�
 
 ### 残タスクの方針
 
-- **CI/CD自動化**：手動デプロイは差分・ヒューマンエラーの温床なので、GitHub Actions + OIDC で AWS 認証鍵を持たない構成に移行する
-- **Container Image 化**：依存パッケージのサイズと Cold Start のチューニング自由度を確保
-- **観測性**：CloudWatch Dashboard / X-Ray 導入で Lambda の遅延・エラー率を可視化
-- **Bedrock**：v0.4 で自然言語Q&A機能。同一AWS内で IAM 認可、外部API より運用が安全
+- **観測性**：CloudWatch Dashboard / X-Ray 導入で Lambda の遅延・エラー率を可視化（未着手）
+- **Bedrock**：v0.4 で自然言語Q&A機能。同一AWS内で IAM 認可、外部API より運用が安全（未着手）
+- **独自ドメイン（Phase 2）**：Route 53 + ACM。現状 CloudFront はデフォルトドメイン(`*.cloudfront.net`)のまま運用中
+
+CI/CD自動化とContainer Image化はPhase 3a/3bとして完了済み（詳細は下記）。
 
 ---
 
@@ -61,10 +62,10 @@ Phase ごとに「何を選んだか・なぜ選んだか・どう実装した�
 | Phase | 内容 | 工数 | 状態 |
 |---|---|---|---|
 | **1** | フロント公開（S3+CloudFront） | 5〜7h | ✅ 完了 |
-| **1.5** | zip Lambda + API Gateway（CloudShell 経由） | 3〜5h | ✅ 完了 |
+| **1.5** | zip Lambda + API Gateway（CloudShell 経由） | 3〜5h | ✅ 完了（Phase 3bでContainer Imageに移行） |
 | **2** | 独自ドメイン（Route53+ACM） | 3〜5h | ⏳ 予定 |
-| **3a** | GitHub Actions 自動CI/CD | 3〜5h | ⏳ 予定 |
-| **3b** | zip → Container Image 移行 | 5〜8h | ⏳ 予定 |
+| **3a** | GitHub Actions 自動CI/CD | 3〜5h | ✅ 完了 |
+| **3b** | zip → Container Image 移行 | 5〜8h | ✅ 完了（3aと同時実施） |
 | **4** | Bedrock 統合（v0.4 機能） | 5〜10h | ⏳ 予定 |
 
 **合計工数**: 24〜40h
@@ -112,10 +113,11 @@ Phase ごとに「何を選んだか・なぜ選んだか・どう実装した�
                                     │ Claude 3 Haiku         │
                                     └────────────────────────┘
 
-[ GitHub: feature/pachi ]
+[ GitHub: main ]
         │ git push
         ▼
-[ GitHub Actions ] → pytest → S3 sync → CloudFront Invalidation → Lambda update
+[ GitHub Actions（OIDC） ] → pytest → docker build/push(ECR) → terraform apply(Lambda更新)
+        → station_master.json同期 → S3 sync → CloudFront Invalidation
 ```
 
 ---
@@ -214,25 +216,59 @@ API Gateway スロットリングに加え、Lambda 側にも Reserved Concurren
 
 ---
 
-### Phase 3a: GitHub Actions 自動 CI/CD — ⏳ 計画中
+### Phase 3a: GitHub Actions 自動 CI/CD — ✅ 完了（2026-08-11）
 
 **目的**: 手動デプロイのヒューマンエラーを排除し、`git push` を唯一のリリーストリガーにする
 
-**方針**:
-- IAM OIDC プロバイダで GitHub Actions に短命クレデンシャルを発行（アクセスキー直書きを廃止）
-- ワークフロー構成: `pytest` → S3 sync → CloudFront Invalidation → Lambda コード更新
-- main ブランチへの push のみがデプロイトリガー
+**実施内容（要点）**:
+- インフラ自体を Terraform でコード化（`infra/`）。S3・CloudFront・API Gateway は既存リソースを `terraform import` で取り込み、Lambda は Phase 3b と合わせて新規（コンテナ版）作成
+- IAM OIDC プロバイダで GitHub Actions に短命クレデンシャルを発行（アクセスキーをGitHub Secretsにも直書きしない）。信頼ポリシーは対象リポジトリ・`main`ブランチに限定
+- ワークフロー構成（`.github/workflows/deploy.yml`）: `pytest` → `docker build/push`(ECR) → `terraform apply`(Lambda更新) → `station_master.json`同期 → `API_GATEWAY_PLACEHOLDER`置換 → S3 sync → CloudFront Invalidation
+- **CI用ロールにはIAM/OIDCプロバイダ自体を触る権限を渡していない**（CIが自分の信頼関係を自分で書き換えられる状態を避けるため）。そのため `terraform apply` は `-target=aws_lambda_function.cest_api` でLambda関数のみを対象にし、IAMロールやOIDC設定を変更する場合は人間が手元/CloudShellからフル `terraform apply` を実行する運用にした
+
+**デプロイ時に直面した課題と切り分け**:
+
+#### ① Terraform importと実物のズレ
+
+既存リソースを `terraform import` した直後、`terraform plan` で「API GatewayのCORS設定が削除される」「CloudFrontのタグ・OACの名前/説明が変わる」という差分が出た。いずれも `.tf` を書く際に実物の設定を見落としていたのが原因。**`apply`前に必ず`plan`で差分ゼロを確認する**運用の効果がここで実際に出た（CORS設定を消していたら、ブラウザからのAPI呼び出しが壊れていた可能性がある）。
+
+#### ② CI用IAMロールの権限を後から一つずつ発見
+
+最小権限を意識してCI用ロールの権限を絞ったところ、初回のワークフロー実行で `ecr:CreateRepository` のAccessDeniedから始まり、`ecr:ListTagsForResource`・`iam:ListRolePolicies`・`iam:ListAttachedRolePolicies`・`s3:DeleteObject`（stateロック解放用）・`lambda:ListVersionsByFunction` と、**Terraformが「変更してない部分」を確認するためのstate refresh処理だけでも複数の読み取り権限が必要**なことが分かった。CloudFrontやLambdaの管理系AWSプロバイダは、実際に変更する権限（Update系）だけでなく、現況を読み取る権限（List/Describe/Get系）もセットで要求してくる。1つずつ実行→AccessDenied→権限追加→再実行、を繰り返して特定した。
+
+**学び**: 最小権限を狙うときも、「実際に変更したい操作」だけでなく「Terraformが差分確認のために読みに行く操作」まで含めて設計しないと、初回実行で必ず引っかかる。
+
+#### ③ 失敗したapplyがstateロックを残す
+
+権限不足で`terraform apply`が失敗した際、S3ネイティブロック（`use_lockfile`）の解放にも同じ権限不足が影響し、ロックファイルが残った。次の実行が「state is locked」で失敗したため、`terraform force-unlock <LOCK_ID>` で手動解除してから再実行した。
 
 ---
 
-### Phase 3b: zip → Container Image 移行 — ⏳ 計画中
+### Phase 3b: zip → Container Image 移行 — ✅ 完了（Phase 3aと同時実施、2026-08-11）
 
-**目的**: 依存パッケージサイズの制約（zip は 250MB 制限）を回避、Cold Start のチューニング自由度を確保
+**目的**: 依存パッケージサイズの制約（zip は 250MB 制限）を回避、ビルド環境の差異（Windows/Linuxバイナリ非互換）を構造的に解消
 
-**方針**:
-- `public.ecr.aws/lambda/python:3.11` ベースの Dockerfile を作成
-- ECR にイメージを push → Lambda の実行形式を Container Image に切り替え
-- GitHub Actions ワークフローも Container Image ビルドに合わせて更新
+**実施内容（要点）**:
+- `public.ecr.aws/lambda/python:3.11` ベースの `cest/Dockerfile` を作成。`pyproject.toml`と`src/`をコピーし`pip install .`
+- ECR にイメージを push → Lambda の実行形式を Container Image に切り替え（`package_type = "Image"`）
+- 旧zip版Lambda関数は削除してから、同じ関数名でコンテナ版を新規作成（LambdaのPackageTypeは作成後に変更不可のため、その場更新ではなく作り直しが必要。関数名を同じにすることでARNが変わらず、API Gateway側の統合設定は無変更で済んだ）
+- イメージタグにはgitのコミットSHAを使用（`:latest`のようなタグ使い回しだと、Terraformが変更を検知できずLambdaが更新されない）
+
+**デプロイ時に直面した課題と切り分け**:
+
+#### ① `pip install .` でパッケージデータが欠落する
+
+Dockerfileで`pip install .`（非editableインストール）を実行したところ、`cest/src/cest/data/*.json`（station_master.json等）がインストール先に含まれないことが判明。`pyproject.toml`に`package-data`の設定が無く、setuptoolsのデフォルト挙動では`.py`ファイル以外は同梱されない仕様だった。
+
+これまで問題が顕在化しなかった理由: ローカル開発は編集可能インストール（`pip install -e .`、コードを実際にコピーせずソースの場所を直接参照するため、データファイルも自然に見つかる）、旧zipデプロイはpipを介さず手動でフォルダごとコピーしていたため、どちらも本物の「pipパッケージング」を通していなかった。今回コンテナ化で初めて`pip install .`を実行し、初めて顕在化した。
+
+`pyproject.toml`に以下を追加して解決:
+```toml
+[tool.setuptools.package-data]
+cest = ["data/*.json"]
+```
+
+**学び**: 「ローカルで動く」「今までのデプロイ方法で動いてた」は、パッケージングの正しさの証明にはならない。依存関係だけでなく、パッケージに何が含まれるかも宣言ファイル(`pyproject.toml`)を一次情報源にする。
 
 ---
 
@@ -260,35 +296,39 @@ API Gateway スロットリングに加え、Lambda 側にも Reserved Concurren
   - 個人プロジェクトのデモ用途では rate 10 で十分実用範囲、超過したリクエストは 429 で拒否される
 - **Lambda 側 Reserved Concurrency は未設定**：二重防御として設定を試みたが、新規 AWS アカウントは安全措置でアカウント全体の同時実行数上限が 10 にロックされており、構造的に既に強い上限が効いている。加えて API Gateway 側でも rate 10 req/秒 に絞っているため、Lambda 側で重ねて絞る必要なしと判断（詳細は Phase 1.5）
 
+### 実装済み（追記）
+
+- **WAF（CloudFront無料バンドル）**：CloudFront作成時にAWSが提案する基本保護（AWSManagedRulesAmazonIpReputationList等）が有効になっていた。当初「WAFは採用しない」という方針だったため追加課金を疑ったが、コンソール上で「CloudFront料金の無料プランに含まれる」設定であることを確認。追加コストが無く実用的な保護でもあるため、削除せずそのまま維持することにした（意図せず有効化されていたものを、実態調査の上で追認した形）
+
 ### 計画中
 
 - **AWS Budgets**：月額閾値（$10）超過時に SNS で通知
 - **CloudWatch Alarms**：Lambda 実行回数 / S3 ストレージ / CloudFront 転送量を個別監視
 - **CloudWatch Logs の保持期間設定**：デフォルトは無期限なので、Lambda ログを 7〜30日に絞る
-- **WAF は採用しない**：個人プロジェクト規模では費用対効果が見合わないため
 
 ### 実装順の考え方
 
 - ✅ API Gateway スロットリングが最初に来た理由：**設定一つで物理的にコスト上限が決まる**ため、観測より先に「上限の蓋」を閉めた
-- ⏳ 次に観測性（Budgets + CloudWatch Alarms）を Phase 3a までに導入し、想定外コストの早期検知ができる状態にする
+- ✅ CI/CD自動化（Phase 3a/3b）は完了。次に観測性（Budgets + CloudWatch Alarms）を導入し、想定外コストの早期検知ができる状態にする
 - ⏳ スロットリング閾値の調整は、実アクセス傾向を Alarms で見てから決める
 
 ---
 
 ## 6. デプロイ対象ファイル
 
-### フロントエンド（S3 にアップロード）
+### フロントエンド（S3 にアップロード、GitHub Actionsが自動生成）
 ```
 web/
-├── index.html
-└── station_master.json
+├── index.html            ← API_GATEWAY_PLACEHOLDERはデプロイ時に実URLへ置換される
+└── station_master.json   ← cest/src/cest/data/station_master.json からデプロイ時にコピー（Git管理外）
 ```
 
-### バックエンド（Lambda にデプロイ）
+### バックエンド（Lambda コンテナイメージとしてECR経由でデプロイ）
 ```
-cest/src/cest/      ← パッケージ全体
+cest/Dockerfile が public.ecr.aws/lambda/python:3.11 をベースにビルド
+cest/src/cest/      ← パッケージ全体（pip install . で導入、data/*.jsonもpackage-data設定で同梱）
 
-依存ライブラリ:
+依存ライブラリ（pyproject.toml）:
 - fastapi
 - pydantic
 - networkx
@@ -322,9 +362,9 @@ cest/src/cest/      ← パッケージ全体
 |---|---|
 | 通信暗号化 | CloudFront HTTPS、S3 直接アクセス禁止（OAC） |
 | 認証 | なし（公開デモ用途のため）。Phase 4 後に API Gateway のレート制限を追加検討 |
-| CORS | Phase 1.5 時は `*`、Phase 3 で `https://yuki-shimada.dev` に絞る |
+| CORS | 現状 `*`（独自ドメイン未確定のため）。Phase 2（独自ドメイン）完了後に `https://yuki-shimada.dev` へ絞る |
 | Lambda 権限 | 最小権限。Phase 4 で `bedrock:InvokeModel` 追加 |
-| AWS認証情報 | コードに直書き禁止。GitHub Secrets 経由 |
+| AWS認証情報 | コード・GitHub Secretsへの直書き禁止。GitHub Actions は OIDC 経由の短命クレデンシャルのみ使用（Phase 3aで実装） |
 | Bedrock 入力 | システムプロンプトで応答範囲を制限（プロンプトインジェクション対策） |
 
 ---
@@ -332,7 +372,7 @@ cest/src/cest/      ← パッケージ全体
 ## 9. 将来拡張（スコープ外）
 
 - 探索モード（最適エリア逆算、v0.4 内で検討中）
-- WAF（個人プロジェクトの規模では費用対効果が見合わないため当面なし）
+- WAFの本格運用（現状はCloudFront無料バンドルの基本保護のみ。有料のカスタムルール追加等は個人プロジェクトの規模では費用対効果が見合わないため当面なし）
 - Cognito 認証（公開デモという用途と合わないため当面なし）
 - 結果の永続化（DynamoDB）
 - カスタムロギング（CloudWatch Logs Insights）
@@ -344,9 +384,11 @@ cest/src/cest/      ← パッケージ全体
 ### 開発環境
 - ローカル: Windows 11 / PowerShell
 - Python: ローカル 3.13 / Lambda ランタイム 3.11
-- ビルド環境: AWS CloudShell（Linux, Python 3.11, AWS CLI 同梱）
+- CI/CDのビルド環境: GitHub Actions（`ubuntu-latest`、Docker同梱）
+- 手動運用・インフラ変更用: AWS CloudShell（Linux, Python 3.11, AWS CLI / Terraform 同梱）。IAM/OIDCプロバイダなどCIに権限を渡していないリソースの変更時のみ使用
 
 ### AWS 環境
 - アカウント: 個人アカウント（無料枠期間内）
 - リージョン: `ap-northeast-1`（CloudFront 用証明書のみ `us-east-1`）
-- 認証情報: IAM ユーザー＋GitHub Secrets（Phase 3a で OIDC 化予定）
+- 認証情報: 人間の手動操作は IAM ユーザー（`cest-admin`）、GitHub Actions は OIDC 経由の短命クレデンシャル（`cest-github-actions-deploy`ロール）。長期アクセスキーはGitHub Secretsにも保存していない
+- インフラのコード管理: Terraform（`infra/`）。stateは `cest-terraform-state-yuki-shimada` バケットにS3ネイティブロックで管理
